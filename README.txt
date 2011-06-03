@@ -1,0 +1,60 @@
+WinBtfrs - Readme/FAQ
+
+Last updated 2011.06.02
+
+
+What is WinBtrfs?
+
+WinBtrfs is a Windows driver for the Btrfs filesystem. Specifically, it is a read-only filesystem implementation in userspace.
+
+
+What is Btrfs?
+
+Btrfs is a new Linux filesystem developed by Chris Mason and Oracle Corporation since 2007. Licensed under the GNU General Public License (GPL), it is poised to become Linux's primary filesystem in the near future, providing such modern features as copy-on-write snapshots, subvolumes, RAID-like mirroring and striping, and many others. In many respects it is similar to ZFS, another nascent filesystem.
+
+
+Why WinBtrfs?
+
+I began development on WinBtrfs in early 2011, when I observed that although Btrfs had been in the Linux kernel for a decent amount of the time and the on-disk format was finalized, there was no way to mount a Btrfs volume in Windows. Taking after the example of several Windows ext2 and ext3 drivers, I decided to write my own read-only userspace implementation of the Btrfs filesystem so that I, as well as others, could make use of our new Btrfs volumes from Windows.
+
+
+What dependencies are required for WinBtrfs?
+
+Building WinBtrfs requires Microsoft Visual Studio (any version should do) for best results; building with a different compiler (say, MinGW or Cygwin) is possible but will probably require some work, as I have yet to try compiling with non-Microsoft compilers. Compiling will also require version 0.6.0 (or later) of the Dokan libraries to be installed (earlier versions might work; your results may vary). WinBtrfs also depends on the Win32 API, so you may need to download the Windows API from Microsoft to compile (unless you already have it with Visual Studio).
+Running WinBtrfs requires Dokan version 0.6.0 or later to be installed. See http://dokan-dev.net to obtain the latest version.
+
+
+How do I build WinBtrfs?
+
+See the question above for information on the software and libraries required to build WinBtrfs. If you are using Visual Studio, load up the solution file and hit Build. Provided you have fulfilled the dependencies, it should build successfully. If the Dokan library and header file (dokan.lib and dokan.h) aren't located in "C:\Program Files\Dokan\DokanLibrary", you may need to adjust the WinBtrfsCLI project settings so that the include directories and linker inputs are pointed to the proper path.
+If you are using a different compiler to build WinBtrfs, you are pretty much on your own at this point, until I find time to try out other compilers myself. I don't have a Makefile prepared, but no unusual compiler options are necessary at this time.
+
+
+How do I use WinBtrfs?
+
+Run WinBtrfsCLI.exe without any options to see usage information. Essentially, run the command in this manner:
+
+WinBtrfsCLI.exe <device> <mount point>
+
+where <device> is either an image file, or a physical partition in the format \\.\HarddiskAPartitionB, where A is the hard drive (numbered from zero) and B is the partition within that drive (numbered from one); and where <mount point> is either a drive letter (e.g. "C:") or an empty directory on an NTFS drive. To get a handle on physical disk and partition numbers, open the Disk Management console in Windows and take a look at how the disks are numbered. For Linux users, it may be useful to note that /dev/sda1 is equivalent to \\.\Harddisk0Partition1; /dev/sdb2 is equivalent to \\.\Harddisk1Partition2; and so forth. Identifying the proper volume and specifying a mount point will become much easier in the future, once more development time is spent on the user interface aspect of WinBtrfs.
+
+
+Is read-write support coming in a future version?
+
+The short answer is: no, probably not. This is for several reasons. The most significant reason is that developing a read-write implementation of Btrfs would require considerably more work than a mere read-only one; for analogy, compare merely reading the works of Shakespeare with being able to come up with them and write them yourself. Perhaps that's a bit over the top, but a full write-enabled driver would certainly require porting the _entire_ Btrfs driver from the Linux kernel to Windows, which would additionally require duplicating the parts of the Linux kernel upon which the driver depends. More than this, it would require significantly more support and if problems did develop, a read-write filesystem driver has the potential to destroy the _entire_ volume and all the data contained within. So, in summary, it is both far more feasible to write a read-only driver; it means significantly less support/bug load on the developer; and there is far less potential for problems to result in the partial or total corruption of all of your data.
+
+
+Under what licensing terms is WinBtrfs distributed?
+
+WinBtrfs is licensed under the GNU General Public License version 2 (GPLv2), which permits you to redistribute and modify the software as you see fit, so long as you conform to the terms of the GPL. For more information, see http://www.gnu.org/licenses/gpl-2.0.html.
+
+
+Can I contribute to WinBtrfs?
+
+Absolutely. WinBtrfs is an open source project, which means that submitting bug reports, contributing patches, helping out with development, breaking open the source code to see how it works, and even forking the project to start your own derivative work are all permitted and even encouraged. See the question on obtaining the source code below for information on how to get involved.
+
+
+
+Where can I obtain the latest source code?
+
+WinBtrfs is an open source project hosted on GitHub at https://github.com/jgottula/WinBtrfs. This project's page on GitHub will always have the latest source code and releases, as well as the facilities for contributing back to the project.
