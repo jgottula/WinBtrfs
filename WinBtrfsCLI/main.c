@@ -106,25 +106,25 @@ void dokanError(int dokanResult)
 		break;
 	case DOKAN_ERROR:
 		printf("Dokan reported a general error!\n");
-		return 1;
+		exit(1);
 	case DOKAN_DRIVE_LETTER_ERROR:
 		printf("Dokan reported a bad drive letter!\n");
-		return 1;
+		exit(1);
 	case DOKAN_DRIVER_INSTALL_ERROR:
 		printf("Dokan reported it couldn't install the driver!\n");
-		return 1;
+		exit(1);
 	case DOKAN_START_ERROR:
 		printf("Dokan reported something is wrong with the driver!\n");
-		return 1;
+		exit(1);
 	case DOKAN_MOUNT_ERROR:
 		printf("Dokan reported it couldn't assign a drive letter or mount point!\n");
-		return 1;
+		exit(1);
 	case DOKAN_MOUNT_POINT_ERROR:
 		printf("Dokan reported the mount point is invalid!\n");
-		return 1;
+		exit(1);
 	default:
 		printf("Dokan returned an unknown error!\n");
-		return 1;
+		exit(1);
 	}
 }
 
