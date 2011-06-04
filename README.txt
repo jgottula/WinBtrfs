@@ -21,7 +21,7 @@ I began development on WinBtrfs in early 2011, when I observed that although Btr
 What dependencies are required for WinBtrfs?
 
 Building WinBtrfs requires Microsoft Visual Studio (any version should do) for best results; building with a different compiler (say, MinGW or Cygwin) is possible but will probably require some work, as I have yet to try compiling with non-Microsoft compilers. Compiling will also require version 0.6.0 (or later) of the Dokan libraries to be installed (earlier versions might work; your results may vary). WinBtrfs also depends on the Win32 API, so you may need to download the Windows API from Microsoft to compile (unless you already have it with Visual Studio).
-Running WinBtrfs requires Dokan version 0.6.0 or later to be installed. See http://dokan-dev.net to obtain the latest version.
+Running WinBtrfs requires Dokan version 0.6.0 or later to be installed. See http://dokan-dev.net to obtain the latest version. You also need Microsoft's Visual C++ 2010 Redistributable package, available at Microsoft's website.
 
 
 How do I build WinBtrfs?
