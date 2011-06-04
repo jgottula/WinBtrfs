@@ -11,6 +11,7 @@
  * any later version.
  */
 
+#include <stdio.h>
 #include <assert.h>
 #include <Windows.h>
 #include "structures.h"
@@ -21,6 +22,8 @@ extern WCHAR devicePath[MAX_PATH];
 
 HANDLE hRead = INVALID_HANDLE_VALUE, hReadMutex = INVALID_HANDLE_VALUE;
 Superblock super;
+BtrfsDevItem *devices = NULL;
+int numDevices = -1;
 Chunk *chunks = NULL;
 int numChunks = -1;
 
@@ -49,6 +52,7 @@ DWORD readBlock(LONGLONG physAddr, DWORD len, LPVOID dest)
 	LARGE_INTEGER li;
 	DWORD bytesRead;
 
+	/* these had better be set up already */
 	assert(hRead != INVALID_HANDLE_VALUE);
 	assert(hReadMutex != INVALID_HANDLE_VALUE);
 
@@ -77,11 +81,30 @@ error:
 
 DWORD readLogicalBlock(LONGLONG logiAddr, DWORD len, LPVOID dest)
 {
-	/* this requires that the chunk tree has been loaded! */
+	int i, chunk = -1;
+	unsigned __int64 physAddr;
 
-	/* we need to ensure that the ENTIRE block fits within a particular chunk mapping.
-		if not, we either need to (a) automatically figure out the chunks the block bridges, or
-		(b) send an error back to the caller. */
+	/* cannot possibly succeed unless chunks have been loaded */
+	assert(numChunks > 0 && chunks != NULL);
+	
+	for (i = 0; i < numChunks; i++)
+	{
+		/* find the first chunk mapping that fits the block we want */
+		if (logiAddr >= chunks[i].logiOffset && logiAddr + len <= chunks[i].logiOffset + chunks[i].chunkItem.chunkSize)
+		{
+			chunk = i;
+			break;
+		}
+	}
+
+	/* failure is NOT an option */
+	assert(chunk != -1);
+
+	/* arbitrarily using the first stripe */
+	/* currently ASSUMING that everything is on the first device */
+	physAddr = (logiAddr - chunks[chunk].logiOffset) + chunks[chunk].stripes[0].offset;
+
+	return readBlock(physAddr, len, dest);
 }
 
 DWORD readPrimarySB()
@@ -96,12 +119,15 @@ int validateSB(Superblock *s)
 		'_', 'B', 'H', 'R', 'f', 'S', '_', 'M'
 	};
 
+	/* if no superblock is provided, use the primary one */
 	if (s == NULL)
 		s = &super;
 
+	/* magic check */
 	if (memcmp(magic, s->magic, 8) != 0)
 		return 1;
 
+	/* checksum */
 	if (crc32c(0, (const unsigned char *)s + 0x20, 0xfe0) != endian32(s->crc32c))
 		return 2;
 
@@ -163,6 +189,7 @@ void getChunkItems()
 		key = (BtrfsDiskKey *)((unsigned char *)sbPtr);
 		sbPtr += sizeof(BtrfsDiskKey);
 
+		/* CHUNK_ITEMs should ALWAYS fit these constraints */
 		assert(key->objectID == 0x100);
 		assert(key->type == 0xe4);
 		
@@ -171,7 +198,8 @@ void getChunkItems()
 		chunk->chunkItem = *((BtrfsChunkItem *)((unsigned char *)sbPtr));
 		sbPtr += sizeof(BtrfsChunkItem);
 
-		assert(chunk->chunkItem.rootObjIDref == 2); // the format indicates that this should always be 2
+		/* this should always be 2 */
+		assert(chunk->chunkItem.rootObjIDref == 2);
 
 		chunk->stripes = (BtrfsChunkItemStripe *)malloc(sizeof(BtrfsChunkItemStripe) * chunk->chunkItem.numStripes);
 
@@ -187,8 +215,11 @@ void getChunkTree()
 {
 	unsigned __int64 chunkTreeLogiAddr = super.chunkTreeLAddr;
 	int i, j, chunk = -1, stripe = -1;
-	unsigned char *chunkTreeBlock;
+	unsigned char *chunkTreeBlock, *chunkTreePtr;
+	BtrfsHeader chunkTreeHeader;
+	BtrfsItem *chunkTreeItem;
 
+	/* find a superblock chunk to bootstrap ourselves to the chunk tree */
 	for (i = 0; i < numChunks; i++)
 	{
 		if (chunkTreeLogiAddr >= chunks[i].logiOffset && chunkTreeLogiAddr < chunks[i].logiOffset + chunks[i].chunkItem.chunkSize)
@@ -210,12 +241,97 @@ void getChunkTree()
 		}
 	}
 
-	/* we MUST have a mapping for the chunk containing the chunk tree! */
+	/* we MUST have at least one mapping so we can load the chunk containing the chunk tree! */
 	assert(chunk != -1 && stripe != -1);
 
 	chunkTreeBlock = (unsigned char *)malloc(chunks[chunk].chunkItem.minIOSize);
 	assert(readBlock(chunks[chunk].stripes[stripe].offset + (chunkTreeLogiAddr - chunks[chunk].logiOffset),
 		chunks[chunk].chunkItem.minIOSize, chunkTreeBlock) == 0);
 
-	
+	chunkTreePtr = chunkTreeBlock;
+
+	chunkTreeHeader = *((BtrfsHeader *)chunkTreePtr);
+	chunkTreePtr += sizeof(BtrfsHeader);
+
+	/* the crc32c had better check out */
+	assert(crc32c(0, chunkTreeBlock + 0x20, chunks[chunk].chunkItem.minIOSize - 0x20) ==
+		endian32(chunkTreeHeader.crc32c));
+
+	/* this should definitely be a leaf node */
+	assert(chunkTreeHeader.level == 0);
+
+	/* clear up the chunks array in preparation for this larger collection of chunks;
+		note that we don't have to free the main array, we just realloc it instead*/
+	for (i = 0; i < numChunks; i++)
+		free(chunks[i].stripes);
+
+	/* set up the chunks array using the maximum possible number of items as the array size */
+	chunks = (Chunk *)realloc(chunks, sizeof(Chunk) * chunkTreeHeader.nrItems);
+	numChunks = 0;
+
+	/* also set up the devices array, again using the max possible number */
+	devices = (BtrfsDevItem *)malloc(sizeof(BtrfsDevItem) * chunkTreeHeader.nrItems);
+	numDevices = 0;
+
+	for (i = 0; i < chunkTreeHeader.nrItems; i++)
+	{
+		chunkTreeItem = (BtrfsItem *)chunkTreePtr;
+
+		if (chunkTreeItem->key.type == 0xd8) // DEV_ITEM
+		{
+			assert(chunkTreeItem->size == sizeof(BtrfsDevItem));
+			assert(sizeof(BtrfsHeader) + chunkTreeItem->offset + chunkTreeItem->size <=
+				chunks[chunk].chunkItem.minIOSize); // ensure we're within bounds
+			
+			devices[numDevices] = *((BtrfsDevItem *)(chunkTreeBlock + sizeof(BtrfsHeader) + chunkTreeItem->offset));
+			numDevices++;
+		}
+		else if (chunkTreeItem->key.type == 0xe4) // CHUNK_ITEM
+		{
+			assert((chunkTreeItem->size - sizeof(BtrfsChunkItem)) %
+				sizeof(BtrfsChunkItemStripe) == 0); // ensure proper 30+20n sizing
+			assert(sizeof(BtrfsHeader) + chunkTreeItem->offset + chunkTreeItem->size <=
+				chunks[chunk].chunkItem.minIOSize); // ensure we're within bounds
+
+			chunks[numChunks].logiOffset = chunkTreeItem->key.offset;
+			chunks[numChunks].chunkItem =
+				*((BtrfsChunkItem *)(chunkTreeBlock + sizeof(BtrfsHeader) + chunkTreeItem->offset));
+			chunks[numChunks].stripes = (BtrfsChunkItemStripe *)malloc(sizeof(BtrfsChunkItemStripe) *
+				chunks[numChunks].chunkItem.numStripes);
+			
+			for (j = 0; j < chunks[numChunks].chunkItem.numStripes; j++)
+				chunks[numChunks].stripes[j] = *((BtrfsChunkItemStripe *)(chunkTreeBlock +
+				sizeof(BtrfsHeader) + chunkTreeItem->offset +
+				sizeof(BtrfsChunkItem) + (sizeof(BtrfsChunkItemStripe) * j)));
+
+			numChunks++;
+		}
+		else if (chunkTreeItem->key.type == 0xa8) // EXTENT_ITEM
+		{
+			/* these are of questionable usefulness at the moment */
+			printf("getChunkTree: ignoring EXTENT_ITEM for now\n");
+		}
+		else if (chunkTreeItem->key.type == 0xb0) // TREE_BLOCK_REF)
+		{
+			/* also not terribly relevant right now */
+			printf("getChunkTree: ignoring TREE_BLOCK_REF for now\n");
+		}
+		else
+			printf("getChunkTree: found an item of unexpected type in chunk tree (0x%02X)!\n", chunkTreeItem->key.type);
+
+		chunkTreePtr += sizeof(BtrfsItem);
+	}
+
+	/* pare these arrays down to size now */
+	chunks = (Chunk *)realloc(chunks, sizeof(Chunk) * numChunks);
+	devices = (BtrfsDevItem *)realloc(devices, sizeof(BtrfsDevItem) * numDevices);
+
+	/* clean up */
+	free(chunkTreeBlock);
+
+	/* there seems to be a second chunk tree block on occasion (in btrfs_256m.img for example),
+		but it currently seems to be nothing more than an incomplete copy
+		(though the additional EXTENT_ITEMs/TREE_BLOCK_REFs may be different).
+		unfortunately, I don't currently know how to tell if it's there just by reading the first block...
+		so I'm ignoring it for now. */
 }
