@@ -123,7 +123,7 @@ unsigned int crc32c(unsigned int crc, const unsigned char *data, unsigned int le
 	crc = ~crc;
 	
 	while (length--)
-	crc = crc32c_table[(crc ^ *data++) & 0xFFL] ^ (crc >> 8);
+		crc = crc32c_table[(crc ^ *data++) & 0xFFL] ^ (crc >> 8);
 	
 	return ~crc;
 }
