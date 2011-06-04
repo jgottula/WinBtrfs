@@ -16,7 +16,7 @@
 
 typedef struct
 {
-	unsigned char			crc32c				[0x04];
+	unsigned int			crc32c;
 	unsigned char			crc32c_pad			[0x1c];
 	unsigned char			fsID				[0x10];
 	unsigned __int64		blockNr;
