@@ -148,6 +148,11 @@ void unitTests()
 	assert(sizeof(BtrfsDiskKey) == 0x11);
 	assert(sizeof(BtrfsItem) == 0x19);
 	assert(sizeof(BtrfsInodeItem) == 0xa0);
+	assert(sizeof(BtrfsInodeRef) == 0x14);
+	assert(sizeof(BtrfsExtentData) == 0x15);
+	assert(sizeof(BtrfsExtentDataNonInline) == 0x20);
+	assert(sizeof(BtrfsRootItem) == 0xef);
+	assert(sizeof(BtrfsBlockGroupItem) == 0x18);
 	assert(sizeof(BtrfsChunkItem) == 0x30);
 	assert(sizeof(BtrfsChunkItemStripe) == 0x20);
 	assert(sizeof(BtrfsDevItem) == 0x62);

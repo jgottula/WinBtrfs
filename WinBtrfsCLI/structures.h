@@ -72,23 +72,61 @@ typedef struct
 
 typedef struct
 {
-	unsigned __int64		chunkSize;
-	unsigned __int64		rootObjIDref;
-	unsigned __int64		stripeLen;
-	unsigned __int64		type;
-	unsigned int			bestIOAlign;
-	unsigned int			bestIOWidth;
-	unsigned int			minIOSize;
-	unsigned short			numStripes;
-	unsigned short			subStripes;
-} BtrfsChunkItem;
+	unsigned __int64		index;
+	unsigned short			nameLen;
+	char					name				[0x0a];
+} BtrfsInodeRef;
 
 typedef struct
 {
-	unsigned __int64		devID;
+	unsigned __int64		generation;
+	unsigned __int64		n;
+	unsigned char			compression;
+	unsigned char			encryption;
+	unsigned short			otherEncoding;
+	unsigned char			type;
+} BtrfsExtentData;
+
+typedef struct
+{
+	unsigned __int64		extAddr;
+	unsigned __int64		extSize;
 	unsigned __int64		offset;
-	unsigned char			devUUID				[0x10];
-} BtrfsChunkItemStripe;
+	unsigned __int64		bytesInFile;
+} BtrfsExtentDataNonInline;
+
+typedef struct
+{
+	BtrfsInodeItem			inodeItem;
+	unsigned __int64		expectedGeneration;
+	unsigned __int64		objID;
+	unsigned __int64		rootNodeBlockNum;
+	unsigned __int64		byteLimit;
+	unsigned __int64		bytesUsed;
+	unsigned __int64		lastGenSnapshot;
+	unsigned __int64		flags;
+	unsigned int			numRefs;
+	BtrfsDiskKey			dropProgress;
+	unsigned char			dropLevel;
+	unsigned char			rootLevel;
+} BtrfsRootItem;
+
+/*typedef struct
+{
+	unsigned __int64		refCount;
+	unsigned __int64		generation;
+	unsigned __int64		flags;
+	BtrfsDiskKey			firstEntryKey;
+	unsigned char			nodeLevel;
+	// ...
+} BtrfsExtentItem;*/
+
+typedef struct
+{
+	unsigned __int64		usedAmount;
+	unsigned __int64		chunkTreeID;
+	unsigned __int64		flags;
+} BtrfsBlockGroupItem;
 
 typedef struct
 {
@@ -107,6 +145,26 @@ typedef struct
 	unsigned char			devUUID				[0x10];
 	unsigned char			fsUUID				[0x10];
 } BtrfsDevItem;
+
+typedef struct
+{
+	unsigned __int64		chunkSize;
+	unsigned __int64		rootObjIDref;
+	unsigned __int64		stripeLen;
+	unsigned __int64		type;
+	unsigned int			bestIOAlign;
+	unsigned int			bestIOWidth;
+	unsigned int			minIOSize;
+	unsigned short			numStripes;
+	unsigned short			subStripes;
+} BtrfsChunkItem;
+
+typedef struct
+{
+	unsigned __int64		devID;
+	unsigned __int64		offset;
+	unsigned char			devUUID				[0x10];
+} BtrfsChunkItemStripe;
 
 typedef struct
 {
