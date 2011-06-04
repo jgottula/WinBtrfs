@@ -49,48 +49,10 @@ DOKAN_OPERATIONS btrfsOperations = {
 	&btrfsSetFileSecurity
 };
 
-void usage()
+void firstTasks()
 {
-	printf("Usage: WinBtrfsCLI.exe <device> <mount point>\n\n"
-		"For the device argument, try something like \\Device\\HarddiskX\\PartitionY.\n"
-		"Disks are indexed from zero; partitions are indexed from one.\n"
-		"Example: /dev/sda1 = \\\\.\\Harddisk0Partition1\n\n"
-		"You can also specify an image file to mount.\n\n"
-		"The mount point can be a drive letter or an empty NTFS directory.\n");
-
-	exit(1);
-}
-
-void unitTests()
-{
-	assert(sizeof(Superblock) == 0x1000);
-	assert(sizeof(ULONGLONG) == sizeof(UINT64));
-}
-
-int main(int argc, char **argv)
-{
-	PDOKAN_OPTIONS dokanOptions;
 	DWORD errorCode;
-	int secSB, dokanResult;
-
-	printf("WinBtrfsCLI\nCopyright (c) 2011 Justin Gottula\n\n");
-
-	unitTests();
-
-	if (argc != 3)
-		usage();
-
-	/* Need argument validity checking, MAX_PATH checking for buffer overruns */
-	
-	mbstowcs_s(NULL, devicePath, MAX_PATH, argv[1], strlen(argv[1]));
-	mbstowcs_s(NULL, mountPoint, MAX_PATH, argv[2], strlen(argv[2]));
-
-	dokanOptions = (PDOKAN_OPTIONS)malloc(sizeof(DOKAN_OPTIONS));
-	dokanOptions->Version = 600;
-	dokanOptions->ThreadCount = 1;			// eventually set this to zero or a user-definable count
-	dokanOptions->Options = 0;				// look into this later
-	dokanOptions->GlobalContext = 0;		// use this later if necessary
-	dokanOptions->MountPoint = mountPoint;
+	int secSB;
 
 	endianDetect();
 
@@ -132,11 +94,11 @@ int main(int argc, char **argv)
 		printf("Found a newer secondary superblock (#%d).\n", secSB);
 
 	getChunkItems();
+	getChunkTree();
+}
 
-	dokanResult = DokanMain(dokanOptions, &btrfsOperations);
-
-	cleanUp();
-
+void dokanError(int dokanResult)
+{
 	switch (dokanResult)
 	{
 	case DOKAN_SUCCESS:
@@ -164,6 +126,54 @@ int main(int argc, char **argv)
 		printf("Dokan returned an unknown error!\n");
 		return 1;
 	}
+}
+
+void usage()
+{
+	printf("Usage: WinBtrfsCLI.exe <device> <mount point>\n\n"
+		"For the device argument, try something like \\Device\\HarddiskX\\PartitionY.\n"
+		"Disks are indexed from zero; partitions are indexed from one.\n"
+		"Example: /dev/sda1 = \\\\.\\Harddisk0Partition1\n\n"
+		"You can also specify an image file to mount.\n\n"
+		"The mount point can be a drive letter or an empty NTFS directory.\n");
+
+	exit(1);
+}
+
+void unitTests()
+{
+	assert(sizeof(Superblock) == 0x1000);
+	assert(sizeof(ULONGLONG) == sizeof(UINT64));
+}
+
+int main(int argc, char **argv)
+{
+	PDOKAN_OPTIONS dokanOptions;
+	int dokanResult;
+
+	printf("WinBtrfsCLI\nCopyright (c) 2011 Justin Gottula\n\n");
+
+	unitTests();
+
+	if (argc != 3)
+		usage();
+
+	/* Need argument validity checking, MAX_PATH checking for buffer overruns */
+	
+	mbstowcs_s(NULL, devicePath, MAX_PATH, argv[1], strlen(argv[1]));
+	mbstowcs_s(NULL, mountPoint, MAX_PATH, argv[2], strlen(argv[2]));
+
+	dokanOptions = (PDOKAN_OPTIONS)malloc(sizeof(DOKAN_OPTIONS));
+	dokanOptions->Version = 600;
+	dokanOptions->ThreadCount = 1;			// eventually set this to zero or a user-definable count
+	dokanOptions->Options = 0;				// look into this later
+	dokanOptions->GlobalContext = 0;		// use this later if necessary
+	dokanOptions->MountPoint = mountPoint;
+
+	dokanResult = DokanMain(dokanOptions, &btrfsOperations);
+
+	cleanUp();
+	dokanError(dokanResult);
 	
 	return 0;
 }
