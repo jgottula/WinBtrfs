@@ -329,6 +329,40 @@ void getChunkTree()
 	/* clean up */
 	free(chunkTreeBlock);
 
+	/* dump! */
+	printf("getChunkTree: dumping devices\n\n");
+
+	for (i = 0; i < numDevices; i++)
+	{
+		printf("devices[%d]:\n", i);
+		printf("devID         0x%016X\n", devices[i].devID);
+		printf("numBytes      0x%016X\n", devices[i].numBytes);
+		printf("numBytesUsed  0x%016X\n", devices[i].numBytesUsed);
+		printf("bestIOAlign           0x%08X\n", devices[i].bestIOAlign);
+		printf("bestIOWidth           0x%08X\n", devices[i].bestIOWidth);
+		printf("minIOSize             0x%08X\n", devices[i].minIOSize);
+		printf("type          0x%016X\n", devices[i].type);
+		printf("generation    0x%016X\n", devices[i].generation);
+		printf("startOffset   0x%016X\n", devices[i].startOffset);
+		printf("devGroup              0x%08X\n", devices[i].devGroup);
+		printf("seekSpeed                   0x%02X\n", devices[i].seekSpeed);
+		printf("bandwidth                   0x%02X\n", devices[i].bandwidth);
+		printf("devUUID         "); for (j = 0; j < 16; j++) printf("%c", devices[i].devUUID[j]); printf("\n");
+		printf("fsUUID          "); for (j = 0; j < 16; j++) printf("%c", devices[i].fsUUID[j]); printf("\n\n");
+	}
+
+	printf("getChunkTree: dumping chunks\n\n");
+
+	for (i = 0; i < numChunks; i++)
+	{
+		printf("chunks[%d]: ", i);
+		printf("size: 0x%016X; ", chunks[i].chunkItem.chunkSize);
+		printf("0x%016X -> ", chunks[i].logiOffset);
+		for (j = 0; j < chunks[i].chunkItem.numStripes; j++)
+			printf("%s0x%016X", (j == 0 ? "" : ", "), chunks[i].stripes[j].offset);
+		printf("\n");
+	}
+
 	/* there seems to be a second chunk tree block on occasion (in btrfs_256m.img for example),
 		but it currently seems to be nothing more than an incomplete copy
 		(though the additional EXTENT_ITEMs/TREE_BLOCK_REFs may be different).
