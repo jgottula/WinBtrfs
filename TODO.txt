@@ -1,0 +1,3 @@
+TODO list
+
+Put endianXX() around EVERY USE of non-character values from on-disk structs!!! AAAAUGH!
