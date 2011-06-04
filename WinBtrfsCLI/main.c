@@ -170,6 +170,8 @@ int main(int argc, char **argv)
 	dokanOptions->GlobalContext = 0;		// use this later if necessary
 	dokanOptions->MountPoint = mountPoint;
 
+	firstTasks();
+
 	dokanResult = DokanMain(dokanOptions, &btrfsOperations);
 
 	cleanUp();
