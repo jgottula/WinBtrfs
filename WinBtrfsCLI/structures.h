@@ -11,6 +11,9 @@
  * any later version.
  */
 
+/* pack structs the way they are on the disk */
+#pragma pack(1)
+
 typedef struct
 {
 	unsigned __int8 csum[32];
