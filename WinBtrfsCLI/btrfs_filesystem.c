@@ -21,7 +21,7 @@
 extern WCHAR devicePath[MAX_PATH];
 
 HANDLE hRead = INVALID_HANDLE_VALUE, hReadMutex = INVALID_HANDLE_VALUE;
-Superblock super;
+BtrfsSuperblock super;
 BtrfsDevItem *devices = NULL;
 int numDevices = -1;
 Chunk *chunks = NULL;
@@ -109,10 +109,10 @@ DWORD readLogicalBlock(LONGLONG logiAddr, DWORD len, LPVOID dest)
 
 DWORD readPrimarySB()
 {
-	return readBlock(0x10000, sizeof(Superblock), &super);
+	return readBlock(0x10000, sizeof(BtrfsSuperblock), &super);
 }
 
-int validateSB(Superblock *s)
+int validateSB(BtrfsSuperblock *s)
 {
 	const char magic[8] =
 	{
@@ -136,27 +136,27 @@ int validateSB(Superblock *s)
 
 int findSecondarySBs()
 {
-	Superblock s2, s3, s4, *sBest = &super;
+	BtrfsSuperblock s2, s3, s4, *sBest = &super;
 	int best = 1;
 
 	/* read each superblock (if present) and validate */
 
-	if (readBlock(0x4000000, sizeof(Superblock), &s2) == 0 && validateSB(&s2) == 0 &&
+	if (readBlock(0x4000000, sizeof(BtrfsSuperblock), &s2) == 0 && validateSB(&s2) == 0 &&
 		s2.generation > sBest->generation)
 		best = 2, sBest = &s2;
 
-	if (readBlock(0x4000000000, sizeof(Superblock), &s3) == 0 && validateSB(&s3) == 0 &&
+	if (readBlock(0x4000000000, sizeof(BtrfsSuperblock), &s3) == 0 && validateSB(&s3) == 0 &&
 		s3.generation > sBest->generation)
 		best = 3, sBest = &s3;
 
-	if (readBlock(0x4000000000000, sizeof(Superblock), &s4) == 0 && validateSB(&s4) == 0 &&
+	if (readBlock(0x4000000000000, sizeof(BtrfsSuperblock), &s4) == 0 && validateSB(&s4) == 0 &&
 		s4.generation > sBest->generation)
 		best = 4, sBest = &s4;
 
 	/* replace the superblock in memory with the most up-to-date on-disk copy */
 
 	if (best != 1)
-		memcpy(&super, sBest, sizeof(Superblock));
+		memcpy(&super, sBest, sizeof(BtrfsSuperblock));
 
 	return best;
 }

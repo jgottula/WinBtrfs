@@ -142,7 +142,16 @@ void usage()
 
 void unitTests()
 {
-	assert(sizeof(Superblock) == 0x1000);
+	/* verify sizes of important on-disk structures */
+	assert(sizeof(BtrfsTime) == 0x0c);
+	assert(sizeof(BtrfsHeader) == 0x65);
+	assert(sizeof(BtrfsDiskKey) == 0x11);
+	assert(sizeof(BtrfsItem) == 0x19);
+	assert(sizeof(BtrfsInodeItem) == 0xa0);
+	assert(sizeof(BtrfsChunkItem) == 0x30);
+	assert(sizeof(BtrfsChunkItemStripe) == 0x20);
+	assert(sizeof(BtrfsDevItem) == 0x62);
+	assert(sizeof(BtrfsSuperblock) == 0x1000);
 }
 
 int main(int argc, char **argv)

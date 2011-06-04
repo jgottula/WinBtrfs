@@ -16,6 +16,12 @@
 
 typedef struct
 {
+	__int64					secSince1970;
+	unsigned int			nanoseconds;
+} BtrfsTime;
+
+typedef struct
+{
 	unsigned int			crc32c;
 	unsigned char			crc32c_pad			[0x1c];
 	unsigned char			fsID				[0x10];
@@ -42,6 +48,27 @@ typedef struct
 	unsigned int			offset;
 	unsigned int			size;
 } BtrfsItem;
+
+typedef struct
+{
+	unsigned __int64		generation;
+	unsigned __int64		transID;
+	unsigned __int64		stSize;
+	unsigned __int64		stBlocks;
+	unsigned __int64		blockGroup;
+	unsigned int			stNLink;
+	unsigned int			stUID;
+	unsigned int			stGID;
+	unsigned int			stMode;
+	unsigned __int64		stRDev;
+	unsigned __int64		flags;
+	unsigned __int64		sequence;
+	unsigned char			reserved			[0x20];
+	BtrfsTime				stATime;
+	BtrfsTime				stCTime;
+	BtrfsTime				stMTime;
+	BtrfsTime				oTime;
+} BtrfsInodeItem;
 
 typedef struct
 {
@@ -116,7 +143,7 @@ typedef struct
 	unsigned char			reserved			[0x100];
 	unsigned char			chunkData			[0x800];
 	unsigned char			unused				[0x4d5];
-} Superblock;
+} BtrfsSuperblock;
 
 typedef struct
 {

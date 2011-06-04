@@ -16,7 +16,7 @@ void cleanUp();
 DWORD readBlock(LONGLONG physAddr, DWORD len, LPVOID dest);
 DWORD readLogicalBlock(LONGLONG logiAddr, DWORD len, LPVOID dest);
 DWORD readPrimarySB();
-int validateSB(Superblock *s);
+int validateSB(BtrfsSuperblock *s);
 int findSecondarySBs();
 void getSBChunks();
 void parseChunkTree();

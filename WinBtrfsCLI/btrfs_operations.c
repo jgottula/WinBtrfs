@@ -20,7 +20,7 @@
 #include "endian.h"
 #include "btrfs_filesystem.h"
 
-extern Superblock super;
+extern BtrfsSuperblock super;
 
 // CreateFile
 //   If file is a directory, CreateFile (not OpenDirectory) may be called.
