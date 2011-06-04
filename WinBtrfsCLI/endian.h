@@ -12,6 +12,6 @@
  */
 
 void endianDetect();
-unsigned __int16 endian16(unsigned __int16 leFromDisk);
-unsigned __int32 endian32(unsigned __int32 leFromDisk);
+unsigned short endian16(unsigned short leFromDisk);
+unsigned int endian32(unsigned int leFromDisk);
 unsigned __int64 endian64(unsigned __int64 leFromDisk);

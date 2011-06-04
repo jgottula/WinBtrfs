@@ -118,7 +118,7 @@ static const UINT32 crc32c_table[256] = {
  * crc using table.
  */
 
-unsigned __int32 crc32c(unsigned __int32 crc, const unsigned char *data, unsigned int length)
+unsigned int crc32c(unsigned int crc, const unsigned char *data, unsigned int length)
 {
 	crc = ~crc;
 	

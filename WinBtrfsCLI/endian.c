@@ -19,19 +19,19 @@ void endianDetect()
 {
 	union
 	{
-		unsigned __int16 s;
-		unsigned __int8 c[2];
+		unsigned short s;
+		unsigned char c[2];
 	} bigint = { 0x0102 };
 
 	archIsBigEndian = (bigint.c[0] == 1);
 }
 
-unsigned __int16 endian16(unsigned __int16 leFromDisk)
+unsigned short endian16(unsigned short leFromDisk)
 {
 	return (archIsBigEndian ? _byteswap_ushort(leFromDisk) : leFromDisk);
 }
 
-unsigned __int32 endian32(unsigned __int32 leFromDisk)
+unsigned int endian32(unsigned int leFromDisk)
 {
 	return (archIsBigEndian ? _byteswap_ulong(leFromDisk) : leFromDisk);
 }

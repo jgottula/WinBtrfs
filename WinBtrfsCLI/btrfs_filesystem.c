@@ -21,8 +21,8 @@ extern WCHAR devicePath[MAX_PATH];
 
 HANDLE hRead = INVALID_HANDLE_VALUE, hReadMutex = INVALID_HANDLE_VALUE;
 Superblock super;
-Chunk *chunks;
-int numChunks = 0;
+Chunk *chunks = NULL;
+int numChunks = -1;
 
 DWORD init()
 {
@@ -44,7 +44,7 @@ void cleanUp()
 	CloseHandle(hRead);
 }
 
-DWORD readBlock(LONGLONG addr, DWORD len, LPVOID dest)
+DWORD readBlock(LONGLONG physAddr, DWORD len, LPVOID dest)
 {
 	LARGE_INTEGER li;
 	DWORD bytesRead;
@@ -52,7 +52,7 @@ DWORD readBlock(LONGLONG addr, DWORD len, LPVOID dest)
 	assert(hRead != INVALID_HANDLE_VALUE);
 	assert(hReadMutex != INVALID_HANDLE_VALUE);
 
-	li.QuadPart = addr;
+	li.QuadPart = physAddr;
 
 	/* using SetFilePointerEx and then ReadFile is clearly not threadsafe, so for now
 		I'm using a mutex here; in the future, this should be fully threaded
@@ -73,6 +73,15 @@ DWORD readBlock(LONGLONG addr, DWORD len, LPVOID dest)
 error:
 	ReleaseMutex(hReadMutex);
 	return GetLastError();
+}
+
+DWORD readLogicalBlock(LONGLONG logiAddr, DWORD len, LPVOID dest)
+{
+	/* this requires that the chunk tree has been loaded! */
+
+	/* we need to ensure that the ENTIRE block fits within a particular chunk mapping.
+		if not, we either need to (a) automatically figure out the chunks the block bridges, or
+		(b) send an error back to the caller. */
 }
 
 DWORD readPrimarySB()
@@ -128,15 +137,18 @@ int findSecondarySBs()
 
 void getChunkItems()
 {
-	unsigned __int8 *sbPtr = super.chunks, *sbMax = super.chunks + super.n;
+	unsigned char *sbPtr = super.chunkData, *sbMax = super.chunkData + super.n;
 	BtrfsDiskKey *key;
 	Chunk *chunk;
 	int i;
-	unsigned __int8 block[0x1000];
+	unsigned char block[0x1000];
+
+	/* this function only needs to be run ONCE */
+	assert(chunks == NULL && numChunks == -1);
 
 	while (sbPtr < sbMax)
 	{
-		if (sbPtr == super.chunks)
+		if (sbPtr == super.chunkData)
 		{
 			numChunks = 1;
 			chunks = (Chunk *)malloc(sizeof(Chunk));
@@ -149,14 +161,15 @@ void getChunkItems()
 
 		chunk = &(chunks[numChunks - 1]);
 		
-		key = (BtrfsDiskKey *)((unsigned __int8 *)sbPtr);
+		key = (BtrfsDiskKey *)((unsigned char *)sbPtr);
 		sbPtr += sizeof(BtrfsDiskKey);
 
 		assert(key->objectID == 0x100);
 		assert(key->type == 0xe4);
-		/* key->offset appears to be of no relevance */
 		
-		chunk->chunkItem = *((BtrfsChunkItem *)((unsigned __int8 *)sbPtr));
+		chunk->logiOffset = key->offset;
+		
+		chunk->chunkItem = *((BtrfsChunkItem *)((unsigned char *)sbPtr));
 		sbPtr += sizeof(BtrfsChunkItem);
 
 		assert(chunk->chunkItem.rootObjIDref == 2); // the format indicates that this should always be 2
@@ -169,6 +182,41 @@ void getChunkItems()
 			sbPtr += sizeof(BtrfsChunkItemStripe);
 		}
 	}
+}
 
-	/* interesting addresses: 0x0040_00000, 0x0140_0000 */
+void getChunkTree()
+{
+	unsigned __int64 chunkTreeLogiAddr = super.chunkTreeLAddr;
+	int i, j, chunk = -1, stripe = -1;
+	unsigned char *chunkTreeBlock;
+
+	for (i = 0; i < numChunks; i++)
+	{
+		if (chunkTreeLogiAddr >= chunks[i].logiOffset && chunkTreeLogiAddr < chunks[i].logiOffset + chunks[i].chunkItem.chunkSize)
+		{
+			for (j = 0; j < chunks[i].chunkItem.numStripes; j++)
+			{
+				if (chunks[i].stripes[j].devID == super.devItem.devID)
+				{
+					stripe = j;
+					break;
+				}
+			}
+
+			if (stripe != -1)
+			{
+				chunk = i;
+				break;
+			}
+		}
+	}
+
+	/* we MUST have a mapping for the chunk containing the chunk tree! */
+	assert(chunk != -1 && stripe != -1);
+
+	chunkTreeBlock = (unsigned char *)malloc(chunks[chunk].chunkItem.minIOSize);
+	assert(readBlock(chunks[chunk].stripes[stripe].offset + (chunkTreeLogiAddr - chunks[chunk].logiOffset),
+		chunks[chunk].chunkItem.minIOSize, chunkTreeBlock) == 0);
+
+	
 }

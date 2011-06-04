@@ -143,7 +143,6 @@ void usage()
 void unitTests()
 {
 	assert(sizeof(Superblock) == 0x1000);
-	assert(sizeof(ULONGLONG) == sizeof(UINT64));
 }
 
 int main(int argc, char **argv)

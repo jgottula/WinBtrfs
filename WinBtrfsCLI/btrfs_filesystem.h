@@ -13,8 +13,10 @@
 
 DWORD init();
 void cleanUp();
-DWORD readBlock(LONGLONG addr, DWORD len, LPVOID dest);
+DWORD readBlock(LONGLONG physAddr, DWORD len, LPVOID dest);
+DWORD readLogicalBlock(LONGLONG logiAddr, DWORD len, LPVOID dest);
 DWORD readPrimarySB();
 int validateSB(Superblock *s);
 int findSecondarySBs();
 void getChunkItems();
+void getChunkTree();

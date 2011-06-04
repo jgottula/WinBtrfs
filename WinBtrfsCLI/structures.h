@@ -16,30 +16,30 @@
 
 typedef struct
 {
-	unsigned __int8 csum[32];
-	unsigned __int8 fsID[16];
+	unsigned char csum[32];
+	unsigned char fsID[16];
 	unsigned __int64 blockNr;
 	unsigned __int64 flags;
 
-	unsigned __int8 chunkTreeUID[16];
+	unsigned char chunkTreeUID[16];
 	unsigned __int64 generation;
 	unsigned __int64 owner;
-	unsigned __int32 nrItems;
-	unsigned __int8 level;
+	unsigned int nrItems;
+	unsigned char level;
 } BtrfsHeader;
 
 typedef struct
 {
 	unsigned __int64 objectID;
-	unsigned __int8 type;
+	unsigned char type;
 	unsigned __int64 offset;
 } BtrfsDiskKey;
 
 typedef struct
 {
 	BtrfsDiskKey key;
-	unsigned __int32 offset;
-	unsigned __int32 size;
+	unsigned int offset;
+	unsigned int size;
 } BtrfsItem;
 
 typedef struct
@@ -48,25 +48,43 @@ typedef struct
 	unsigned __int64 rootObjIDref;
 	unsigned __int64 stripeLen;
 	unsigned __int64 type;
-	unsigned __int32 ioAlign;
-	unsigned __int32 ioWidth;
-	unsigned __int32 sectorSize;
-	unsigned __int16 numStripes;
-	unsigned __int16 subStripes;
+	unsigned int bestIOAlign;
+	unsigned int bestIOWidth;
+	unsigned int minIOSize;
+	unsigned short numStripes;
+	unsigned short subStripes;
 } BtrfsChunkItem;
 
 typedef struct
 {
 	unsigned __int64 devID;
 	unsigned __int64 offset;
-	unsigned __int8 devUUID[0x10];
+	unsigned char devUUID[0x10];
 } BtrfsChunkItemStripe;
 
 typedef struct
 {
-	unsigned __int32	crc32;
-	unsigned __int8		crc32_pad			[0x1c];
-	unsigned __int8		uuid				[0x10];
+	unsigned __int64 devID;
+	unsigned __int64 numBytes;
+	unsigned __int64 numBytesUsed;
+	unsigned int bestIOAlign;
+	unsigned int bestIOWidth;
+	unsigned int minIOSize;
+	unsigned __int64 type;
+	unsigned __int64 generation;
+	unsigned __int64 startOffset;
+	unsigned int devGroup;
+	unsigned char seekSpeed;
+	unsigned char bandwidth;
+	unsigned char devUUID[0x10];
+	unsigned char fsUUID[0x10];
+} BtrfsDevItem;
+
+typedef struct
+{
+	unsigned int	crc32;
+	unsigned char		crc32_pad			[0x1c];
+	unsigned char		uuid				[0x10];
 	unsigned __int64	physAddr;
 	unsigned __int64	flags;
 	char				magic				[0x08];
@@ -79,28 +97,29 @@ typedef struct
 	unsigned __int64	bytesUsed;
 	unsigned __int64	rootDirObjectID;
 	unsigned __int64	numDevices;
-	unsigned __int32	sectorSize;
-	unsigned __int32	nodeSize;
-	unsigned __int32	leafSize;
-	unsigned __int32	stripeSize;
-	unsigned __int32	n;
+	unsigned int	sectorSize;
+	unsigned int	nodeSize;
+	unsigned int	leafSize;
+	unsigned int	stripeSize;
+	unsigned int	n;
 	unsigned __int64	chunkRootGeneration;
 	unsigned __int64	compatFlags;
 	unsigned __int64	compatROFlags;
 	unsigned __int64	incompatFlags;
-	unsigned __int16	csumType;
-	unsigned __int8		rootLevel;
-	unsigned __int8		chunkRootLevel;
-	unsigned __int8		logRootLevel;
-	unsigned __int8		deviceData			[0x62];
+	unsigned short	csumType;
+	unsigned char		rootLevel;
+	unsigned char		chunkRootLevel;
+	unsigned char		logRootLevel;
+	BtrfsDevItem		devItem;
 	char				label				[0x100];
-	unsigned __int8		reserved			[0x100];
-	unsigned __int8		chunks				[0x800];
-	unsigned __int8		unused				[0x4d5];
+	unsigned char		reserved			[0x100];
+	unsigned char		chunkData			[0x800];
+	unsigned char		unused				[0x4d5];
 } Superblock;
 
 typedef struct
 {
+	unsigned __int64 logiOffset;
 	BtrfsChunkItem chunkItem;
 	BtrfsChunkItemStripe *stripes;
 } Chunk;
