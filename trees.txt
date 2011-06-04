@@ -1,0 +1,51 @@
+btrfs_256m
+
+
+chunk tree block 0 [0x01400000]:
+
+A items
+
+item 0: DEV_ITEM (0x01)
+item 1: CHUNK_ITEM (size: 0x00400000; 0x00000000->0x00000000)
+item 2: CHUNK_ITEM (size: 0x00800000; 0x00400000->0x00400000)
+item 3: CHUNK_ITEM (size: 0x00800000; 0x00c00000->0x00c00000)
+item 4: CHUNK_ITEM (size: 0x00800000; 0x01400000->0x01400000,0x01c00000) // internally duplicated, perhaps for metadata safety
+item 5: CHUNK_ITEM (size: 0x02000000; 0x01c00000->0x02400000,0x04400000) // same as above
+item 6: CHUNK_ITEM (size: 0x04000000; 0x03c00000->0x06400000)
+item 7: CHUNK_ITEM (size: 0x04000000; 0x07c00000->0x0a400000)
+item 8: CHUNK_ITEM (size: 0x01990000; 0x0bc00000->0x0e400000)
+item 9: CHUNK_ITEM (size: 0x00270000; 0x0d590000->0x0fd90000)
+item A: EXTENT_ITEM (!)
+item B: TREE_BLOCK_REF (!)
+
+
+chunk tree block 1 [0x01401000]:
+
+8 items
+
+item 0: DEV_ITEM (0x01)
+item 1: CHUNK_ITEM (size: 0x00400000; 0x00000000->0x00000000)
+item 2: CHUNK_ITEM (size: 0x00800000; 0x00400000->0x00400000)
+item 3: CHUNK_ITEM (size: 0x00800000; 0x00c00000->0x00c00000)
+item 4: CHUNK_ITEM (size: 0x00800000; 0x01400000->0x01400000,0x01c00000)
+item 5: CHUNK_ITEM (size: 0x02000000; 0x01c00000->0x02400000,0x04400000)
+item 6: CHUNK_ITEM (size: 0x04000000; 0x03c00000->0x06400000)
+item 7: CHUNK_ITEM (size: 0x04000000; 0x07c00000->0x0a400000)
+item 8: EXTENT_ITEM (!)
+item 9: TREE_BLOCK_REF (!)
+item A: EXTENT_ITEM (!)
+
+
+root tree block 0 [0x01c44000]:
+
+9 items
+
+item 0: ROOT_ITEM (0x02 -> extent tree)
+item 1: ROOT_ITEM (0x04 -> dev tree)
+item 2: INODE_REF (inode_id = 0x03, dir_id = 0x06)
+item 3: ROOT_ITEM (0x05 -> fs tree)
+item 4: INODE_ITEM (0x06)
+item 5: INODE_REF (inode_id = 0x06, dir_id = 0x06)
+item 6: DIR_ITEM (parent = 0x06, hash = 0x8dbfc2d2)
+item 7: ROOT_ITEM (0x07 -> checksum tree)
+item 8: ROOT_ITEM (-0x09 -> data_reloc tree)
