@@ -98,3 +98,9 @@ typedef struct
 	unsigned __int8		chunks				[0x800];
 	unsigned __int8		unused				[0x4d5];
 } Superblock;
+
+typedef struct
+{
+	BtrfsChunkItem chunkItem;
+	BtrfsChunkItemStripe *stripes;
+} Chunk;

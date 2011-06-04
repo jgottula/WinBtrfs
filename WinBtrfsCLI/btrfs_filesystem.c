@@ -21,7 +21,8 @@ extern WCHAR devicePath[MAX_PATH];
 
 HANDLE hRead = INVALID_HANDLE_VALUE, hReadMutex = INVALID_HANDLE_VALUE;
 Superblock super;
-void *rootTree, *chunkTree, *logTree;
+Chunk *chunks;
+int numChunks = 0;
 
 DWORD init()
 {
@@ -127,27 +128,47 @@ int findSecondarySBs()
 
 void getChunkItems()
 {
-	unsigned __int8 *sbPtr = super.chunks;
-	BtrfsDiskKey k;
-	BtrfsChunkItem ci;
-	BtrfsChunkItemStripe ci_stripes[10];
+	unsigned __int8 *sbPtr = super.chunks, *sbMax = super.chunks + super.n;
+	BtrfsDiskKey *key;
+	Chunk *chunk;
 	int i;
 	unsigned __int8 block[0x1000];
 
-	while (1)
+	while (sbPtr < sbMax)
 	{
-		k = *((BtrfsDiskKey *)sbPtr);
-		sbPtr += sizeof(BtrfsDiskKey);
-
-		ci = *((BtrfsChunkItem *)sbPtr);
-		sbPtr += sizeof(BtrfsChunkItem);
-
-		for (i = 0; i < ci.numStripes; i++)
+		if (sbPtr == super.chunks)
 		{
-			ci_stripes[i] = *((BtrfsChunkItemStripe *)sbPtr);
-			sbPtr += sizeof(BtrfsChunkItemStripe);
+			numChunks = 1;
+			chunks = (Chunk *)malloc(sizeof(Chunk));
+		}
+		else
+		{
+			numChunks++;
+			chunks = (Chunk *)realloc(chunks, sizeof(Chunk) * numChunks);
 		}
 
-		/* interesting addresses: 0x0040_00000, 0x0140_0000 */
+		chunk = &(chunks[numChunks - 1]);
+		
+		key = (BtrfsDiskKey *)((unsigned __int8 *)sbPtr);
+		sbPtr += sizeof(BtrfsDiskKey);
+
+		assert(key->objectID == 0x100);
+		assert(key->type == 0xe4);
+		/* key->offset appears to be of no relevance */
+		
+		chunk->chunkItem = *((BtrfsChunkItem *)((unsigned __int8 *)sbPtr));
+		sbPtr += sizeof(BtrfsChunkItem);
+
+		assert(chunk->chunkItem.rootObjIDref == 2); // the format indicates that this should always be 2
+
+		chunk->stripes = (BtrfsChunkItemStripe *)malloc(sizeof(BtrfsChunkItemStripe) * chunk->chunkItem.numStripes);
+
+		for (i = 0; i < chunk->chunkItem.numStripes; i++)
+		{
+			chunk->stripes[i] = *((BtrfsChunkItemStripe *)sbPtr);
+			sbPtr += sizeof(BtrfsChunkItemStripe);
+		}
 	}
+
+	/* interesting addresses: 0x0040_00000, 0x0140_0000 */
 }
