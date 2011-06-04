@@ -161,7 +161,7 @@ int findSecondarySBs()
 	return best;
 }
 
-void getChunkItems()
+void getSBChunks()
 {
 	unsigned char *sbPtr = super.chunkData, *sbMax = super.chunkData + super.n;
 	BtrfsDiskKey *key;
@@ -212,7 +212,7 @@ void getChunkItems()
 }
 
 /* TODO: refactor this function */
-void getChunkTree()
+void parseChunkTree()
 {
 	unsigned __int64 chunkTreeLogiAddr = super.chunkTreeLAddr;
 	int i, j, chunk = -1, stripe = -1;
@@ -220,7 +220,10 @@ void getChunkTree()
 	BtrfsHeader chunkTreeHeader;
 	BtrfsItem *chunkTreeItem;
 
-	/* find a superblock chunk to bootstrap ourselves to the chunk tree */
+	/* we need the superblock chunks first so we can bootstrap to the chunk tree */
+	getSBChunks();
+
+	/* find a superblock chunk for the location of the chunk tree so we can load it in */
 	for (i = 0; i < numChunks; i++)
 	{
 		if (chunkTreeLogiAddr >= chunks[i].logiOffset && chunkTreeLogiAddr < chunks[i].logiOffset + chunks[i].chunkItem.chunkSize)
@@ -371,7 +374,7 @@ void getChunkTree()
 		so I'm ignoring it for now. */
 }
 
-void getRootTree()
+void parseRootTree()
 {
 	unsigned __int64 rootTreeLogiAddr = super.rootTreeLAddr;
 	unsigned char *rootTreeBlock, *rootTreePtr;

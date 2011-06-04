@@ -93,9 +93,8 @@ void firstTasks()
 	if ((secSB = findSecondarySBs()) != 1)
 		printf("Found a newer secondary superblock (#%d).\n", secSB);
 
-	getChunkItems();
-	getChunkTree();
-	getRootTree();
+	parseChunkTree();
+	parseRootTree();
 }
 
 void dokanError(int dokanResult)
