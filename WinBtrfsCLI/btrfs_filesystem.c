@@ -102,7 +102,7 @@ int validateSB(Superblock *s)
 	if (memcmp(magic, s->magic, 8) != 0)
 		return 1;
 
-	if (crc32c(0, (const unsigned char *)s + 0x20, 0xfe0) != endian32(s->crc32))
+	if (crc32c(0, (const unsigned char *)s + 0x20, 0xfe0) != endian32(s->crc32c))
 		return 2;
 
 	return 0;
@@ -141,7 +141,6 @@ void getChunkItems()
 	BtrfsDiskKey *key;
 	Chunk *chunk;
 	int i;
-	unsigned char block[0x1000];
 
 	/* this function only needs to be run ONCE */
 	assert(chunks == NULL && numChunks == -1);
