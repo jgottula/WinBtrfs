@@ -95,6 +95,7 @@ void firstTasks()
 
 	getChunkItems();
 	getChunkTree();
+	getRootTree();
 }
 
 void dokanError(int dokanResult)

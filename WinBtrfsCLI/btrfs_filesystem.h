@@ -20,3 +20,4 @@ int validateSB(Superblock *s);
 int findSecondarySBs();
 void getChunkItems();
 void getChunkTree();
+void getRootTree();

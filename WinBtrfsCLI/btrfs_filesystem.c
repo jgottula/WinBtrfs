@@ -211,6 +211,7 @@ void getChunkItems()
 	}
 }
 
+/* TODO: refactor this function */
 void getChunkTree()
 {
 	unsigned __int64 chunkTreeLogiAddr = super.chunkTreeLAddr;
@@ -244,9 +245,9 @@ void getChunkTree()
 	/* we MUST have at least one mapping so we can load the chunk containing the chunk tree! */
 	assert(chunk != -1 && stripe != -1);
 
-	chunkTreeBlock = (unsigned char *)malloc(chunks[chunk].chunkItem.minIOSize);
+	chunkTreeBlock = (unsigned char *)malloc(super.nodeSize);
 	assert(readBlock(chunks[chunk].stripes[stripe].offset + (chunkTreeLogiAddr - chunks[chunk].logiOffset),
-		chunks[chunk].chunkItem.minIOSize, chunkTreeBlock) == 0);
+		super.nodeSize, chunkTreeBlock) == 0);
 
 	chunkTreePtr = chunkTreeBlock;
 
@@ -254,7 +255,7 @@ void getChunkTree()
 	chunkTreePtr += sizeof(BtrfsHeader);
 
 	/* the crc32c had better check out */
-	assert(crc32c(0, chunkTreeBlock + 0x20, chunks[chunk].chunkItem.minIOSize - 0x20) ==
+	assert(crc32c(0, chunkTreeBlock + 0x20, super.nodeSize - 0x20) ==
 		endian32(chunkTreeHeader.crc32c));
 
 	/* this should definitely be a leaf node */
@@ -281,7 +282,7 @@ void getChunkTree()
 		{
 			assert(chunkTreeItem->size == sizeof(BtrfsDevItem));
 			assert(sizeof(BtrfsHeader) + chunkTreeItem->offset + chunkTreeItem->size <=
-				chunks[chunk].chunkItem.minIOSize); // ensure we're within bounds
+				super.nodeSize); // ensure we're within bounds
 			
 			devices[numDevices] = *((BtrfsDevItem *)(chunkTreeBlock + sizeof(BtrfsHeader) + chunkTreeItem->offset));
 			numDevices++;
@@ -291,7 +292,7 @@ void getChunkTree()
 			assert((chunkTreeItem->size - sizeof(BtrfsChunkItem)) %
 				sizeof(BtrfsChunkItemStripe) == 0); // ensure proper 30+20n sizing
 			assert(sizeof(BtrfsHeader) + chunkTreeItem->offset + chunkTreeItem->size <=
-				chunks[chunk].chunkItem.minIOSize); // ensure we're within bounds
+				super.nodeSize); // ensure we're within bounds
 
 			chunks[numChunks].logiOffset = chunkTreeItem->key.offset;
 			chunks[numChunks].chunkItem =
@@ -368,4 +369,25 @@ void getChunkTree()
 		(though the additional EXTENT_ITEMs/TREE_BLOCK_REFs may be different).
 		unfortunately, I don't currently know how to tell if it's there just by reading the first block...
 		so I'm ignoring it for now. */
+}
+
+void getRootTree()
+{
+	unsigned __int64 rootTreeLogiAddr = super.rootTreeLAddr;
+	unsigned char *rootTreeBlock, *rootTreePtr;
+	BtrfsHeader rootTreeHeader;
+
+	rootTreeBlock = (unsigned char *)malloc(super.nodeSize);
+	assert(readLogicalBlock(rootTreeLogiAddr, super.nodeSize, rootTreeBlock) == 0); // CANNOT fail
+
+	rootTreePtr = rootTreeBlock;
+
+	rootTreeHeader = *((BtrfsHeader *)rootTreePtr);
+	rootTreePtr += sizeof(BtrfsHeader);
+
+	/* definitely should not fail */
+	assert(crc32c(0, rootTreeBlock + 0x20, super.nodeSize - 0x20) ==
+		endian32(rootTreeHeader.crc32c));
+
+
 }
