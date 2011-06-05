@@ -36,16 +36,47 @@ item 9: TREE_BLOCK_REF (!)
 item A: EXTENT_ITEM (!)
 
 
+--------
+
+
 root tree block 0 [0x01c44000]:
 
 9 items
 
-item 0: ROOT_ITEM (0x02 -> extent tree)
-item 1: ROOT_ITEM (0x04 -> dev tree)
-item 2: INODE_REF (inode_id = 0x03, dir_id = 0x06)
-item 3: ROOT_ITEM (0x05 -> fs tree)
-item 4: INODE_ITEM (0x06)
-item 5: INODE_REF (inode_id = 0x06, dir_id = 0x06)
-item 6: DIR_ITEM (parent = 0x06, hash = 0x8dbfc2d2)
-item 7: ROOT_ITEM (0x07 -> checksum tree)
-item 8: ROOT_ITEM (-0x09 -> data_reloc tree)
+item 0: ROOT_ITEM (0x02 -> extent tree)				// I think we will need this for translating extents to blocks
+item 1: ROOT_ITEM (0x04 -> dev tree)				// needed only for volume resizing
+item 2: INODE_REF (inode_id = 0x03, dir_id = 0x06)	// index = 0, name is "default"
+item 3: ROOT_ITEM (0x05 -> fs tree)					// first priority
+item 4: INODE_ITEM (0x06)							// INVESTIGATE this
+item 5: INODE_REF (inode_id = 0x06, dir_id = 0x06)	// INVESTIGATE this
+item 6: DIR_ITEM (parent = 0x06, hash = 0x8dbfc2d2)	// INVESTIGATE this
+item 7: ROOT_ITEM (0x07 -> checksum tree)			// this will be useful for verifying extents, once we start accessing them
+item 8: ROOT_ITEM (-0x09 -> data_reloc tree)		// not really sure what this tree is for
+
+
+--------
+
+
+fs tree block 0 [0x01c0d000]:
+
+8 items
+
+item 0: INODE_ITEM (
+item 1: INODE_REF
+item 2: DIR_ITEM
+item 3: DIR_INDEX
+item 4: INODE_ITEM
+item 5: INODE_REF
+item 6: EXTENT_DATA
+item 7: EXTENT_DATA
+[!]item 8: EXTENT_ITEM
+[!]item 9: TREE_BLOCK_REF
+[!]item A: EXTENT_ITEM
+
+
+checksum tree [0x01c0e000]:
+
+2 items
+
+item 0: EXTENT_CSUM
+item 1: EXTENT_CSUM
