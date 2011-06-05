@@ -96,6 +96,7 @@ void firstTasks()
 	parseChunkTree();
 	parseRootTree();
 	parseFSTree();
+	dump();
 }
 
 void dokanError(int dokanResult)

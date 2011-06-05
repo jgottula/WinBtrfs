@@ -15,6 +15,8 @@
 #include <assert.h>
 #include <Windows.h>
 #include "structures.h"
+
+
 #include "endian.h"
 #include "crc32c.h"
 #include "btrfs_filesystem.h"
@@ -239,6 +241,8 @@ void parseNodePhysical(unsigned __int64 physAddr)
 	{
 	case 0x01: // root tree
 		break;
+	case 0x03: // chunk tree
+		break;
 	case 0x05: // fs tree
 		break;
 	default:
@@ -259,6 +263,9 @@ void parseNodePhysical(unsigned __int64 physAddr)
 				break;
 			}
 
+			assert(item->size == sizeof(BtrfsRootItem)); // ensure proper size
+			assert(sizeof(BtrfsHeader) + item->offset + item->size <= super.nodeSize); // ensure we're within bounds
+
 			if (numRoots == -1)
 			{
 				roots = (Root *)malloc(sizeof(Root));
@@ -271,6 +278,57 @@ void parseNodePhysical(unsigned __int64 physAddr)
 			roots[numRoots].rootItem = *((BtrfsRootItem *)(nodeBlock + sizeof(BtrfsHeader) + item->offset));
 
 			numRoots++;
+			break;
+		case 0xd8: // DEV_ITEM
+			if (header->tree != 0x03)
+			{
+				printf("parseNode: DEV_ITEM unexpected in tree of type 0x%02x!\n", header->tree);
+				break;
+			}
+
+			assert(item->size == sizeof(BtrfsDevItem)); // ensure proper size
+			assert(sizeof(BtrfsHeader) + item->offset + item->size <= super.nodeSize); // ensure we're within bounds
+
+			if (numDevices == -1)
+			{
+				devices = (BtrfsDevItem *)malloc(sizeof(BtrfsDevItem));
+				numDevices = 0;
+			}
+			else
+				devices = (BtrfsDevItem *)realloc(devices, sizeof(BtrfsDevItem) * (numDevices + 1));
+
+			devices[numDevices] = *((BtrfsDevItem *)(nodeBlock + sizeof(BtrfsHeader) + item->offset));
+
+			numDevices++;
+			break;
+		case 0xe4: // CHUNK_ITEM
+			if (header->tree != 0x03)
+			{
+				printf("parseNode: CHUNK_ITEM unexpected in tree of type 0x%02x!\n", header->tree);
+				break;
+			}
+
+			assert((item->size - sizeof(BtrfsChunkItem)) % sizeof(BtrfsChunkItemStripe) == 0); // ensure proper 30+20n size
+			assert(sizeof(BtrfsHeader) + item->offset + item->size <= super.nodeSize); // ensure we're within bounds
+
+			if (numChunks == -1)
+			{
+				chunks = (Chunk *)malloc(sizeof(Chunk));
+				numChunks = 0;
+			}
+			else
+				chunks = (Chunk *)realloc(chunks, sizeof(Chunk) * (numChunks + 1));
+
+			chunks[numChunks].logiOffset = item->key.offset;
+			chunks[numChunks].chunkItem = *((BtrfsChunkItem *)(nodeBlock + sizeof(BtrfsHeader) + item->offset));
+			chunks[numChunks].stripes = (BtrfsChunkItemStripe *)malloc(sizeof(BtrfsChunkItemStripe) *
+				chunks[numChunks].chunkItem.numStripes);
+
+			for (j = 0; j < chunks[numChunks].chunkItem.numStripes; j++)
+				chunks[numChunks].stripes[j] = *((BtrfsChunkItemStripe *)(nodeBlock + sizeof(BtrfsHeader) + item->offset +
+					sizeof(BtrfsChunkItem) + (sizeof(BtrfsChunkItemStripe) * j)));
+
+			numChunks++;
 			break;
 		default:
 			printf("parseNode: found an item of unrecognized type [0x%02x] in tree of type 0x%02x!\n",
@@ -285,6 +343,8 @@ void parseNodePhysical(unsigned __int64 physAddr)
 	switch (header->tree)
 	{
 	case 0x01: // root tree
+		break;
+	case 0x03: // chunk tree
 		break;
 	case 0x05: // fs tree
 		break;
@@ -303,9 +363,6 @@ void parseChunkTree()
 {
 	unsigned __int64 chunkTreeLogiAddr = super.chunkTreeLAddr;
 	int i, j, chunk = -1, stripe = -1;
-	unsigned char *chunkTreeBlock, *chunkTreePtr;
-	BtrfsHeader chunkTreeHeader;
-	BtrfsItem *chunkTreeItem;
 
 	/* we need the superblock chunks first so we can bootstrap to the chunk tree */
 	getSBChunks();
@@ -334,131 +391,8 @@ void parseChunkTree()
 
 	/* we MUST have at least one mapping so we can load the chunk containing the chunk tree! */
 	assert(chunk != -1 && stripe != -1);
-
-	chunkTreeBlock = (unsigned char *)malloc(super.nodeSize);
-	assert(readBlock(chunks[chunk].stripes[stripe].offset + (chunkTreeLogiAddr - chunks[chunk].logiOffset),
-		super.nodeSize, chunkTreeBlock) == 0);
-
-	chunkTreePtr = chunkTreeBlock;
-
-	chunkTreeHeader = *((BtrfsHeader *)chunkTreePtr);
-	chunkTreePtr += sizeof(BtrfsHeader);
-
-	/* the crc32c had better check out */
-	assert(crc32c(0, chunkTreeBlock + 0x20, super.nodeSize - 0x20) ==
-		endian32(chunkTreeHeader.crc32c));
-
-	/* this should definitely be a leaf node */
-	assert(chunkTreeHeader.level == 0);
-
-	/* clear up the chunks array in preparation for this larger collection of chunks;
-		note that we don't have to free the main array, we just realloc it instead*/
-	for (i = 0; i < numChunks; i++)
-		free(chunks[i].stripes);
-
-	/* set up the chunks array using the maximum possible number of items as the array size */
-	chunks = (Chunk *)realloc(chunks, sizeof(Chunk) * chunkTreeHeader.nrItems);
-	numChunks = 0;
-
-	/* also set up the devices array, again using the max possible number */
-	devices = (BtrfsDevItem *)malloc(sizeof(BtrfsDevItem) * chunkTreeHeader.nrItems);
-	numDevices = 0;
-
-	for (i = 0; i < chunkTreeHeader.nrItems; i++)
-	{
-		chunkTreeItem = (BtrfsItem *)chunkTreePtr;
-
-		if (chunkTreeItem->key.type == 0xd8) // DEV_ITEM
-		{
-			assert(chunkTreeItem->size == sizeof(BtrfsDevItem));
-			assert(sizeof(BtrfsHeader) + chunkTreeItem->offset + chunkTreeItem->size <=
-				super.nodeSize); // ensure we're within bounds
-			
-			devices[numDevices] = *((BtrfsDevItem *)(chunkTreeBlock + sizeof(BtrfsHeader) + chunkTreeItem->offset));
-			numDevices++;
-		}
-		else if (chunkTreeItem->key.type == 0xe4) // CHUNK_ITEM
-		{
-			assert((chunkTreeItem->size - sizeof(BtrfsChunkItem)) %
-				sizeof(BtrfsChunkItemStripe) == 0); // ensure proper 30+20n sizing
-			assert(sizeof(BtrfsHeader) + chunkTreeItem->offset + chunkTreeItem->size <=
-				super.nodeSize); // ensure we're within bounds
-
-			chunks[numChunks].logiOffset = chunkTreeItem->key.offset;
-			chunks[numChunks].chunkItem =
-				*((BtrfsChunkItem *)(chunkTreeBlock + sizeof(BtrfsHeader) + chunkTreeItem->offset));
-			chunks[numChunks].stripes = (BtrfsChunkItemStripe *)malloc(sizeof(BtrfsChunkItemStripe) *
-				chunks[numChunks].chunkItem.numStripes);
-			
-			for (j = 0; j < chunks[numChunks].chunkItem.numStripes; j++)
-				chunks[numChunks].stripes[j] = *((BtrfsChunkItemStripe *)(chunkTreeBlock +
-				sizeof(BtrfsHeader) + chunkTreeItem->offset +
-				sizeof(BtrfsChunkItem) + (sizeof(BtrfsChunkItemStripe) * j)));
-
-			numChunks++;
-		}
-		else if (chunkTreeItem->key.type == 0xa8) // EXTENT_ITEM
-		{
-			/* these are of questionable usefulness at the moment */
-			printf("getChunkTree: ignoring EXTENT_ITEM for now\n");
-		}
-		else if (chunkTreeItem->key.type == 0xb0) // TREE_BLOCK_REF)
-		{
-			/* also not terribly relevant right now */
-			printf("getChunkTree: ignoring TREE_BLOCK_REF for now\n");
-		}
-		else
-			printf("getChunkTree: found an item of unexpected type in chunk tree (0x%02X)!\n", chunkTreeItem->key.type);
-
-		chunkTreePtr += sizeof(BtrfsItem);
-	}
-
-	/* pare these arrays down to size now */
-	chunks = (Chunk *)realloc(chunks, sizeof(Chunk) * numChunks);
-	devices = (BtrfsDevItem *)realloc(devices, sizeof(BtrfsDevItem) * numDevices);
-
-	/* clean up */
-	free(chunkTreeBlock);
-
-	/* dump! */
-	printf("getChunkTree: dumping devices\n\n");
-
-	for (i = 0; i < numDevices; i++)
-	{
-		printf("devices[%d]:\n", i);
-		printf("devID         0x%016X\n", devices[i].devID);
-		printf("numBytes      0x%016X\n", devices[i].numBytes);
-		printf("numBytesUsed  0x%016X\n", devices[i].numBytesUsed);
-		printf("bestIOAlign           0x%08X\n", devices[i].bestIOAlign);
-		printf("bestIOWidth           0x%08X\n", devices[i].bestIOWidth);
-		printf("minIOSize             0x%08X\n", devices[i].minIOSize);
-		printf("type          0x%016X\n", devices[i].type);
-		printf("generation    0x%016X\n", devices[i].generation);
-		printf("startOffset   0x%016X\n", devices[i].startOffset);
-		printf("devGroup              0x%08X\n", devices[i].devGroup);
-		printf("seekSpeed                   0x%02X\n", devices[i].seekSpeed);
-		printf("bandwidth                   0x%02X\n", devices[i].bandwidth);
-		printf("devUUID         "); for (j = 0; j < 16; j++) printf("%c", devices[i].devUUID[j]); printf("\n");
-		printf("fsUUID          "); for (j = 0; j < 16; j++) printf("%c", devices[i].fsUUID[j]); printf("\n\n");
-	}
-
-	printf("getChunkTree: dumping chunks\n\n");
-
-	for (i = 0; i < numChunks; i++)
-	{
-		printf("chunks[%d]: ", i);
-		printf("size: 0x%016X; ", chunks[i].chunkItem.chunkSize);
-		printf("0x%016X -> ", chunks[i].logiOffset);
-		for (j = 0; j < chunks[i].chunkItem.numStripes; j++)
-			printf("%s0x%016X", (j == 0 ? "" : ", "), chunks[i].stripes[j].offset);
-		printf("\n");
-	}
-
-	/* there seems to be a second chunk tree block on occasion (in btrfs_256m.img for example),
-		but it currently seems to be nothing more than an incomplete copy
-		(though the additional EXTENT_ITEMs/TREE_BLOCK_REFs may be different).
-		unfortunately, I don't currently know how to tell if it's there just by reading the first block...
-		so I'm ignoring it for now. */
+	
+	parseNodePhysical(chunks[chunk].stripes[stripe].offset + (chunkTreeLogiAddr - chunks[chunk].logiOffset));
 }
 
 void parseRootTree()
@@ -485,4 +419,60 @@ void parseFSTree()
 	assert(root != -1);
 
 	parseNodeLogical(roots[root].rootItem.rootNodeBlockNum);
+}
+
+void dump()
+{
+	int i, j;
+
+	/* take a dump */
+	printf("dump: dumping devices\n\n");
+	for (i = 0; i < numDevices; i++)
+	{
+		printf("devices[%d]:\n", i);
+		printf("devID         0x%016X\n", devices[i].devID);
+		printf("numBytes      0x%016X\n", devices[i].numBytes);
+		printf("numBytesUsed  0x%016X\n", devices[i].numBytesUsed);
+		printf("bestIOAlign           0x%08X\n", devices[i].bestIOAlign);
+		printf("bestIOWidth           0x%08X\n", devices[i].bestIOWidth);
+		printf("minIOSize             0x%08X\n", devices[i].minIOSize);
+		printf("type          0x%016X\n", devices[i].type);
+		printf("generation    0x%016X\n", devices[i].generation);
+		printf("startOffset   0x%016X\n", devices[i].startOffset);
+		printf("devGroup              0x%08X\n", devices[i].devGroup);
+		printf("seekSpeed                   0x%02X\n", devices[i].seekSpeed);
+		printf("bandwidth                   0x%02X\n", devices[i].bandwidth);
+		printf("devUUID         "); for (j = 0; j < 16; j++) printf("%c", devices[i].devUUID[j]); printf("\n");
+		printf("fsUUID          "); for (j = 0; j < 16; j++) printf("%c", devices[i].fsUUID[j]); printf("\n\n");
+	}
+
+	printf("dump: dumping chunks\n\n");
+	for (i = 0; i < numChunks; i++)
+	{
+		printf("chunks[%d]: ", i);
+		printf("size: 0x%016X; ", chunks[i].chunkItem.chunkSize);
+		printf("0x%016X -> ", chunks[i].logiOffset);
+		for (j = 0; j < chunks[i].chunkItem.numStripes; j++)
+			printf("%s0x%016X", (j == 0 ? "" : ", "), chunks[i].stripes[j].offset);
+		printf("\n");
+	}
+
+	printf("dump: dumping roots\n\n");
+	for (i = 0; i < numRoots; i++)
+	{
+		printf("roots[%d]:\n", i);
+		printf("[objectID]          0x%016X\n", roots[i].objectID);
+		printf("inodeItem                          ...\n");
+		printf("expectedGeneration  0x%016X\n", roots[i].rootItem.expectedGeneration);
+		printf("objID               0x%016X\n", roots[i].rootItem.objID);
+		printf("rootNodeBlockNum    0x%016X\n", roots[i].rootItem.rootNodeBlockNum);
+		printf("byteLimit           0x%016X\n", roots[i].rootItem.byteLimit);
+		printf("bytesUsed           0x%016X\n", roots[i].rootItem.bytesUsed);
+		printf("lastGenSnapshot     0x%016X\n", roots[i].rootItem.lastGenSnapshot);
+		printf("flags               0x%016X\n", roots[i].rootItem.flags);
+		printf("numRefs                     0x%08X\n", roots[i].rootItem.numRefs);
+		printf("dropProgress                       ...\n");
+		printf("dropLevel                         0x%02X\n", roots[i].rootItem.dropLevel);
+		printf("rootLevel                         0x%02X\n\n", roots[i].rootItem.rootLevel);
+	}
 }

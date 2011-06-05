@@ -25,3 +25,4 @@ void parseNodeLogical(unsigned __int64 logiAddr);
 void parseChunkTree();
 void parseRootTree();
 void parseFSTree();
+void dump();
