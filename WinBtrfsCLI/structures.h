@@ -23,7 +23,12 @@ typedef struct
 typedef struct
 {
 	unsigned int			crc32c;
-	unsigned char			crc32c_pad			[0x1c];
+	unsigned char			padding				[0x1c];
+} BtrfsChecksum;
+
+typedef struct
+{
+	BtrfsChecksum			csum;
 	unsigned char			fsID				[0x10];
 	unsigned __int64		blockNr;
 	unsigned __int64		flags;
@@ -168,8 +173,7 @@ typedef struct
 
 typedef struct
 {
-	unsigned int			crc32c;
-	unsigned char			crc32c_pad			[0x1c];
+	BtrfsChecksum			csum;
 	unsigned char			uuid				[0x10];
 	unsigned __int64		physAddr;
 	unsigned __int64		flags;

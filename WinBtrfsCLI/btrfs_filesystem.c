@@ -15,8 +15,7 @@
 #include <assert.h>
 #include <Windows.h>
 #include "structures.h"
-
-
+#include "constants.h"
 #include "endian.h"
 #include "crc32c.h"
 #include "btrfs_filesystem.h"
@@ -116,7 +115,7 @@ DWORD readLogicalBlock(LONGLONG logiAddr, DWORD len, LPVOID dest)
 
 DWORD readPrimarySB()
 {
-	return readBlock(0x10000, sizeof(BtrfsSuperblock), &super);
+	return readBlock(SUPERBLOCK_1_PADDR, sizeof(BtrfsSuperblock), &super);
 }
 
 int validateSB(BtrfsSuperblock *s)
@@ -135,7 +134,8 @@ int validateSB(BtrfsSuperblock *s)
 		return 1;
 
 	/* checksum */
-	if (crc32c(0, (const unsigned char *)s + 0x20, 0xfe0) != endian32(s->crc32c))
+	if (crc32c(0, (const unsigned char *)s + sizeof(BtrfsChecksum),
+		sizeof(BtrfsSuperblock) - sizeof(BtrfsChecksum)) != endian32(s->csum.crc32c))
 		return 2;
 
 	return 0;
@@ -148,16 +148,16 @@ int findSecondarySBs()
 
 	/* read each superblock (if present) and validate */
 
-	if (readBlock(0x4000000, sizeof(BtrfsSuperblock), &s2) == 0 && validateSB(&s2) == 0 &&
-		s2.generation > sBest->generation)
+	if (readBlock(SUPERBLOCK_2_PADDR, sizeof(BtrfsSuperblock), &s2) == 0 &&
+		validateSB(&s2) == 0 && s2.generation > sBest->generation)
 		best = 2, sBest = &s2;
 
-	if (readBlock(0x4000000000, sizeof(BtrfsSuperblock), &s3) == 0 && validateSB(&s3) == 0 &&
-		s3.generation > sBest->generation)
+	if (readBlock(SUPERBLOCK_2_PADDR, sizeof(BtrfsSuperblock), &s3) == 0 &&
+		validateSB(&s3) == 0 && s3.generation > sBest->generation)
 		best = 3, sBest = &s3;
 
-	if (readBlock(0x4000000000000, sizeof(BtrfsSuperblock), &s4) == 0 && validateSB(&s4) == 0 &&
-		s4.generation > sBest->generation)
+	if (readBlock(SUPERBLOCK_2_PADDR, sizeof(BtrfsSuperblock), &s4) == 0 &&
+		validateSB(&s4) == 0 && s4.generation > sBest->generation)
 		best = 4, sBest = &s4;
 
 	/* replace the superblock in memory with the most up-to-date on-disk copy */
@@ -198,15 +198,12 @@ void getSBChunks()
 
 		/* CHUNK_ITEMs should ALWAYS fit these constraints */
 		assert(key->objectID == 0x100);
-		assert(key->type == 0xe4);
+		assert(key->type == TYPE_CHUNK_ITEM);
 		
 		chunk->logiOffset = key->offset;
 		
 		chunk->chunkItem = *((BtrfsChunkItem *)((unsigned char *)sbPtr));
 		sbPtr += sizeof(BtrfsChunkItem);
-
-		/* this should always be 2 */
-		assert(chunk->chunkItem.rootObjIDref == 2);
 
 		chunk->stripes = (BtrfsChunkItemStripe *)malloc(sizeof(BtrfsChunkItemStripe) * chunk->chunkItem.numStripes);
 
@@ -234,16 +231,16 @@ void parseNodePhysical(unsigned __int64 physAddr)
 	nodePtr += sizeof(BtrfsHeader);
 
 	/* again, this may not warrant stopping the whole program if reading from a less important tree */
-	assert(crc32c(0, nodeBlock + 0x20, super.nodeSize - 0x20) == endian32(header->crc32c));
+	assert(crc32c(0, nodeBlock + sizeof(BtrfsChecksum), super.nodeSize - sizeof(BtrfsChecksum)) == endian32(header->csum.crc32c));
 
 	/* pre tasks */
 	switch (header->tree)
 	{
-	case 0x01: // root tree
+	case OBJID_ROOT_TREE: // root tree
 		break;
-	case 0x03: // chunk tree
+	case OBJID_CHUNK_TREE: // chunk tree
 		break;
-	case 0x05: // fs tree
+	case OBJID_FS_TREE: // fs tree
 		break;
 	default:
 		printf("parseNode: given a tree of an unknown type [0x%02x]!\n", header->tree);
@@ -256,8 +253,8 @@ void parseNodePhysical(unsigned __int64 physAddr)
 
 		switch (item->key.type)
 		{
-		case 0x84: // ROOT_ITEM
-			if (header->tree != 0x01)
+		case TYPE_ROOT_ITEM: // ROOT_ITEM
+			if (header->tree != OBJID_ROOT_TREE)
 			{
 				printf("parseNode: ROOT_ITEM unexpected in tree of type 0x%02x!\n", header->tree);
 				break;
@@ -279,8 +276,8 @@ void parseNodePhysical(unsigned __int64 physAddr)
 
 			numRoots++;
 			break;
-		case 0xd8: // DEV_ITEM
-			if (header->tree != 0x03)
+		case TYPE_DEV_ITEM: // DEV_ITEM
+			if (header->tree != OBJID_CHUNK_TREE)
 			{
 				printf("parseNode: DEV_ITEM unexpected in tree of type 0x%02x!\n", header->tree);
 				break;
@@ -301,8 +298,8 @@ void parseNodePhysical(unsigned __int64 physAddr)
 
 			numDevices++;
 			break;
-		case 0xe4: // CHUNK_ITEM
-			if (header->tree != 0x03)
+		case TYPE_CHUNK_ITEM: // CHUNK_ITEM
+			if (header->tree != OBJID_CHUNK_TREE)
 			{
 				printf("parseNode: CHUNK_ITEM unexpected in tree of type 0x%02x!\n", header->tree);
 				break;
@@ -342,11 +339,11 @@ void parseNodePhysical(unsigned __int64 physAddr)
 	/* post tasks */
 	switch (header->tree)
 	{
-	case 0x01: // root tree
+	case OBJID_ROOT_TREE: // root tree
 		break;
-	case 0x03: // chunk tree
+	case OBJID_CHUNK_TREE: // chunk tree
 		break;
-	case 0x05: // fs tree
+	case OBJID_FS_TREE: // fs tree
 		break;
 	}
 
@@ -409,7 +406,7 @@ void parseFSTree()
 	
 	for (i = 0; i < numRoots; i++)
 	{
-		if (roots[i].objectID == 0x05)
+		if (roots[i].objectID == OBJID_FS_TREE)
 		{
 			root = i;
 			break;
