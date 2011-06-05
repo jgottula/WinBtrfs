@@ -30,7 +30,7 @@ typedef struct
 
 	unsigned char			chunkTreeUID		[0x10];
 	unsigned __int64		generation;
-	unsigned __int64		owner;
+	unsigned __int64		tree;
 	unsigned int			nrItems;
 	unsigned char			level;
 } BtrfsHeader;
