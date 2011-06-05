@@ -17,6 +17,7 @@
 #include "structures.h"
 #include "endian.h"
 #include "crc32c.h"
+#include "btrfs_filesystem.h"
 
 extern WCHAR devicePath[MAX_PATH];
 
@@ -26,6 +27,8 @@ BtrfsDevItem *devices = NULL;
 int numDevices = -1;
 Chunk *chunks = NULL;
 int numChunks = -1;
+Root *roots = NULL;
+int numRoots = -1;
 
 DWORD init()
 {
@@ -45,6 +48,31 @@ DWORD init()
 void cleanUp()
 {
 	CloseHandle(hRead);
+}
+
+unsigned __int64 logiToPhys(unsigned __int64 logiAddr, unsigned __int64 len)
+{
+	int i, chunk = -1;
+
+	/* cannot possibly succeed unless chunks have been loaded */
+	assert(numChunks > 0 && chunks != NULL);
+	
+	for (i = 0; i < numChunks; i++)
+	{
+		/* find the first chunk mapping that fits the block we want */
+		if (logiAddr >= chunks[i].logiOffset && logiAddr + len <= chunks[i].logiOffset + chunks[i].chunkItem.chunkSize)
+		{
+			chunk = i;
+			break;
+		}
+	}
+
+	/* failure is NOT an option */
+	assert(chunk != -1);
+
+	/* arbitrarily using the first stripe */
+	/* currently ASSUMING that everything is on the first device */
+	return (logiAddr - chunks[chunk].logiOffset) + chunks[chunk].stripes[0].offset;
 }
 
 DWORD readBlock(LONGLONG physAddr, DWORD len, LPVOID dest)
@@ -81,30 +109,7 @@ error:
 
 DWORD readLogicalBlock(LONGLONG logiAddr, DWORD len, LPVOID dest)
 {
-	int i, chunk = -1;
-	unsigned __int64 physAddr;
-
-	/* cannot possibly succeed unless chunks have been loaded */
-	assert(numChunks > 0 && chunks != NULL);
-	
-	for (i = 0; i < numChunks; i++)
-	{
-		/* find the first chunk mapping that fits the block we want */
-		if (logiAddr >= chunks[i].logiOffset && logiAddr + len <= chunks[i].logiOffset + chunks[i].chunkItem.chunkSize)
-		{
-			chunk = i;
-			break;
-		}
-	}
-
-	/* failure is NOT an option */
-	assert(chunk != -1);
-
-	/* arbitrarily using the first stripe */
-	/* currently ASSUMING that everything is on the first device */
-	physAddr = (logiAddr - chunks[chunk].logiOffset) + chunks[chunk].stripes[0].offset;
-
-	return readBlock(physAddr, len, dest);
+	return readBlock(logiToPhys(logiAddr, len), len, dest);
 }
 
 DWORD readPrimarySB()
@@ -211,7 +216,89 @@ void getSBChunks()
 	}
 }
 
-/* TODO: refactor this function */
+void parseNodePhysical(unsigned __int64 physAddr)
+{
+	unsigned char *nodeBlock, *nodePtr;
+	BtrfsHeader *header;
+	BtrfsItem *item;
+	int i, j;
+
+	nodePtr = nodeBlock = (unsigned char *)malloc(super.nodeSize);
+
+	/* this might not always be fatal, so an assertion may be inappropriate */
+	assert(readBlock(physAddr, super.nodeSize, nodeBlock) == 0);
+
+	header = (BtrfsHeader *)nodePtr;
+	nodePtr += sizeof(BtrfsHeader);
+
+	/* again, this may not warrant stopping the whole program if reading from a less important tree */
+	assert(crc32c(0, nodeBlock + 0x20, super.nodeSize - 0x20) == endian32(header->crc32c));
+
+	/* pre tasks */
+	switch (header->tree)
+	{
+	case 0x01: // root tree
+		break;
+	case 0x05: // fs tree
+		break;
+	default:
+		printf("parseNode: given a tree of an unknown type [0x%02x]!\n", header->tree);
+		break;
+	}
+
+	for (i = 0; i < header->nrItems; i++)
+	{
+		item = (BtrfsItem *)nodePtr;
+
+		switch (item->key.type)
+		{
+		case 0x84: // ROOT_ITEM
+			if (header->tree != 0x01)
+			{
+				printf("parseNode: ROOT_ITEM unexpected in tree of type 0x%02x!\n", header->tree);
+				break;
+			}
+
+			if (numRoots == -1)
+			{
+				roots = (Root *)malloc(sizeof(Root));
+				numRoots = 0;
+			}
+			else
+				roots = (Root *)realloc(roots, sizeof(Root) * (numRoots + 1));
+
+			roots[numRoots].objectID = item->key.objectID;
+			roots[numRoots].rootItem = *((BtrfsRootItem *)(nodeBlock + sizeof(BtrfsHeader) + item->offset));
+
+			numRoots++;
+			break;
+		default:
+			printf("parseNode: found an item of unrecognized type [0x%02x] in tree of type 0x%02x!\n",
+				item->key.type, header->tree);
+			break;
+		}
+
+		nodePtr += sizeof(BtrfsItem);
+	}
+
+	/* post tasks */
+	switch (header->tree)
+	{
+	case 0x01: // root tree
+		break;
+	case 0x05: // fs tree
+		break;
+	}
+
+	/* clean up */
+	free(nodeBlock);
+}
+
+void parseNodeLogical(unsigned __int64 logiAddr)
+{
+	parseNodePhysical(logiToPhys(logiAddr, super.nodeSize));
+}
+
 void parseChunkTree()
 {
 	unsigned __int64 chunkTreeLogiAddr = super.chunkTreeLAddr;
@@ -376,21 +463,26 @@ void parseChunkTree()
 
 void parseRootTree()
 {
-	unsigned __int64 rootTreeLogiAddr = super.rootTreeLAddr;
-	unsigned char *rootTreeBlock, *rootTreePtr;
-	BtrfsHeader rootTreeHeader;
+	parseNodeLogical(super.rootTreeLAddr);
+}
 
-	rootTreeBlock = (unsigned char *)malloc(super.nodeSize);
-	assert(readLogicalBlock(rootTreeLogiAddr, super.nodeSize, rootTreeBlock) == 0); // CANNOT fail
+void parseFSTree()
+{
+	int i, root = -1;
 
-	rootTreePtr = rootTreeBlock;
+	/* no way we can find the FS root node without the root tree */
+	assert(numRoots > 0 && roots != NULL);
+	
+	for (i = 0; i < numRoots; i++)
+	{
+		if (roots[i].objectID == 0x05)
+		{
+			root = i;
+			break;
+		}
+	}
 
-	rootTreeHeader = *((BtrfsHeader *)rootTreePtr);
-	rootTreePtr += sizeof(BtrfsHeader);
+	assert(root != -1);
 
-	/* definitely should not fail */
-	assert(crc32c(0, rootTreeBlock + 0x20, super.nodeSize - 0x20) ==
-		endian32(rootTreeHeader.crc32c));
-
-
+	parseNodeLogical(roots[root].rootItem.rootNodeBlockNum);
 }

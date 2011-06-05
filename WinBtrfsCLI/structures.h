@@ -209,3 +209,9 @@ typedef struct
 	BtrfsChunkItem			chunkItem;
 	BtrfsChunkItemStripe	*stripes;
 } Chunk;
+
+typedef struct
+{
+	unsigned __int64		objectID;
+	BtrfsRootItem			rootItem;
+} Root;

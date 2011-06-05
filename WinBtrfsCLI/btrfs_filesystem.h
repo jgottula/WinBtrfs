@@ -13,11 +13,15 @@
 
 DWORD init();
 void cleanUp();
+unsigned __int64 logiToPhys(unsigned __int64 logiAddr, unsigned __int64 len);
 DWORD readBlock(LONGLONG physAddr, DWORD len, LPVOID dest);
 DWORD readLogicalBlock(LONGLONG logiAddr, DWORD len, LPVOID dest);
 DWORD readPrimarySB();
 int validateSB(BtrfsSuperblock *s);
 int findSecondarySBs();
 void getSBChunks();
+void parseNodePhysical(unsigned __int64 physAddr);
+void parseNodeLogical(unsigned __int64 logiAddr);
 void parseChunkTree();
 void parseRootTree();
+void parseFSTree();
