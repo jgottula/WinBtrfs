@@ -14,6 +14,10 @@
 /* pack structs the way they are on the disk */
 #pragma pack(1)
 
+/* ALL multibyte integers in Btrfs_____ structs WILL ALWAYS be little-endian!
+	(use endian16(), endian32(), and endian64() to convert them)
+	any other struct members WILL ALWAYS be in native endian! */
+
 typedef struct
 {
 	__int64					secSince1970;
