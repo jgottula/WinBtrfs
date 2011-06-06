@@ -9,8 +9,11 @@ Esoteric Btrfs stuff
 - Subvolumes
 - Multi-drive volumes
 - Converted ext4 fs
-GUI (C#)
+GUI (C#: which .NET version?)
 Installer (NSIS)
+MinGW/Cygwin[/Mono] build support
+UI translations
+Old OS testing
 
 Code stuff:
 Rectify inconsistent struct member names: num/nr, csum/cSum/crc32c/etc, generation/gen, objectID/objID, len/length
