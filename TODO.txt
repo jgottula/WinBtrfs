@@ -23,11 +23,7 @@ Multithread support for everything: make block reading threadsafe, and ensure th
 	from different threads will not cause serious race conditions and/or destruction
 Check all malloc/realloc calls and end fatally upon malloc failure
 Develop a better system for error reporting than just piling on a bunch of assertions (look up assert best practices)
-
-Next steps:
-Refactor parseNode* so it's not so damn obtuse to use
-Implement these:
-- go from file/dir name to object ID (DIR_ITEM)
-(repeat above for each filename/path component until at the end of the path)
-- go from object ID to inode (INODE_ITEM)
-[the above should allow for getting an inode (and therefore, stat information) for a file/dir by path]
+Rectify comiler warnings
+Make sure performance isn't horrendous for filesystems with big FS trees (i.e. large directory structures)
+	Do, say, a Linux installation on a Btrfs partition and then feed the image into WinBtrfs and have it do a dirlist or something
+	Fix this with... caching? or something?

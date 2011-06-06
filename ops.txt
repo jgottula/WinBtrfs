@@ -1,0 +1,14 @@
+Operations
+
+
+FS ops
+
+FSOP_NAME_TO_ID
+[A] const unsigned __int64 *	ptr to parent's object ID
+[B] const unsigned __int64 *	ptr to hash of the child file/dir's name
+[C] const char *				child file/dir's name
+[R] unsigned __int64 *			child's object ID
+
+FSOP_ID_TO_INODE
+[A] const unsigned __int64 *	ptr to file/dir's object ID
+[R] BtrfsInodeItem *			inode for the file/dir
