@@ -395,12 +395,12 @@ void parseRootTree()
 }
 
 /* extend this function to have an option for the operation we want, plus an output/returnval */
-void parseFSTreeRec(unsigned __int64 addr)
+void parseFSTreeRec(unsigned __int64 addr, int operation, void *inputA, void *inputB, void *inputC, void *output)
 {
 	unsigned char *nodeBlock, *nodePtr;
 	BtrfsHeader *header;
 	BtrfsItem *item;
-	int i, j;
+	int i, j, done = 0;
 
 	loadNode(addr, ADDR_LOGICAL, &nodeBlock, &header);
 
@@ -414,6 +414,68 @@ void parseFSTreeRec(unsigned __int64 addr)
 		{
 			item = (BtrfsItem *)nodePtr;
 
+			if (operation == FSOP_NAME_TO_ID)
+			{
+				/* pointer aliases */
+				const unsigned __int64 *parentID = (const unsigned __int64 *)inputA;
+				const unsigned __int64 *hash = (const unsigned __int64 *)inputB;
+				const char *name = (const char *)inputC;
+				unsigned __int64 *childID = (unsigned __int64 *)output;
+				
+				printf("parseFSTreeRec: name hashing appears to be broken, please fix me!\n");
+				if (item->key.type == TYPE_DIR_ITEM && endian64(item->key.objectID) == *parentID/* &&
+					endian64(item->key.offset) == *hash*/)
+				{
+					BtrfsDirItem *dirItem = (BtrfsDirItem *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset));
+
+					while (1)
+					{
+						/* ensure that the variably sized item fits entirely in the node block */
+						assert((unsigned char *)dirItem + sizeof(BtrfsDirItem) <= (unsigned char *)nodeBlock + endian32(super.nodeSize) &&
+							(unsigned char *)dirItem + sizeof(BtrfsDirItem) + endian16(dirItem->m) + endian16(dirItem->n) <=
+							(unsigned char *)nodeBlock + endian32(super.nodeSize));
+					
+						if (endian16(dirItem->n) == strlen(name) && memcmp((char *)dirItem + sizeof(BtrfsDirItem), name, endian16(dirItem->n)) == 0)
+						{
+							/* found a match */
+							*childID = dirItem->child.objectID;
+							done = 1;
+							break;
+						}
+					
+						/* advance to the next DIR_ITEM if there are more */
+						if (endian32(item->size) > sizeof(BtrfsDirItem) + endian16(dirItem->m) + endian16(dirItem->n))
+						{
+							dirItem = (BtrfsDirItem *)((unsigned char *)dirItem + sizeof(BtrfsDirItem) +
+								endian16(dirItem->m) + endian16(dirItem->n));
+						}
+						else
+							break;
+					}
+				}
+			}
+			else if (operation == FSOP_ID_TO_INODE)
+			{
+				/* pointer aliases */
+				const unsigned __int64 *objectID = (const unsigned __int64 *)inputA;
+				BtrfsInodeItem *inode = (BtrfsInodeItem *)output;
+
+				if (item->key.type == TYPE_INODE_ITEM && endian64(item->key.objectID) == *objectID)
+				{
+					BtrfsInodeItem *inodeItem = (BtrfsInodeItem *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset));
+					
+					/* ensure that the item fits entirely in the node block */
+					assert((unsigned char *)inodeItem + sizeof(BtrfsInodeItem) <= (unsigned char *)nodeBlock + endian32(super.nodeSize));
+
+					memcpy(inode, inodeItem, sizeof(BtrfsInodeItem));
+
+					done = 1;
+				}
+			}
+			else
+				printf("parseFSTreeRec: unknown operation (0x%02x)!\n", operation);
+
+#if 0
 			switch (item->key.type)
 			{
 			case TYPE_INODE_ITEM:
@@ -434,6 +496,10 @@ void parseFSTreeRec(unsigned __int64 addr)
 				printf("parseFSTreeRec: found an item of unexpected type [0x%02x] in the tree!\n", item->key.type);
 				break;
 			}
+#endif
+
+			if (done)
+				break;
 
 			nodePtr += sizeof(BtrfsItem);
 		}
@@ -445,7 +511,7 @@ void parseFSTreeRec(unsigned __int64 addr)
 			BtrfsKeyPtr *keyPtr = (BtrfsKeyPtr *)nodePtr;
 
 			/* recurse down one level of the tree */
-			parseFSTreeRec(endian64(keyPtr->blockNum));
+			parseFSTreeRec(endian64(keyPtr->blockNum), operation, inputA, inputB, inputC, output);
 
 			nodePtr += sizeof(BtrfsKeyPtr);
 		}
@@ -454,25 +520,137 @@ void parseFSTreeRec(unsigned __int64 addr)
 	free(nodeBlock);
 }
 
-void parseFSTree()
+void parseFSTree(int operation, void *inputA, void *inputB, void *inputC, void *output)
 {
-	int i, root = -1;
+	parseFSTreeRec(getFSRootBlockNum(), operation, inputA, inputB, inputC, output);
+}
 
-	/* no way we can find the FS root node without the root tree */
-	assert(numRoots > 0 && roots != NULL);
-	
-	for (i = 0; i < numRoots; i++)
+unsigned __int64 getFSRootBlockNum()
+{
+	static int fsRoot = -1;
+	int i;
+
+	/* this only needs to be done the first time the function is called */
+	if (fsRoot == -1)
 	{
-		if (endian64(roots[i].objectID) == OBJID_FS_TREE)
+		/* no way we can find the FS root node without the root tree */
+		assert(numRoots > 0 && roots != NULL);
+	
+		for (i = 0; i < numRoots; i++)
 		{
-			root = i;
-			break;
+			if (endian64(roots[i].objectID) == OBJID_FS_TREE)
+			{
+				fsRoot = i;
+				break;
+			}
+		}
+
+		/* can't fail */
+		assert(fsRoot != -1);
+	}
+
+	return endian64(roots[fsRoot].rootItem.rootNodeBlockNum);
+}
+
+void validatePath(char *path)
+{
+	int i;
+
+	for (i = 0; i < strlen(path); i++)
+	{
+		assert(i != 0 || path[i] == '\\'); // MUST start with a backslash
+		assert(i == 0 || i != strlen(path) - 1 || path[i] != '\\'); // CANNOT end with a backslash (if len > 1)
+
+		if (path[i] == '\\' && i > 0)
+			assert(path[i - 1] != '\\'); // no double backslashes within paths
+	}
+}
+
+/* path MUST be validated for this to work properly */
+int componentizePath(char *path, char ***output)
+{
+	size_t len = strlen(path), compLen = 0, i;
+	int numComponents = 0, compIdx = 0, compC = 0;
+
+	if (len == 1 && path[0] == '\\')
+		return 0;
+
+	for (i = 0; i < len; i++)
+	{
+		if (path[i] == '\\')
+			numComponents++;
+	}
+
+	/* allocate the array of pointers */
+	*output = (char **)malloc(sizeof(char *) * numComponents);
+
+	for (i = 1; i < len; i++) // skip the first backslash
+	{
+		if (path[i] != '\\')
+			compLen++;
+		else
+		{
+			/* allocate this individual pointer in the array */
+			(*output)[compIdx++] = (char *)malloc(compLen + 1);
+			compLen = 0;
 		}
 	}
 
-	assert(root != -1);
+	/* get the last one */
+	(*output)[numComponents - 1] = (char *)malloc(compLen + 1);
 
-	parseFSTreeRec(endian64(roots[root].rootItem.rootNodeBlockNum));
+	compIdx = 0;
+
+	for (i = 1; i < len; i++) // again, skip the first backslash
+	{
+		if (path[i] != '\\')
+		{
+			/* fill in the component name, char by char */
+			(*output)[compIdx][compC++] = path[i];
+		}
+		else
+		{
+			/* null terminate */
+			(*output)[compIdx++][compC] = 0;
+			compC = 0;
+		}
+	}
+
+	/* get the last one */
+	(*output)[numComponents - 1][compC] = 0;
+
+	return numComponents;
+}
+
+void getInode(char *path, BtrfsInodeItem *inode)
+{
+	char **components;
+	unsigned __int64 parentID = OBJID_ROOT_DIR, childID, hash;
+	int i, numComponents = -1;
+
+	validatePath(path);
+	numComponents = componentizePath(path, &components);
+
+	for (i = 0; i < numComponents; i++)
+	{
+		childID = -1;
+		hash = crc32c(0, (const unsigned char *)(components[i]), strlen(components[i]));
+		parseFSTree(FSOP_NAME_TO_ID, &parentID, &hash, components[i], &childID);
+
+		/* can't fail */
+		assert(childID != -1);
+
+		parentID = childID;
+	}
+
+	parseFSTree(FSOP_ID_TO_INODE, &parentID, NULL, NULL, inode);
+}
+
+void test()
+{
+	BtrfsInodeItem inode;
+
+	getInode("\\dirA\\dir1\\smiley.txt", &inode);
 }
 
 void dump()

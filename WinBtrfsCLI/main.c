@@ -32,7 +32,7 @@ DOKAN_OPERATIONS btrfsOperations = {
 	&btrfsFlushFileBuffers,
 	&btrfsGetFileInformation,
 	&btrfsFindFiles,
-	&btrfsFindFilesWithPattern,
+	NULL, // FindFilesWithPattern
 	&btrfsSetFileAttributes,
 	&btrfsSetFileTime,
 	&btrfsDeleteFile,
@@ -95,8 +95,8 @@ void firstTasks()
 
 	parseChunkTree();
 	parseRootTree();
-	parseFSTree();
 	dump();
+	test();
 }
 
 void dokanError(int dokanResult)
@@ -190,7 +190,8 @@ int main(int argc, char **argv)
 
 	firstTasks();
 
-	dokanResult = DokanMain(dokanOptions, &btrfsOperations);
+	printf("main: DokanMain is disabled for stability for the time being.\n");
+	//dokanResult = DokanMain(dokanOptions, &btrfsOperations);
 
 	cleanUp();
 	dokanError(dokanResult);

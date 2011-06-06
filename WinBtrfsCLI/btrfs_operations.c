@@ -95,18 +95,9 @@ int DOKAN_CALLBACK btrfsGetFileInformation(LPCWSTR fileName, LPBY_HANDLE_FILE_IN
 	return 0;
 }
 
-// You should implement either FindFiles or FindFilesWithPattern
 int DOKAN_CALLBACK btrfsFindFiles(LPCWSTR pathName, PFillFindData data, PDOKAN_FILE_INFO info)
 {
 	printf("btrfsFindFiles: unimplemented! [%s]\n", pathName);
-
-	return 0;
-}
-
-// You should implement either FindFiles or FindFilesWithPattern
-int DOKAN_CALLBACK btrfsFindFilesWithPattern(LPCWSTR pathName, LPCWSTR searchPattern, PFillFindData data, PDOKAN_FILE_INFO info)
-{
-	printf("btrfsFindFilesWithPattern: unimplemented! [%s; pattern: %s]\n", pathName, searchPattern);
 
 	return 0;
 }

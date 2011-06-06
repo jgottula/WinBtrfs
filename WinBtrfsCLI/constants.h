@@ -5,13 +5,14 @@
 #define OBJID_FS_TREE			0x05
 #define OBJID_ROOT_TREE_DIR		0x06
 #define OBJID_CSUM_TREE			0x07
+#define OBJID_ROOT_DIR			0x100
 #define OBJID_ORPHAN			-0x05
 #define OBJID_TREE_LOG			-0x06
 #define OBJID_TREE_LOG_FIXUP	-0x07
 #define OBJID_TREE_RELOC		-0x08
 #define OBJID_DATA_RELOC_TREE	-0x09
 #define OBJID_EXTENT_CSUM		-0x0a
-#define OBJID_MULTIPLE			-0x0100
+#define OBJID_MULTIPLE			-0x100
 
 #define TYPE_INODE_ITEM			0x01
 #define TYPE_INODE_REF			0x0c
@@ -45,3 +46,6 @@
 
 #define ADDR_PHYSICAL			0x00
 #define ADDR_LOGICAL			0x01
+
+#define FSOP_NAME_TO_ID			0x00
+#define FSOP_ID_TO_INODE		0x01
