@@ -1,15 +1,25 @@
 TODO list
 
-Big items:
+Roadmap:
+Get directory listings and file info working (fs tree queries)
+Get file data working (extents)
+- Remove Dokan callbacks that should never be called
+Esoteric Btrfs stuff
+- Compression (zlib)
+- Subvolumes
+- Multi-drive volumes
+- Converted ext4 fs
+GUI (C#)
+Installer (NSIS)
+
+Code stuff:
 Rectify inconsistent struct member names: num/nr, csum/cSum/crc32c/etc, generation/gen, objectID/objID, len/length
 Rectify inconsistent function arg names: len/length, addr/lAddr/logicalAddr/physAddr/etc
 Cache frequently used blocks in memory, especially FS tree nodes and other trees that are references multiple times (extent tree?)
 
-Eventually:
-Remove Dokan callbacks that should never be called
-GUI
-
-Functionality we need to build on top of tree parsing:
+Next steps:
+Refactor parseNode* so it's not so damn obtuse to use
+Implement these:
 - go from file/dir name to object ID (DIR_ITEM)
 (repeat above for each filename/path component until at the end of the path)
 - go from object ID to inode (INODE_ITEM)
