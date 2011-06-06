@@ -96,7 +96,6 @@ void firstTasks()
 	parseChunkTree();
 	parseRootTree();
 	dump();
-	test();
 }
 
 void dokanError(int dokanResult)
@@ -190,8 +189,7 @@ int main(int argc, char **argv)
 
 	firstTasks();
 
-	printf("main: DokanMain is disabled for stability for the time being.\n");
-	//dokanResult = DokanMain(dokanOptions, &btrfsOperations);
+	dokanResult = DokanMain(dokanOptions, &btrfsOperations);
 
 	cleanUp();
 	dokanError(dokanResult);

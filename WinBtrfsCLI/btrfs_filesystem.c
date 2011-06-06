@@ -422,7 +422,7 @@ void parseFSTreeRec(unsigned __int64 addr, int operation, void *inputA, void *in
 				const char *name = (const char *)inputC;
 				unsigned __int64 *childID = (unsigned __int64 *)output;
 				
-				printf("parseFSTreeRec: name hashing appears to be broken, please fix me!\n");
+				/* TODO: fix hash matching */
 				if (item->key.type == TYPE_DIR_ITEM && endian64(item->key.objectID) == *parentID/* &&
 					endian64(item->key.offset) == *hash*/)
 				{
@@ -474,29 +474,6 @@ void parseFSTreeRec(unsigned __int64 addr, int operation, void *inputA, void *in
 			}
 			else
 				printf("parseFSTreeRec: unknown operation (0x%02x)!\n", operation);
-
-#if 0
-			switch (item->key.type)
-			{
-			case TYPE_INODE_ITEM:
-				break;
-			case TYPE_INODE_REF:
-				break;
-			case TYPE_DIR_ITEM:
-				/* name & data extend past end of the struct */
-				/* may repeat */
-				break;
-			case TYPE_DIR_INDEX:
-				/* name & data extend past end of the struct */
-				break;
-			case TYPE_EXTENT_DATA:
-				/* either inline data or a BtrfsExtentDataNonInline struct will follow */
-				break;
-			default:
-				printf("parseFSTreeRec: found an item of unexpected type [0x%02x] in the tree!\n", item->key.type);
-				break;
-			}
-#endif
 
 			if (done)
 				break;
@@ -622,11 +599,12 @@ int componentizePath(char *path, char ***output)
 	return numComponents;
 }
 
-void getInode(char *path, BtrfsInodeItem *inode)
+int getInode(char *path, Inode *inode)
 {
 	char **components;
 	unsigned __int64 parentID = OBJID_ROOT_DIR, childID, hash;
 	int i, numComponents = -1;
+	BtrfsInodeItem inodeItem;
 
 	validatePath(path);
 	numComponents = componentizePath(path, &components);
@@ -637,20 +615,32 @@ void getInode(char *path, BtrfsInodeItem *inode)
 		hash = crc32c(0, (const unsigned char *)(components[i]), strlen(components[i]));
 		parseFSTree(FSOP_NAME_TO_ID, &parentID, &hash, components[i], &childID);
 
-		/* can't fail */
-		assert(childID != -1);
+		if (childID == -1)
+			return 1;
 
 		parentID = childID;
 	}
 
-	parseFSTree(FSOP_ID_TO_INODE, &parentID, NULL, NULL, inode);
+	parseFSTree(FSOP_ID_TO_INODE, &parentID, NULL, NULL, &inodeItem);
+
+	inode->objectID = parentID;
+	inode->hidden = (numComponents > 0 && components[numComponents - 1][0] == '.') ? 1 : 0;
+	inode->compressed = 0; // TODO: implement this for real
+
+	memcpy(&(inode->inodeItem), &inodeItem, sizeof(BtrfsInodeItem));
+
+	return 0;
 }
 
-void test()
+void convertTime(BtrfsTime *bTime, PFILETIME wTime)
 {
-	BtrfsInodeItem inode;
+	LONGLONG s64 = 116444736000000000; // 1601-to-1970 correction factor
 
-	getInode("\\dirA\\dir1\\smiley.txt", &inode);
+	s64 += endian64(bTime->secSince1970) * 10000000;
+	s64 += endian32(bTime->nanoseconds) / 100;
+
+	wTime->dwHighDateTime = (DWORD)(s64 >> 32);
+	wTime->dwLowDateTime = (DWORD)s64;
 }
 
 void dump()

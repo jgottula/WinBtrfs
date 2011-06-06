@@ -27,5 +27,6 @@ void parseRootTree();
 void parseFSTreeRec(unsigned __int64 addr, int operation, void *inputA, void *inputB, void *inputC, void *output);
 void parseFSTree(int operation, void *inputA, void *inputB, void *inputC, void *output);
 unsigned __int64 getFSRootBlockNum();
-void test();
+int getInode(char *path, Inode *inode);
+void convertTime(BtrfsTime *bTime, PFILETIME wTime);
 void dump();

@@ -247,3 +247,11 @@ typedef struct
 	unsigned __int64		objectID;
 	BtrfsRootItem			rootItem;
 } Root;
+
+typedef struct
+{
+	unsigned __int64		objectID;
+	BtrfsInodeItem			inodeItem;
+	int						hidden;
+	int						compressed;
+} Inode;
