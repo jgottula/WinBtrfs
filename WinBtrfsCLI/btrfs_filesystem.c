@@ -314,6 +314,9 @@ void parseChunkTreeRec(unsigned __int64 addr)
 		}
 	}
 
+	if (numDevices > 1)
+		printf("parseChunkTreeRec: volumes with more than one device not yet supported!\n");
+
 	free(nodeBlock);
 }
 
