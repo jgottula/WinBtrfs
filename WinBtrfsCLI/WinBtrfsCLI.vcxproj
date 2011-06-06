@@ -97,15 +97,17 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="btrfs_filesystem.c" />
     <ClCompile Include="btrfs_operations.c" />
+    <ClCompile Include="btrfs_system.c" />
+    <ClCompile Include="dokan_callbacks.c" />
     <ClCompile Include="crc32c.c" />
     <ClCompile Include="endian.c" />
     <ClCompile Include="main.c" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="btrfs_filesystem.h" />
     <ClInclude Include="btrfs_operations.h" />
+    <ClInclude Include="btrfs_system.h" />
+    <ClInclude Include="dokan_callbacks.h" />
     <ClInclude Include="constants.h" />
     <ClInclude Include="crc32c.h" />
     <ClInclude Include="endian.h" />

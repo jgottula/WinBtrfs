@@ -15,12 +15,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="btrfs_filesystem.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="btrfs_operations.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="endian.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -30,14 +24,17 @@
     <ClCompile Include="crc32c.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="btrfs_system.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dokan_callbacks.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="btrfs_operations.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="btrfs_filesystem.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="btrfs_operations.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="crc32c.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -48,6 +45,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="constants.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="btrfs_system.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dokan_callbacks.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="btrfs_operations.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

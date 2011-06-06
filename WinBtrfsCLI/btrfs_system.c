@@ -18,7 +18,7 @@
 #include "constants.h"
 #include "endian.h"
 #include "crc32c.h"
-#include "btrfs_filesystem.h"
+#include "btrfs_system.h"
 
 extern WCHAR devicePath[MAX_PATH];
 
@@ -527,120 +527,6 @@ unsigned __int64 getFSRootBlockNum()
 	}
 
 	return endian64(roots[fsRoot].rootItem.rootNodeBlockNum);
-}
-
-void validatePath(char *path)
-{
-	int i;
-
-	for (i = 0; i < strlen(path); i++)
-	{
-		assert(i != 0 || path[i] == '\\'); // MUST start with a backslash
-		assert(i == 0 || i != strlen(path) - 1 || path[i] != '\\'); // CANNOT end with a backslash (if len > 1)
-
-		if (path[i] == '\\' && i > 0)
-			assert(path[i - 1] != '\\'); // no double backslashes within paths
-	}
-}
-
-/* path MUST be validated for this to work properly */
-int componentizePath(char *path, char ***output)
-{
-	size_t len = strlen(path), compLen = 0, i;
-	int numComponents = 0, compIdx = 0, compC = 0;
-
-	if (len == 1 && path[0] == '\\')
-		return 0;
-
-	for (i = 0; i < len; i++)
-	{
-		if (path[i] == '\\')
-			numComponents++;
-	}
-
-	/* allocate the array of pointers */
-	*output = (char **)malloc(sizeof(char *) * numComponents);
-
-	for (i = 1; i < len; i++) // skip the first backslash
-	{
-		if (path[i] != '\\')
-			compLen++;
-		else
-		{
-			/* allocate this individual pointer in the array */
-			(*output)[compIdx++] = (char *)malloc(compLen + 1);
-			compLen = 0;
-		}
-	}
-
-	/* get the last one */
-	(*output)[numComponents - 1] = (char *)malloc(compLen + 1);
-
-	compIdx = 0;
-
-	for (i = 1; i < len; i++) // again, skip the first backslash
-	{
-		if (path[i] != '\\')
-		{
-			/* fill in the component name, char by char */
-			(*output)[compIdx][compC++] = path[i];
-		}
-		else
-		{
-			/* null terminate */
-			(*output)[compIdx++][compC] = 0;
-			compC = 0;
-		}
-	}
-
-	/* get the last one */
-	(*output)[numComponents - 1][compC] = 0;
-
-	return numComponents;
-}
-
-int getInode(char *path, Inode *inode)
-{
-	char **components;
-	unsigned __int64 parentID = OBJID_ROOT_DIR, childID, hash;
-	int i, numComponents = -1;
-	BtrfsInodeItem inodeItem;
-
-	validatePath(path);
-	numComponents = componentizePath(path, &components);
-
-	for (i = 0; i < numComponents; i++)
-	{
-		childID = -1;
-		hash = crc32c(0, (const unsigned char *)(components[i]), strlen(components[i]));
-		parseFSTree(FSOP_NAME_TO_ID, &parentID, &hash, components[i], &childID);
-
-		if (childID == -1)
-			return 1;
-
-		parentID = childID;
-	}
-
-	parseFSTree(FSOP_ID_TO_INODE, &parentID, NULL, NULL, &inodeItem);
-
-	inode->objectID = parentID;
-	inode->hidden = (numComponents > 0 && components[numComponents - 1][0] == '.') ? 1 : 0;
-	inode->compressed = 0; // TODO: implement this for real
-
-	memcpy(&(inode->inodeItem), &inodeItem, sizeof(BtrfsInodeItem));
-
-	return 0;
-}
-
-void convertTime(BtrfsTime *bTime, PFILETIME wTime)
-{
-	LONGLONG s64 = 116444736000000000; // 1601-to-1970 correction factor
-
-	s64 += endian64(bTime->secSince1970) * 10000000;
-	s64 += endian32(bTime->nanoseconds) / 100;
-
-	wTime->dwHighDateTime = (DWORD)(s64 >> 32);
-	wTime->dwLowDateTime = (DWORD)s64;
 }
 
 void dump()
