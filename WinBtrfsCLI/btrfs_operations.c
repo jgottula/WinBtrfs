@@ -38,14 +38,14 @@ int DOKAN_CALLBACK btrfsCreateFile(LPCWSTR fileName, DWORD desiredAccess, DWORD 
 
 int DOKAN_CALLBACK btrfsOpenDirectory(LPCWSTR fileName, PDOKAN_FILE_INFO info)
 {
-	printf("btrfsOpenDirectory: unimplemented!\n");
+	printf("btrfsOpenDirectory: unimplemented! [%s]\n", fileName);
 	
 	return 0;
 }
 
 int DOKAN_CALLBACK btrfsCreateDirectory(LPCWSTR fileName, PDOKAN_FILE_INFO info)
 {
-	printf("btrfsCreateDirectory: unimplemented!\n");
+	printf("btrfsCreateDirectory: SHOULD NEVER BE CALLED!! [%s]\n", fileName);
 	
 	return 0;
 }
@@ -53,14 +53,14 @@ int DOKAN_CALLBACK btrfsCreateDirectory(LPCWSTR fileName, PDOKAN_FILE_INFO info)
 // When FileInfo->DeleteOnClose is true, you must delete the file in Cleanup.
 int DOKAN_CALLBACK btrfsCleanup(LPCWSTR fileName, PDOKAN_FILE_INFO info)
 {
-	printf("btrfsCleanup: unimplemented!\n");
+	printf("btrfsCleanup: unimplemented! [%s]\n", fileName);
 	
 	return 0;
 }
 
 int DOKAN_CALLBACK btrfsCloseFile(LPCWSTR fileName, PDOKAN_FILE_INFO info)
 {
-	printf("btrfsCloseFile: unimplemented!\n");
+	printf("btrfsCloseFile: unimplemented! [%s]\n", fileName);
 	
 	return 0;
 }
@@ -68,7 +68,7 @@ int DOKAN_CALLBACK btrfsCloseFile(LPCWSTR fileName, PDOKAN_FILE_INFO info)
 int DOKAN_CALLBACK btrfsReadFile(LPCWSTR fileName, LPVOID buffer, DWORD numberOfBytesToRead, LPDWORD numberOfBytesRead,
 	LONGLONG offset, PDOKAN_FILE_INFO info)
 {
-	printf("btrfsReadFile: unimplemented!\n");
+	printf("btrfsReadFile: unimplemented! [%s]\n", fileName);
 
 	return 0;
 }
@@ -76,21 +76,21 @@ int DOKAN_CALLBACK btrfsReadFile(LPCWSTR fileName, LPVOID buffer, DWORD numberOf
 int DOKAN_CALLBACK btrfsWriteFile(LPCWSTR fileName, LPCVOID buffer, DWORD numberOfBytesToWrite, LPDWORD numberOfBytesWritten,
 	LONGLONG offset, PDOKAN_FILE_INFO info)
 {
-	printf("btrfsWriteFile: unimplemented!\n");
+	printf("btrfsWriteFile: SHOULD NEVER BE CALLED!! [%s]\n", fileName);
 
 	return 0;
 }
 
 int DOKAN_CALLBACK btrfsFlushFileBuffers(LPCWSTR fileName, PDOKAN_FILE_INFO info)
 {
-	printf("btrfsFlushFileBuffers: unimplemented!\n");
+	printf("btrfsFlushFileBuffers: SHOULD NEVER BE CALLED!! [%s]\n", fileName);
 
 	return 0;
 }
 
 int DOKAN_CALLBACK btrfsGetFileInformation(LPCWSTR fileName, LPBY_HANDLE_FILE_INFORMATION buffer, PDOKAN_FILE_INFO info)
 {
-	printf("btrfsGetFileInformation: unimplemented!\n");
+	printf("btrfsGetFileInformation: unimplemented! [%s]\n", fileName);
 	
 	return 0;
 }
@@ -98,7 +98,7 @@ int DOKAN_CALLBACK btrfsGetFileInformation(LPCWSTR fileName, LPBY_HANDLE_FILE_IN
 // You should implement either FindFiles or FindFilesWithPattern
 int DOKAN_CALLBACK btrfsFindFiles(LPCWSTR pathName, PFillFindData data, PDOKAN_FILE_INFO info)
 {
-	printf("btrfsFindFiles: unimplemented!\n");
+	printf("btrfsFindFiles: unimplemented! [%s]\n", pathName);
 
 	return 0;
 }
@@ -106,14 +106,14 @@ int DOKAN_CALLBACK btrfsFindFiles(LPCWSTR pathName, PFillFindData data, PDOKAN_F
 // You should implement either FindFiles or FindFilesWithPattern
 int DOKAN_CALLBACK btrfsFindFilesWithPattern(LPCWSTR pathName, LPCWSTR searchPattern, PFillFindData data, PDOKAN_FILE_INFO info)
 {
-	printf("btrfsFindFilesWithPattern: unimplemented!\n");
+	printf("btrfsFindFilesWithPattern: unimplemented! [%s; pattern: %s]\n", pathName, searchPattern);
 
 	return 0;
 }
 
 int DOKAN_CALLBACK btrfsSetFileAttributes(LPCWSTR fileName, DWORD fileAttributes, PDOKAN_FILE_INFO info)
 {
-	printf("btrfsSetFileAttributes: unimplemented!\n");
+	printf("btrfsSetFileAttributes: SHOULD NEVER BE CALLED!! [%s]\n", fileName);
 
 	return 0;
 }
@@ -121,7 +121,7 @@ int DOKAN_CALLBACK btrfsSetFileAttributes(LPCWSTR fileName, DWORD fileAttributes
 int DOKAN_CALLBACK btrfsSetFileTime(LPCWSTR fileName, CONST PFILETIME creationTime, CONST PFILETIME lastAccessTime,
 	CONST PFILETIME lastWriteTime, PDOKAN_FILE_INFO info)
 {
-	printf("btrfsSetFileTime: unimplemented!\n");
+	printf("btrfsSetFileTime: SHOULD NEVER BE CALLED!! [%s]\n", fileName);
 
 	return 0;
 }
@@ -136,7 +136,7 @@ int DOKAN_CALLBACK btrfsSetFileTime(LPCWSTR fileName, CONST PFILETIME creationTi
 // file in Close.
 int DOKAN_CALLBACK btrfsDeleteFile(LPCWSTR fileName, PDOKAN_FILE_INFO info)
 {
-	printf("btrfsDeleteFile: unimplemented!\n");
+	printf("btrfsDeleteFile: SHOULD NEVER BE CALLED!! [%s]\n", fileName);
 
 	return 0;
 }
@@ -151,42 +151,42 @@ int DOKAN_CALLBACK btrfsDeleteFile(LPCWSTR fileName, PDOKAN_FILE_INFO info)
 // file in Close.
 int DOKAN_CALLBACK btrfsDeleteDirectory(LPCWSTR fileName, PDOKAN_FILE_INFO info)
 {
-	printf("btrfsDeleteDirectory: unimplemented!\n");
+	printf("btrfsDeleteDirectory: SHOULD NEVER BE CALLED!! [%s]\n", fileName);
 
 	return 0;
 }
 
 int DOKAN_CALLBACK btrfsMoveFile(LPCWSTR existingFileName, LPCWSTR newFileName, BOOL replaceExisting, PDOKAN_FILE_INFO info)
 {
-	printf("btrfsMoveFile: unimplemented!\n");
+	printf("btrfsMoveFile: SHOULD NEVER BE CALLED!! [%s -> %s]\n", existingFileName, newFileName);
 
 	return 0;
 }
 
 int DOKAN_CALLBACK btrfsSetEndOfFile(LPCWSTR fileName, LONGLONG length, PDOKAN_FILE_INFO info)
 {
-	printf("btrfsSetEndOfFile: unimplemented!\n");
+	printf("btrfsSetEndOfFile: SHOULD NEVER BE CALLED!! [%s]\n", fileName);
 
 	return 0;
 }
 
 int DOKAN_CALLBACK btrfsSetAllocationSize(LPCWSTR fileName, LONGLONG length, PDOKAN_FILE_INFO info)
 {
-	printf("btrfsSetAllocationSize: unimplemented!\n");
+	printf("btrfsSetAllocationSize: SHOULD NEVER BE CALLED!! [%s]\n", fileName);
 
 	return 0;
 }
 
 int DOKAN_CALLBACK btrfsLockFile(LPCWSTR fileName, LONGLONG byteOffset, LONGLONG length, PDOKAN_FILE_INFO info)
 {
-	printf("btrfsLockFile: unimplemented!\n");
+	printf("btrfsLockFile: unimplemented! [%s]\n", fileName);
 
 	return 0;
 }
 
 int DOKAN_CALLBACK btrfsUnlockFile(LPCWSTR fileName, LONGLONG byteOffset, LONGLONG length, PDOKAN_FILE_INFO info)
 {
-	printf("btrfsUnlockFile: unimplemented!\n");
+	printf("btrfsUnlockFile: unimplemented! [%s]\n", fileName);
 
 	return 0;
 }
@@ -214,7 +214,7 @@ int DOKAN_CALLBACK btrfsGetVolumeInformation(LPWSTR volumeNameBuffer, DWORD volu
 {
 	CHAR labelS[MAX_PATH + 1];
 
-	printf("btrfsGetVolumeInformation\n");
+	printf("btrfsGetVolumeInformation: OK\n");
 	
 	/* TODO: switch to strcpy_s & mbstowcs_s; this currently causes pointers to go bad,
 		which presumably indicates some sort of vulnerability in the present code that
@@ -238,9 +238,9 @@ int DOKAN_CALLBACK btrfsGetVolumeInformation(LPWSTR volumeNameBuffer, DWORD volu
 
 int DOKAN_CALLBACK btrfsUnmount(PDOKAN_FILE_INFO info)
 {
-	printf("btrfsUnmount\n");
+	printf("btrfsUnmount: OK\n");
 
-	/* nothing to do for ro-mounted fs */
+	/* nothing to do */
 	
 	return 0;
 }
@@ -248,7 +248,7 @@ int DOKAN_CALLBACK btrfsUnmount(PDOKAN_FILE_INFO info)
 int DOKAN_CALLBACK btrfsGetFileSecurity(LPCWSTR fileName, PSECURITY_INFORMATION secInfo, PSECURITY_DESCRIPTOR secDesc,
 	ULONG secDescLen, PULONG lengthNeeded, PDOKAN_FILE_INFO info)
 {
-	printf("btrfsGetFileSecurity: unimplemented!\n");
+	printf("btrfsGetFileSecurity: unimplemented! [%s]\n", fileName);
 
 	return 0;
 }
@@ -256,7 +256,7 @@ int DOKAN_CALLBACK btrfsGetFileSecurity(LPCWSTR fileName, PSECURITY_INFORMATION 
 int DOKAN_CALLBACK btrfsSetFileSecurity(LPCWSTR fileName, PSECURITY_INFORMATION secInfo, PSECURITY_DESCRIPTOR secDesc,
 	ULONG secDescLen, PDOKAN_FILE_INFO info)
 {
-	printf("btrfsSetFileSecurity: unimplemented!\n");
+	printf("btrfsSetFileSecurity: SHOULD NEVER BE CALLED!! [%s]\n", fileName);
 
 	return 0;
 }
