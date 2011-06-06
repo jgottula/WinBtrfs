@@ -14,14 +14,12 @@
 DWORD init();
 void cleanUp();
 unsigned __int64 logiToPhys(unsigned __int64 logiAddr, unsigned __int64 len);
-DWORD readBlock(LONGLONG physAddr, DWORD len, LPVOID dest);
-DWORD readLogicalBlock(LONGLONG logiAddr, DWORD len, LPVOID dest);
+DWORD readBlock(unsigned __int64 addr, int addrType, unsigned __int64 len, unsigned char *dest);
 DWORD readPrimarySB();
 int validateSB(BtrfsSuperblock *s);
 int findSecondarySBs();
 void getSBChunks();
-void parseNodePhysical(unsigned __int64 physAddr);
-void parseNodeLogical(unsigned __int64 logiAddr);
+void loadNode(unsigned __int64 blockAddr, int addrType, unsigned char **nodeDest, BtrfsHeader **header);
 void parseChunkTree();
 void parseRootTree();
 void parseFSTree();

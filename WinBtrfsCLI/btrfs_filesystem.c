@@ -76,16 +76,21 @@ unsigned __int64 logiToPhys(unsigned __int64 logiAddr, unsigned __int64 len)
 	return (logiAddr - chunks[chunk].logiOffset) + chunks[chunk].stripes[0].offset;
 }
 
-DWORD readBlock(LONGLONG physAddr, DWORD len, LPVOID dest)
+DWORD readBlock(unsigned __int64 addr, int addrType, unsigned __int64 len, unsigned char *dest)
 {
 	LARGE_INTEGER li;
 	DWORD bytesRead;
 
-	/* these had better be set up already */
+	/* hope you called init first! */
 	assert(hRead != INVALID_HANDLE_VALUE);
 	assert(hReadMutex != INVALID_HANDLE_VALUE);
 
-	li.QuadPart = physAddr;
+	if (addrType == ADDR_LOGICAL)
+		addr = logiToPhys(addr, len);
+
+	/* because Win32 uses a signed (??) value for the address from which to read,
+		our address space is cut in half from what Btrfs technically allows */
+	li.QuadPart = (LONGLONG)addr;
 
 	/* using SetFilePointerEx and then ReadFile is clearly not threadsafe, so for now
 		I'm using a mutex here; in the future, this should be fully threaded
@@ -97,7 +102,7 @@ DWORD readBlock(LONGLONG physAddr, DWORD len, LPVOID dest)
 	if (SetFilePointerEx(hRead, li, NULL, 0) == 0)
 		goto error;
 
-	if (ReadFile(hRead, dest, len, &bytesRead, NULL) == 0 || bytesRead != len)
+	if (ReadFile(hRead, dest, (DWORD)len, &bytesRead, NULL) == 0 || bytesRead != len)
 		goto error;
 
 	ReleaseMutex(hReadMutex);
@@ -108,14 +113,9 @@ error:
 	return GetLastError();
 }
 
-DWORD readLogicalBlock(LONGLONG logiAddr, DWORD len, LPVOID dest)
-{
-	return readBlock(logiToPhys(logiAddr, len), len, dest);
-}
-
 DWORD readPrimarySB()
 {
-	return readBlock(SUPERBLOCK_1_PADDR, sizeof(BtrfsSuperblock), &super);
+	return readBlock(SUPERBLOCK_1_PADDR, ADDR_PHYSICAL, sizeof(BtrfsSuperblock), (unsigned char *)&super);
 }
 
 int validateSB(BtrfsSuperblock *s)
@@ -149,22 +149,24 @@ int findSecondarySBs()
 
 	/* read each superblock (if present) and validate */
 
-	if (readBlock(SUPERBLOCK_2_PADDR, sizeof(BtrfsSuperblock), &s2) == 0 &&
+	if (readBlock(SUPERBLOCK_2_PADDR, ADDR_PHYSICAL, sizeof(BtrfsSuperblock), (unsigned char *)&s2) == 0 &&
 		validateSB(&s2) == 0 && endian64(s2.generation) > bestGen)
 		best = 2, sBest = &s2, bestGen = endian64(s2.generation);
 
-	if (readBlock(SUPERBLOCK_2_PADDR, sizeof(BtrfsSuperblock), &s3) == 0 &&
+	if (readBlock(SUPERBLOCK_2_PADDR, ADDR_PHYSICAL, sizeof(BtrfsSuperblock), (unsigned char *)&s3) == 0 &&
 		validateSB(&s3) == 0 && endian64(s3.generation) > bestGen)
 		best = 3, sBest = &s3, bestGen = endian64(s3.generation);
 
-	if (readBlock(SUPERBLOCK_2_PADDR, sizeof(BtrfsSuperblock), &s4) == 0 &&
+	if (readBlock(SUPERBLOCK_2_PADDR, ADDR_PHYSICAL, sizeof(BtrfsSuperblock), (unsigned char *)&s4) == 0 &&
 		validateSB(&s4) == 0 && endian64(s4.generation) > bestGen)
 		best = 4, sBest = &s4, bestGen = endian64(s4.generation);
 
 	/* replace the superblock in memory with the most up-to-date on-disk copy */
-
 	if (best != 1)
+	{
+		printf("findSecondarySBs: found a better superblock (#%d).\n", best);
 		memcpy(&super, sBest, sizeof(BtrfsSuperblock));
+	}
 
 	return best;
 }
@@ -181,12 +183,12 @@ void getSBChunks()
 
 	while (sbPtr < sbMax)
 	{
-		if (sbPtr == super.chunkData)
+		if (sbPtr == super.chunkData) // first iteration
 		{
 			numChunks = 1;
 			chunks = (Chunk *)malloc(sizeof(Chunk));
 		}
-		else
+		else // subsequent iterations
 		{
 			numChunks++;
 			chunks = (Chunk *)realloc(chunks, sizeof(Chunk) * numChunks);
@@ -216,50 +218,197 @@ void getSBChunks()
 	}
 }
 
-void parseNodePhysical(unsigned __int64 physAddr)
+void loadNode(unsigned __int64 blockAddr, int addrType, unsigned char **nodeDest, BtrfsHeader **header)
+{
+	unsigned int blockSize = endian32(super.nodeSize);
+	
+	*nodeDest = (unsigned char *)malloc(blockSize);
+
+	/* this might not always be fatal, so in the future an assertion may be inappropriate */
+	assert(readBlock(blockAddr, addrType, blockSize, *nodeDest) == 0);
+
+	*header = (BtrfsHeader *)(*nodeDest);
+
+	/* also possibly nonfatal */
+	assert(crc32c(0, *nodeDest + sizeof(BtrfsChecksum), blockSize - sizeof(BtrfsChecksum)) == endian32((*header)->csum.crc32c));
+}
+
+void parseChunkTreeRec(unsigned __int64 addr)
 {
 	unsigned char *nodeBlock, *nodePtr;
 	BtrfsHeader *header;
 	BtrfsItem *item;
 	int i, j;
 
-	nodePtr = nodeBlock = (unsigned char *)malloc(endian32(super.nodeSize));
+	loadNode(addr, ADDR_LOGICAL, &nodeBlock, &header);
 
-	/* this might not always be fatal, so an assertion may be inappropriate */
-	assert(readBlock(physAddr, endian32(super.nodeSize), nodeBlock) == 0);
-
-	header = (BtrfsHeader *)nodePtr;
-	nodePtr += sizeof(BtrfsHeader);
-
-	/* again, this may not warrant stopping the whole program if reading from a less important tree */
-	assert(crc32c(0, nodeBlock + sizeof(BtrfsChecksum), endian32(super.nodeSize) - sizeof(BtrfsChecksum)) == endian32(header->csum.crc32c));
-
-	/* pre tasks */
-	switch (endian64(header->tree))
-	{
-	case OBJID_ROOT_TREE: // root tree
-		break;
-	case OBJID_CHUNK_TREE: // chunk tree
-		break;
-	case OBJID_FS_TREE: // fs tree
-		break;
-	default:
-		printf("parseNode: given a tree of an unknown type [0x%016x]!\n", endian64(header->tree));
-		break;
-	}
+	assert(header->tree == OBJID_CHUNK_TREE);
 	
+	nodePtr = nodeBlock + sizeof(BtrfsHeader);
+
+	/* clear out the superblock chunk items to make way for the chunk tree chunk items */
+	for (i = 0; i < numChunks; i++)
+		free(chunks[i].stripes);
+	numChunks = 0;
+
 	if (header->level == 0) // leaf node
 	{
 		for (i = 0; i < endian32(header->nrItems); i++)
 		{
-			/* delete these */
-			BtrfsInodeItem *inodeItem = (BtrfsInodeItem *)(nodeBlock + sizeof(BtrfsHeader) + ((BtrfsItem *)nodePtr)->offset);
-			BtrfsInodeRef *inodeRef = (BtrfsInodeRef *)(nodeBlock + sizeof(BtrfsHeader) + ((BtrfsItem *)nodePtr)->offset);
-			BtrfsDirItem *dirItem = (BtrfsDirItem *)(nodeBlock + sizeof(BtrfsHeader) + ((BtrfsItem *)nodePtr)->offset);
-			BtrfsExtentData *extentData = (BtrfsExtentData *)(nodeBlock + sizeof(BtrfsHeader) + ((BtrfsItem *)nodePtr)->offset);
-			BtrfsExtentDataNonInline *extentDataNonInline =
-				(BtrfsExtentDataNonInline *)(nodeBlock + sizeof(BtrfsHeader) + ((BtrfsItem *)nodePtr)->offset);
+			item = (BtrfsItem *)nodePtr;
 
+			switch (item->key.type)
+			{
+			case TYPE_DEV_ITEM:
+				assert(endian32(item->size) == sizeof(BtrfsDevItem)); // ensure proper size
+				assert(sizeof(BtrfsHeader) + endian32(item->offset) + endian32(item->size) <= endian32(super.nodeSize)); // ensure we're within bounds
+
+				if (numDevices == -1)
+				{
+					devices = (BtrfsDevItem *)malloc(sizeof(BtrfsDevItem));
+					numDevices = 0;
+				}
+				else
+					devices = (BtrfsDevItem *)realloc(devices, sizeof(BtrfsDevItem) * (numDevices + 1));
+
+				devices[numDevices] = *((BtrfsDevItem *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset)));
+
+				numDevices++;
+				break;
+			case TYPE_CHUNK_ITEM:
+				assert((endian32(item->size) - sizeof(BtrfsChunkItem)) % sizeof(BtrfsChunkItemStripe) == 0); // ensure proper 30+20n size
+				assert(sizeof(BtrfsHeader) + endian32(item->offset) + endian32(item->size) <= endian32(super.nodeSize)); // ensure we're within bounds
+
+				/* assuming that the chunks array is already allocated, as should be the case from the start */
+				chunks = (Chunk *)realloc(chunks, sizeof(Chunk) * (numChunks + 1));
+
+				chunks[numChunks].logiOffset = endian64(item->key.offset);
+				chunks[numChunks].chunkItem = *((BtrfsChunkItem *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset)));
+				chunks[numChunks].stripes = (BtrfsChunkItemStripe *)malloc(sizeof(BtrfsChunkItemStripe) *
+					endian16(chunks[numChunks].chunkItem.numStripes));
+
+				for (j = 0; j < endian16(chunks[numChunks].chunkItem.numStripes); j++)
+					chunks[numChunks].stripes[j] = *((BtrfsChunkItemStripe *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset) +
+						sizeof(BtrfsChunkItem) + (sizeof(BtrfsChunkItemStripe) * j)));
+
+				numChunks++;
+				break;
+			default:
+				printf("parseChunkTreeRec: found an item of unexpected type [0x%02x] in the tree!\n", item->key.type);
+				break;
+			}
+
+			nodePtr += sizeof(BtrfsItem);
+		}
+	}
+	else // non-leaf node
+	{
+		for (i = 0; i < endian32(header->nrItems); i++)
+		{
+			BtrfsKeyPtr *keyPtr = (BtrfsKeyPtr *)nodePtr;
+
+			/* recurse down one level of the tree */
+			parseChunkTreeRec(endian64(keyPtr->blockNum));
+
+			nodePtr += sizeof(BtrfsKeyPtr);
+		}
+	}
+
+	free(nodeBlock);
+}
+
+void parseChunkTree()
+{
+	getSBChunks();
+	
+	parseChunkTreeRec(endian64(super.chunkTreeLAddr));
+}
+
+void parseRootTreeRec(unsigned __int64 addr)
+{
+	unsigned char *nodeBlock, *nodePtr;
+	BtrfsHeader *header;
+	BtrfsItem *item;
+	int i, j;
+
+	loadNode(addr, ADDR_LOGICAL, &nodeBlock, &header);
+
+	assert(header->tree == OBJID_ROOT_TREE);
+	
+	nodePtr = nodeBlock + sizeof(BtrfsHeader);
+
+	if (header->level == 0) // leaf node
+	{
+		for (i = 0; i < endian32(header->nrItems); i++)
+		{
+			item = (BtrfsItem *)nodePtr;
+
+			switch (item->key.type)
+			{
+			case TYPE_ROOT_ITEM:
+				assert(endian32(item->size) == sizeof(BtrfsRootItem)); // ensure proper size
+				assert(sizeof(BtrfsHeader) + endian32(item->offset) + endian32(item->size) <= endian32(super.nodeSize)); // ensure we're within bounds
+
+				if (numRoots == -1)
+				{
+					roots = (Root *)malloc(sizeof(Root));
+					numRoots = 0;
+				}
+				else
+					roots = (Root *)realloc(roots, sizeof(Root) * (numRoots + 1));
+
+				roots[numRoots].objectID = endian64(item->key.objectID);
+				roots[numRoots].rootItem = *((BtrfsRootItem *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset)));
+
+				numRoots++;
+				break;
+			default:
+				printf("parseRootTreeRec: found an item of unexpected type [0x%02x] in the tree!\n", item->key.type);
+				break;
+			}
+
+			nodePtr += sizeof(BtrfsItem);
+		}
+	}
+	else // non-leaf node
+	{
+		for (i = 0; i < endian32(header->nrItems); i++)
+		{
+			BtrfsKeyPtr *keyPtr = (BtrfsKeyPtr *)nodePtr;
+
+			/* recurse down one level of the tree */
+			parseRootTreeRec(endian64(keyPtr->blockNum));
+
+			nodePtr += sizeof(BtrfsKeyPtr);
+		}
+	}
+
+	free(nodeBlock);
+}
+
+void parseRootTree()
+{
+	parseRootTreeRec(endian64(super.rootTreeLAddr));
+}
+
+/* extend this function to have an option for the operation we want, plus an output/returnval */
+void parseFSTreeRec(unsigned __int64 addr)
+{
+	unsigned char *nodeBlock, *nodePtr;
+	BtrfsHeader *header;
+	BtrfsItem *item;
+	int i, j;
+
+	loadNode(addr, ADDR_LOGICAL, &nodeBlock, &header);
+
+	assert(header->tree == OBJID_FS_TREE);
+	
+	nodePtr = nodeBlock + sizeof(BtrfsHeader);
+
+	if (header->level == 0) // leaf node
+	{
+		for (i = 0; i < endian32(header->nrItems); i++)
+		{
 			item = (BtrfsItem *)nodePtr;
 
 			switch (item->key.type)
@@ -278,83 +427,8 @@ void parseNodePhysical(unsigned __int64 physAddr)
 			case TYPE_EXTENT_DATA:
 				/* either inline data or a BtrfsExtentDataNonInline struct will follow */
 				break;
-			case TYPE_ROOT_ITEM:
-				if (endian64(header->tree) != OBJID_ROOT_TREE)
-				{
-					printf("parseNode: ROOT_ITEM unexpected in tree of type 0x%016x!\n", endian64(header->tree));
-					break;
-				}
-
-				assert(endian32(item->size) == sizeof(BtrfsRootItem)); // ensure proper size
-				assert(sizeof(BtrfsHeader) + endian32(item->offset) + endian32(item->size) <= endian32(super.nodeSize)); // ensure we're within bounds
-
-				if (numRoots == -1)
-				{
-					roots = (Root *)malloc(sizeof(Root));
-					numRoots = 0;
-				}
-				else
-					roots = (Root *)realloc(roots, sizeof(Root) * (numRoots + 1));
-
-				roots[numRoots].objectID = endian64(item->key.objectID);
-				roots[numRoots].rootItem = *((BtrfsRootItem *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset)));
-
-				numRoots++;
-				break;
-			case TYPE_DEV_ITEM:
-				if (endian64(header->tree) != OBJID_CHUNK_TREE)
-				{
-					printf("parseNode: DEV_ITEM unexpected in tree of type 0x%016x!\n", endian64(header->tree));
-					break;
-				}
-
-				assert(endian32(item->size) == sizeof(BtrfsDevItem)); // ensure proper size
-				assert(sizeof(BtrfsHeader) + endian32(item->offset) + endian32(item->size) <= endian32(super.nodeSize)); // ensure we're within bounds
-
-				if (numDevices == -1)
-				{
-					devices = (BtrfsDevItem *)malloc(sizeof(BtrfsDevItem));
-					numDevices = 0;
-				}
-				else
-					devices = (BtrfsDevItem *)realloc(devices, sizeof(BtrfsDevItem) * (numDevices + 1));
-
-				devices[numDevices] = *((BtrfsDevItem *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset)));
-
-				numDevices++;
-				break;
-			case TYPE_CHUNK_ITEM:
-				if (endian64(header->tree) != OBJID_CHUNK_TREE)
-				{
-					printf("parseNode: CHUNK_ITEM unexpected in tree of type 0x%016x!\n", endian64(header->tree));
-					break;
-				}
-
-				assert((endian32(item->size) - sizeof(BtrfsChunkItem)) % sizeof(BtrfsChunkItemStripe) == 0); // ensure proper 30+20n size
-				assert(sizeof(BtrfsHeader) + endian32(item->offset) + endian32(item->size) <= endian32(super.nodeSize)); // ensure we're within bounds
-
-				if (numChunks == -1)
-				{
-					chunks = (Chunk *)malloc(sizeof(Chunk));
-					numChunks = 0;
-				}
-				else
-					chunks = (Chunk *)realloc(chunks, sizeof(Chunk) * (numChunks + 1));
-
-				chunks[numChunks].logiOffset = endian64(item->key.offset);
-				chunks[numChunks].chunkItem = *((BtrfsChunkItem *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset)));
-				chunks[numChunks].stripes = (BtrfsChunkItemStripe *)malloc(sizeof(BtrfsChunkItemStripe) *
-					endian16(chunks[numChunks].chunkItem.numStripes));
-
-				for (j = 0; j < endian16(chunks[numChunks].chunkItem.numStripes); j++)
-					chunks[numChunks].stripes[j] = *((BtrfsChunkItemStripe *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset) +
-						sizeof(BtrfsChunkItem) + (sizeof(BtrfsChunkItemStripe) * j)));
-
-				numChunks++;
-				break;
 			default:
-				printf("parseNode: found an item of unrecognized type [0x%02x] in tree of type 0x%016x!\n",
-					item->key.type, endian64(header->tree));
+				printf("parseFSTreeRec: found an item of unexpected type [0x%02x] in the tree!\n", item->key.type);
 				break;
 			}
 
@@ -368,71 +442,13 @@ void parseNodePhysical(unsigned __int64 physAddr)
 			BtrfsKeyPtr *keyPtr = (BtrfsKeyPtr *)nodePtr;
 
 			/* recurse down one level of the tree */
-			parseNodeLogical(keyPtr->blockNum);
+			parseFSTreeRec(endian64(keyPtr->blockNum));
 
 			nodePtr += sizeof(BtrfsKeyPtr);
 		}
 	}
 
-	/* post tasks */
-	switch (endian64(header->tree))
-	{
-	case OBJID_ROOT_TREE: // root tree
-		break;
-	case OBJID_CHUNK_TREE: // chunk tree
-		break;
-	case OBJID_FS_TREE: // fs tree
-		break;
-	}
-
-	/* clean up */
 	free(nodeBlock);
-}
-
-void parseNodeLogical(unsigned __int64 logiAddr)
-{
-	parseNodePhysical(logiToPhys(logiAddr, endian32(super.nodeSize)));
-}
-
-void parseChunkTree()
-{
-	unsigned __int64 chunkTreeLogiAddr = endian64(super.chunkTreeLAddr);
-	int i, j, chunk = -1, stripe = -1;
-
-	/* we need the superblock chunks first so we can bootstrap to the chunk tree */
-	getSBChunks();
-
-	/* find a superblock chunk for the location of the chunk tree so we can load it in */
-	for (i = 0; i < numChunks; i++)
-	{
-		if (chunkTreeLogiAddr >= chunks[i].logiOffset && chunkTreeLogiAddr < chunks[i].logiOffset + endian64(chunks[i].chunkItem.chunkSize))
-		{
-			for (j = 0; j < endian16(chunks[i].chunkItem.numStripes); j++)
-			{
-				if (endian64(chunks[i].stripes[j].devID) == endian64(super.devItem.devID))
-				{
-					stripe = j;
-					break;
-				}
-			}
-
-			if (stripe != -1)
-			{
-				chunk = i;
-				break;
-			}
-		}
-	}
-
-	/* we MUST have at least one mapping so we can load the chunk containing the chunk tree! */
-	assert(chunk != -1 && stripe != -1);
-	
-	parseNodePhysical(endian64(chunks[chunk].stripes[stripe].offset) + (chunkTreeLogiAddr - chunks[chunk].logiOffset));
-}
-
-void parseRootTree()
-{
-	parseNodeLogical(endian64(super.rootTreeLAddr));
 }
 
 void parseFSTree()
@@ -453,7 +469,7 @@ void parseFSTree()
 
 	assert(root != -1);
 
-	parseNodeLogical(endian64(roots[root].rootItem.rootNodeBlockNum));
+	parseFSTreeRec(endian64(roots[root].rootItem.rootNodeBlockNum));
 }
 
 void dump()
