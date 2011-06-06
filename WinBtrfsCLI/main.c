@@ -148,9 +148,12 @@ void unitTests()
 	assert(sizeof(BtrfsTime) == 0x0c);
 	assert(sizeof(BtrfsHeader) == 0x65);
 	assert(sizeof(BtrfsDiskKey) == 0x11);
+	assert(sizeof(BtrfsKeyPtr) == 0x21);
 	assert(sizeof(BtrfsItem) == 0x19);
 	assert(sizeof(BtrfsInodeItem) == 0xa0);
 	assert(sizeof(BtrfsInodeRef) == 0x14);
+	assert(sizeof(BtrfsDirItem) == 0x1e);
+	assert(sizeof(BtrfsDirIndex) == 0x1e);
 	assert(sizeof(BtrfsExtentData) == 0x15);
 	assert(sizeof(BtrfsExtentDataNonInline) == 0x20);
 	assert(sizeof(BtrfsRootItem) == 0xef);

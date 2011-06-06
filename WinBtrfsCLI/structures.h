@@ -54,6 +54,13 @@ typedef struct
 typedef struct
 {
 	BtrfsDiskKey			key;
+	unsigned __int64		blockNum;
+	unsigned __int64		generation;
+} BtrfsKeyPtr;
+
+typedef struct
+{
+	BtrfsDiskKey			key;
 	unsigned int			offset;
 	unsigned int			size;
 } BtrfsItem;
@@ -85,6 +92,23 @@ typedef struct
 	unsigned short			nameLen;
 	char					name				[0x0a];
 } BtrfsInodeRef;
+
+/* this structure may be repeated if multiple items have the same hash */
+typedef struct
+{
+	BtrfsDiskKey			child;
+	unsigned __int64		transID;
+	unsigned short			m;
+	unsigned short			n;
+	unsigned char			childType;
+
+	/* the following two items are of variable size */
+	// char					name[n];
+	// unsigned char		data[m];
+} BtrfsDirItem;
+
+/* same contents as BtrfsDirItem, but will never repeat */
+typedef BtrfsDirItem BtrfsDirIndex;
 
 typedef struct
 {
