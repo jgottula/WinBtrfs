@@ -1,5 +1,16 @@
 TODO list
 
+Big items:
 Rectify inconsistent struct member names: num/nr, csum/cSum/crc32c/etc, generation/gen, objectID/objID, len/length
 Rectify inconsistent function arg names: len/length, addr/lAddr/logicalAddr/physAddr/etc
 Cache frequently used blocks in memory, especially FS tree nodes and other trees that are references multiple times (extent tree?)
+
+Eventually:
+Remove Dokan callbacks that should never be called
+GUI
+
+Functionality we need to build on top of tree parsing:
+- go from file/dir name to object ID (DIR_ITEM)
+(repeat above for each filename/path component until at the end of the path)
+- go from object ID to inode (INODE_ITEM)
+[the above should allow for getting an inode (and therefore, stat information) for a file/dir by path]
