@@ -14,8 +14,12 @@ Installer (NSIS)
 
 Code stuff:
 Rectify inconsistent struct member names: num/nr, csum/cSum/crc32c/etc, generation/gen, objectID/objID, len/length
-Rectify inconsistent function arg names: len/length, addr/lAddr/logicalAddr/physAddr/etc
+Rectify inconsistent function arg names: len/length, addr/lAddr/logicalAddr/physAddr/etc, super/SB/superblock
 Cache frequently used blocks in memory, especially FS tree nodes and other trees that are references multiple times (extent tree?)
+Multithread support for everything: make block reading threadsafe, and ensure that calls to btrfs_filesystem.c functions
+	from different threads will not cause serious race conditions and/or destruction
+Check all malloc/realloc calls and end fatally upon malloc failure
+Develop a better system for error reporting than just piling on a bunch of assertions (look up assert best practices)
 
 Next steps:
 Refactor parseNode* so it's not so damn obtuse to use
