@@ -247,94 +247,131 @@ void parseNodePhysical(unsigned __int64 physAddr)
 		printf("parseNode: given a tree of an unknown type [0x%016x]!\n", endian64(header->tree));
 		break;
 	}
-
-	for (i = 0; i < endian32(header->nrItems); i++)
+	
+	if (header->level == 0) // leaf node
 	{
-		item = (BtrfsItem *)nodePtr;
-
-		switch (item->key.type)
+		for (i = 0; i < endian32(header->nrItems); i++)
 		{
-		case TYPE_ROOT_ITEM: // ROOT_ITEM
-			if (endian64(header->tree) != OBJID_ROOT_TREE)
+			/* delete these */
+			BtrfsInodeItem *inodeItem = (BtrfsInodeItem *)(nodeBlock + sizeof(BtrfsHeader) + ((BtrfsItem *)nodePtr)->offset);
+			BtrfsInodeRef *inodeRef = (BtrfsInodeRef *)(nodeBlock + sizeof(BtrfsHeader) + ((BtrfsItem *)nodePtr)->offset);
+			BtrfsDirItem *dirItem = (BtrfsDirItem *)(nodeBlock + sizeof(BtrfsHeader) + ((BtrfsItem *)nodePtr)->offset);
+			BtrfsExtentData *extentData = (BtrfsExtentData *)(nodeBlock + sizeof(BtrfsHeader) + ((BtrfsItem *)nodePtr)->offset);
+			BtrfsExtentDataNonInline *extentDataNonInline =
+				(BtrfsExtentDataNonInline *)(nodeBlock + sizeof(BtrfsHeader) + ((BtrfsItem *)nodePtr)->offset);
+
+			item = (BtrfsItem *)nodePtr;
+
+			switch (item->key.type)
 			{
-				printf("parseNode: ROOT_ITEM unexpected in tree of type 0x%016x!\n", endian64(header->tree));
+			case TYPE_INODE_ITEM:
+				break;
+			case TYPE_INODE_REF:
+				break;
+			case TYPE_DIR_ITEM:
+				/* name & data extend past end of the struct */
+				/* may repeat */
+				break;
+			case TYPE_DIR_INDEX:
+				/* name & data extend past end of the struct */
+				break;
+			case TYPE_EXTENT_DATA:
+				/* either inline data or a BtrfsExtentDataNonInline struct will follow */
+				break;
+			case TYPE_ROOT_ITEM:
+				if (endian64(header->tree) != OBJID_ROOT_TREE)
+				{
+					printf("parseNode: ROOT_ITEM unexpected in tree of type 0x%016x!\n", endian64(header->tree));
+					break;
+				}
+
+				assert(endian32(item->size) == sizeof(BtrfsRootItem)); // ensure proper size
+				assert(sizeof(BtrfsHeader) + endian32(item->offset) + endian32(item->size) <= endian32(super.nodeSize)); // ensure we're within bounds
+
+				if (numRoots == -1)
+				{
+					roots = (Root *)malloc(sizeof(Root));
+					numRoots = 0;
+				}
+				else
+					roots = (Root *)realloc(roots, sizeof(Root) * (numRoots + 1));
+
+				roots[numRoots].objectID = endian64(item->key.objectID);
+				roots[numRoots].rootItem = *((BtrfsRootItem *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset)));
+
+				numRoots++;
+				break;
+			case TYPE_DEV_ITEM:
+				if (endian64(header->tree) != OBJID_CHUNK_TREE)
+				{
+					printf("parseNode: DEV_ITEM unexpected in tree of type 0x%016x!\n", endian64(header->tree));
+					break;
+				}
+
+				assert(endian32(item->size) == sizeof(BtrfsDevItem)); // ensure proper size
+				assert(sizeof(BtrfsHeader) + endian32(item->offset) + endian32(item->size) <= endian32(super.nodeSize)); // ensure we're within bounds
+
+				if (numDevices == -1)
+				{
+					devices = (BtrfsDevItem *)malloc(sizeof(BtrfsDevItem));
+					numDevices = 0;
+				}
+				else
+					devices = (BtrfsDevItem *)realloc(devices, sizeof(BtrfsDevItem) * (numDevices + 1));
+
+				devices[numDevices] = *((BtrfsDevItem *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset)));
+
+				numDevices++;
+				break;
+			case TYPE_CHUNK_ITEM:
+				if (endian64(header->tree) != OBJID_CHUNK_TREE)
+				{
+					printf("parseNode: CHUNK_ITEM unexpected in tree of type 0x%016x!\n", endian64(header->tree));
+					break;
+				}
+
+				assert((endian32(item->size) - sizeof(BtrfsChunkItem)) % sizeof(BtrfsChunkItemStripe) == 0); // ensure proper 30+20n size
+				assert(sizeof(BtrfsHeader) + endian32(item->offset) + endian32(item->size) <= endian32(super.nodeSize)); // ensure we're within bounds
+
+				if (numChunks == -1)
+				{
+					chunks = (Chunk *)malloc(sizeof(Chunk));
+					numChunks = 0;
+				}
+				else
+					chunks = (Chunk *)realloc(chunks, sizeof(Chunk) * (numChunks + 1));
+
+				chunks[numChunks].logiOffset = endian64(item->key.offset);
+				chunks[numChunks].chunkItem = *((BtrfsChunkItem *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset)));
+				chunks[numChunks].stripes = (BtrfsChunkItemStripe *)malloc(sizeof(BtrfsChunkItemStripe) *
+					endian16(chunks[numChunks].chunkItem.numStripes));
+
+				for (j = 0; j < endian16(chunks[numChunks].chunkItem.numStripes); j++)
+					chunks[numChunks].stripes[j] = *((BtrfsChunkItemStripe *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset) +
+						sizeof(BtrfsChunkItem) + (sizeof(BtrfsChunkItemStripe) * j)));
+
+				numChunks++;
+				break;
+			default:
+				printf("parseNode: found an item of unrecognized type [0x%02x] in tree of type 0x%016x!\n",
+					item->key.type, endian64(header->tree));
 				break;
 			}
 
-			assert(endian32(item->size) == sizeof(BtrfsRootItem)); // ensure proper size
-			assert(sizeof(BtrfsHeader) + endian32(item->offset) + endian32(item->size) <= endian32(super.nodeSize)); // ensure we're within bounds
-
-			if (numRoots == -1)
-			{
-				roots = (Root *)malloc(sizeof(Root));
-				numRoots = 0;
-			}
-			else
-				roots = (Root *)realloc(roots, sizeof(Root) * (numRoots + 1));
-
-			roots[numRoots].objectID = endian64(item->key.objectID);
-			roots[numRoots].rootItem = *((BtrfsRootItem *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset)));
-
-			numRoots++;
-			break;
-		case TYPE_DEV_ITEM: // DEV_ITEM
-			if (endian64(header->tree) != OBJID_CHUNK_TREE)
-			{
-				printf("parseNode: DEV_ITEM unexpected in tree of type 0x%016x!\n", endian64(header->tree));
-				break;
-			}
-
-			assert(endian32(item->size) == sizeof(BtrfsDevItem)); // ensure proper size
-			assert(sizeof(BtrfsHeader) + endian32(item->offset) + endian32(item->size) <= endian32(super.nodeSize)); // ensure we're within bounds
-
-			if (numDevices == -1)
-			{
-				devices = (BtrfsDevItem *)malloc(sizeof(BtrfsDevItem));
-				numDevices = 0;
-			}
-			else
-				devices = (BtrfsDevItem *)realloc(devices, sizeof(BtrfsDevItem) * (numDevices + 1));
-
-			devices[numDevices] = *((BtrfsDevItem *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset)));
-
-			numDevices++;
-			break;
-		case TYPE_CHUNK_ITEM: // CHUNK_ITEM
-			if (endian64(header->tree) != OBJID_CHUNK_TREE)
-			{
-				printf("parseNode: CHUNK_ITEM unexpected in tree of type 0x%016x!\n", endian64(header->tree));
-				break;
-			}
-
-			assert((endian32(item->size) - sizeof(BtrfsChunkItem)) % sizeof(BtrfsChunkItemStripe) == 0); // ensure proper 30+20n size
-			assert(sizeof(BtrfsHeader) + endian32(item->offset) + endian32(item->size) <= endian32(super.nodeSize)); // ensure we're within bounds
-
-			if (numChunks == -1)
-			{
-				chunks = (Chunk *)malloc(sizeof(Chunk));
-				numChunks = 0;
-			}
-			else
-				chunks = (Chunk *)realloc(chunks, sizeof(Chunk) * (numChunks + 1));
-
-			chunks[numChunks].logiOffset = endian64(item->key.offset);
-			chunks[numChunks].chunkItem = *((BtrfsChunkItem *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset)));
-			chunks[numChunks].stripes = (BtrfsChunkItemStripe *)malloc(sizeof(BtrfsChunkItemStripe) *
-				endian16(chunks[numChunks].chunkItem.numStripes));
-
-			for (j = 0; j < endian16(chunks[numChunks].chunkItem.numStripes); j++)
-				chunks[numChunks].stripes[j] = *((BtrfsChunkItemStripe *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset) +
-					sizeof(BtrfsChunkItem) + (sizeof(BtrfsChunkItemStripe) * j)));
-
-			numChunks++;
-			break;
-		default:
-			printf("parseNode: found an item of unrecognized type [0x%02x] in tree of type 0x%016x!\n",
-				item->key.type, endian64(header->tree));
-			break;
+			nodePtr += sizeof(BtrfsItem);
 		}
+	}
+	else // non-leaf node
+	{
+		for (i = 0; i < endian32(header->nrItems); i++)
+		{
+			BtrfsKeyPtr *keyPtr = (BtrfsKeyPtr *)nodePtr;
 
-		nodePtr += sizeof(BtrfsItem);
+			/* recurse down one level of the tree */
+			parseNodeLogical(keyPtr->blockNum);
+
+			nodePtr += sizeof(BtrfsKeyPtr);
+		}
 	}
 
 	/* post tasks */
