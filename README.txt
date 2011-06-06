@@ -1,6 +1,9 @@
 WinBtfrs - Readme/FAQ
 
-Last updated 2011.06.02
+Last updated 2011.06.05
+
+
+NOTE: WinBtrfs is NOT EVEN CLOSE to a finished product, and is not yet ready for use by most users. See the project status question below for more details.
 
 
 What is WinBtrfs?
@@ -39,6 +42,11 @@ WinBtrfsCLI.exe <device> <mount point>
 where <device> is either an image file, or a physical partition in the format \\.\HarddiskAPartitionB, where A is the hard drive (numbered from zero) and B is the partition within that drive (numbered from one); and where <mount point> is either a drive letter (e.g. "C:") or an empty directory on an NTFS drive. To get a handle on physical disk and partition numbers, open the Disk Management console in Windows and take a look at how the disks are numbered. For Linux users, it may be useful to note that /dev/sda1 is equivalent to \\.\Harddisk0Partition1; /dev/sdb2 is equivalent to \\.\Harddisk1Partition2; and so forth. Identifying the proper volume and specifying a mount point will become much easier in the future, once more development time is spent on the user interface aspect of WinBtrfs.
 
 
+What is the status of the project, and what does the roadmap look like?
+
+WinBtrfs has been in development since May 25, 2011, and many important features have not yet been completed. At the time of this writing, WinBtrfs implements the Dokan callbacks required to display the Drive Properties dialog (that is, the drive label, the FS type, the total size, and the free space). On the other side of the chasm, I have been implementing the low-level functionality required to process the internal structures that make up a Btrfs filesystem. Fortunately, I am quickly approaching the point when the gap between these low-level filesystem operations and the functionality users expect (directory listings, file information, reading files) will be bridged. WinBtrfs can currently do all of the things required to reach the filesystem tree; it's simply a matter of parsing this tree in the proper manner, implementing the proper Dokan callbacks, and then directory listings and file information queries will be possible. The next step will be accessing file data, which will entail another leap on the backend (primarly involving being able to read the extent tree). After these steps have been completed, the next priority will be to ensure that the more esoteric aspects of Btrfs filesystems (multi-drive filesystems, compression, subvolumes, ext4-converted volumes, etc.) work properly. Once all of that works properly, it will be time for a proper GUI so that mounting volumes isn't so damn difficult for the average user. And after all that, a proper Windows installer (almost certainly NSIS) will be made available so that Windows noobs won't get confused at what to do to install the thing.
+
+
 Is read-write support coming in a future version?
 
 The short answer is: no, probably not. This is for several reasons. The most significant reason is that developing a read-write implementation of Btrfs would require considerably more work than a mere read-only one; for analogy, compare merely reading the works of Shakespeare with being able to come up with them and write them yourself. Perhaps that's a bit over the top, but a full write-enabled driver would certainly require porting the _entire_ Btrfs driver from the Linux kernel to Windows, which would additionally require duplicating the parts of the Linux kernel upon which the driver depends. More than this, it would require significantly more support and if problems did develop, a read-write filesystem driver has the potential to destroy the _entire_ volume and all the data contained within. So, in summary, it is both far more feasible to write a read-only driver; it means significantly less support/bug load on the developer; and there is far less potential for problems to result in the partial or total corruption of all of your data.
@@ -52,7 +60,6 @@ WinBtrfs is licensed under the GNU General Public License version 2 (GPLv2), whi
 Can I contribute to WinBtrfs?
 
 Absolutely. WinBtrfs is an open source project, which means that submitting bug reports, contributing patches, helping out with development, breaking open the source code to see how it works, and even forking the project to start your own derivative work are all permitted and even encouraged. See the question on obtaining the source code below for information on how to get involved.
-
 
 
 Where can I obtain the latest source code?
