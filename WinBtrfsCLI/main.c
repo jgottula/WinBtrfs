@@ -1,5 +1,5 @@
 /* main.c
- * CLI processing, bootstrapping, and Dokan stuff
+ * CLI processing and Dokan stuff
  *
  * WinBtrfs
  *
@@ -17,8 +17,8 @@
 #include <dokan.h>
 #include "structures.h"
 #include "endian.h"
-#include "btrfs_filesystem.h"
-#include "btrfs_operations.h"
+#include "btrfs_system.h"
+#include "dokan_callbacks.h"
 
 WCHAR devicePath[MAX_PATH], mountPoint[MAX_PATH];
 DOKAN_OPERATIONS btrfsOperations = {

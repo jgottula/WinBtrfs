@@ -1,5 +1,5 @@
-/* btrfs_filesystem.c
- * nitty gritty filesystem functionality
+/* btrfs_system.c
+ * low-level filesystem operations
  *
  * WinBtrfs
  *

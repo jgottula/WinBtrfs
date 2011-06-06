@@ -1,4 +1,4 @@
-/* btrfs_operations.c
+/* dokan_callbacks.c
  * implementations of Dokan callback functions
  *
  * WinBtrfs
@@ -19,7 +19,7 @@
 #include "constants.h"
 #include "structures.h"
 #include "endian.h"
-#include "btrfs_filesystem.h"
+#include "btrfs_system.h"
 
 extern BtrfsSuperblock super;
 

@@ -1,4 +1,4 @@
-/* btrfs_operations.h
+/* dokan_callbacks.h
  * implementations of Dokan callback functions
  *
  * WinBtrfs

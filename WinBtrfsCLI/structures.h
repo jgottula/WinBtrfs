@@ -1,5 +1,5 @@
 /* structures.h
- * on-disk filesystem structures
+ * struct declarations (on-disk and in-memory)
  *
  * WinBtrfs
  *

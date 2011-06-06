@@ -1,3 +1,16 @@
+/* constants.h
+ * symbolic constant definitions
+ *
+ * WinBtrfs
+ *
+ * Copyright (c) 2011 Justin Gottula
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation; either version 2 of the License, or (at your option)
+ * any later version.
+ */
+
 /* Btrfs objectIDs */
 #define OBJID_ROOT_TREE			0x01
 #define OBJID_EXTENT_TREE		0x02
