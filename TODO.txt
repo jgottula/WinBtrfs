@@ -1,3 +1,5 @@
 TODO list
 
-Put endianXX() around EVERY USE of non-character values from on-disk structs!!! AAAAUGH!
+Rectify inconsistent struct member names: num/nr, csum/cSum/crc32c/etc, generation/gen, objectID/objID, len/length
+Rectify inconsistent function arg names: len/length, addr/lAddr/logicalAddr/physAddr/etc
+Cache frequently used blocks in memory, especially FS tree nodes and other trees that are references multiple times (extent tree?)

@@ -3,37 +3,37 @@ btrfs_256m
 
 chunk tree block 0 [0x01400000]:
 
-A items
+0x0a items
 
-item 0: DEV_ITEM (0x01)
-item 1: CHUNK_ITEM (size: 0x00400000; 0x00000000->0x00000000)
-item 2: CHUNK_ITEM (size: 0x00800000; 0x00400000->0x00400000)
-item 3: CHUNK_ITEM (size: 0x00800000; 0x00c00000->0x00c00000)
-item 4: CHUNK_ITEM (size: 0x00800000; 0x01400000->0x01400000,0x01c00000) // internally duplicated, perhaps for metadata safety
-item 5: CHUNK_ITEM (size: 0x02000000; 0x01c00000->0x02400000,0x04400000) // same as above
-item 6: CHUNK_ITEM (size: 0x04000000; 0x03c00000->0x06400000)
-item 7: CHUNK_ITEM (size: 0x04000000; 0x07c00000->0x0a400000)
-item 8: CHUNK_ITEM (size: 0x01990000; 0x0bc00000->0x0e400000)
-item 9: CHUNK_ITEM (size: 0x00270000; 0x0d590000->0x0fd90000)
-item A: EXTENT_ITEM (!)
-item B: TREE_BLOCK_REF (!)
+item 0x00: DEV_ITEM (0x01)
+item 0x01: CHUNK_ITEM (size: 0x00400000; 0x00000000->0x00000000)
+item 0x02: CHUNK_ITEM (size: 0x00800000; 0x00400000->0x00400000)
+item 0x03: CHUNK_ITEM (size: 0x00800000; 0x00c00000->0x00c00000)
+item 0x04: CHUNK_ITEM (size: 0x00800000; 0x01400000->0x01400000,0x01c00000) // internally duplicated, perhaps for metadata safety
+item 0x05: CHUNK_ITEM (size: 0x02000000; 0x01c00000->0x02400000,0x04400000) // same as above
+item 0x06: CHUNK_ITEM (size: 0x04000000; 0x03c00000->0x06400000)
+item 0x07: CHUNK_ITEM (size: 0x04000000; 0x07c00000->0x0a400000)
+item 0x08: CHUNK_ITEM (size: 0x01990000; 0x0bc00000->0x0e400000)
+item 0x09: CHUNK_ITEM (size: 0x00270000; 0x0d590000->0x0fd90000)
+item 0x0a: EXTENT_ITEM (!)
+item 0x0b: TREE_BLOCK_REF (!)
 
 
 chunk tree block 1 [0x01401000]:
 
-8 items
+0x08 items
 
-item 0: DEV_ITEM (0x01)
-item 1: CHUNK_ITEM (size: 0x00400000; 0x00000000->0x00000000)
-item 2: CHUNK_ITEM (size: 0x00800000; 0x00400000->0x00400000)
-item 3: CHUNK_ITEM (size: 0x00800000; 0x00c00000->0x00c00000)
-item 4: CHUNK_ITEM (size: 0x00800000; 0x01400000->0x01400000,0x01c00000)
-item 5: CHUNK_ITEM (size: 0x02000000; 0x01c00000->0x02400000,0x04400000)
-item 6: CHUNK_ITEM (size: 0x04000000; 0x03c00000->0x06400000)
-item 7: CHUNK_ITEM (size: 0x04000000; 0x07c00000->0x0a400000)
-item 8: EXTENT_ITEM (!)
-item 9: TREE_BLOCK_REF (!)
-item A: EXTENT_ITEM (!)
+item 0x00: DEV_ITEM (0x01)
+item 0x01: CHUNK_ITEM (size: 0x00400000; 0x00000000->0x00000000)
+item 0x02: CHUNK_ITEM (size: 0x00800000; 0x00400000->0x00400000)
+item 0x03: CHUNK_ITEM (size: 0x00800000; 0x00c00000->0x00c00000)
+item 0x04: CHUNK_ITEM (size: 0x00800000; 0x01400000->0x01400000,0x01c00000)
+item 0x05: CHUNK_ITEM (size: 0x02000000; 0x01c00000->0x02400000,0x04400000)
+item 0x06: CHUNK_ITEM (size: 0x04000000; 0x03c00000->0x06400000)
+item 0x07: CHUNK_ITEM (size: 0x04000000; 0x07c00000->0x0a400000)
+item 0x08: EXTENT_ITEM (!)
+item 0x09: TREE_BLOCK_REF (!)
+item 0x0a: EXTENT_ITEM (!)
 
 
 --------
@@ -41,42 +41,150 @@ item A: EXTENT_ITEM (!)
 
 root tree block 0 [0x01c44000]:
 
-9 items
+0x09 items
 
-item 0: ROOT_ITEM (0x02 -> extent tree)				// I think we will need this for translating extents to blocks
-item 1: ROOT_ITEM (0x04 -> dev tree)				// needed only for volume resizing
-item 2: INODE_REF (inode_id = 0x03, dir_id = 0x06)	// index = 0, name is "default"
-item 3: ROOT_ITEM (0x05 -> fs tree)					// first priority
-item 4: INODE_ITEM (0x06)							// INVESTIGATE this
-item 5: INODE_REF (inode_id = 0x06, dir_id = 0x06)	// INVESTIGATE this
-item 6: DIR_ITEM (parent = 0x06, hash = 0x8dbfc2d2)	// INVESTIGATE this
-item 7: ROOT_ITEM (0x07 -> checksum tree)			// this will be useful for verifying extents, once we start accessing them
-item 8: ROOT_ITEM (-0x09 -> data_reloc tree)		// not really sure what this tree is for
+item 0x00: ROOT_ITEM (0x02 -> extent tree)				// I think we will need this for translating extents to blocks
+item 0x01: ROOT_ITEM (0x04 -> dev tree)				// needed only for volume resizing
+item 0x02: INODE_REF (inode_id = 0x03, dir_id = 0x06)	// index = 0, name is "default"
+item 0x03: ROOT_ITEM (0x05 -> fs tree)					// first priority
+item 0x04: INODE_ITEM (0x06)							// INVESTIGATE this
+item 0x05: INODE_REF (inode_id = 0x06, dir_id = 0x06)	// INVESTIGATE this
+item 0x06: DIR_ITEM (parent = 0x06, hash = 0x8dbfc2d2)	// INVESTIGATE this
+item 0x07: ROOT_ITEM (0x07 -> checksum tree)			// this will be useful for verifying extents, once we start accessing them
+item 0x08: ROOT_ITEM (-0x09 -> data_reloc tree)		// not really sure what this tree is for
 
 
 --------
 
 
-fs tree block 0 [0x01c0d000]:
-
-8 items
-
-item 0: INODE_ITEM (
-item 1: INODE_REF
-item 2: DIR_ITEM
-item 3: DIR_INDEX
-item 4: INODE_ITEM
-item 5: INODE_REF
-item 6: EXTENT_DATA
-item 7: EXTENT_DATA
-[!]item 8: EXTENT_ITEM
-[!]item 9: TREE_BLOCK_REF
-[!]item A: EXTENT_ITEM
-
-
 checksum tree [0x01c0e000]:
 
-2 items
+0x02 items
 
-item 0: EXTENT_CSUM
-item 1: EXTENT_CSUM
+item 0x00: EXTENT_CSUM
+item 0x01: EXTENT_CSUM
+
+
+--------
+the listings above are before newer files were added to the 256m filesystem;
+the ones below are up to date.
+--------
+
+btrfs_256m directory structure as of 2011.06.05
+
++ /
+  + dirA
+    + dir1
+      - smiley.txt
+    + dir2
+    + dir3
+  + dirB
+  + dirC
+  - helloworld.txt
+  - 256b.bin
+  - 1k.bin
+  - 4k.bin
+  - 16k.bin
+  - 64k.bin
+  - 256k.bin
+  - 1m.bin
+  - 4m.bin
+  - 16m.bin
+
+--------
+
+
+fs tree level 1 [0x01c6c000]:
+
+0x02 key ptrs
+
+keyPtr 0x00: [[0x0100, 0x01, 0x00], 0x1c6e000, 0x19]
+keyPtr 0x01: [[0x0108, 0x01, 0x00], 0x1c6d000, 0x19]
+
+
+fs tree level 0[0] [0x1c6e000]:
+
+0x31 items
+
+item 0x00: INODE_ITEM (0x100)
+item 0x01: INODE_REF (0x100 -> "..")
+item 0x02: DIR_ITEM (parent: 0x100 child: 0x10c name: 1k.bin)
+item 0x03: DIR_ITEM (parent: 0x100 child: 0x103 name: dirC)
+item 0x04: DIR_ITEM (parent: 0x100 child: 0x107 name: helloworld.txt)
+item 0x05: DIR_ITEM (parent: 0x100 child: 0x10d name: 4k.bin)
+item 0x06: DIR_ITEM (parent: 0x100 child: 0x10b name: 256b.bin)
+item 0x07: DIR_ITEM (parent: 0x100 child: 0x10f name: 256k.bin)
+item 0x08: DIR_ITEM (parent: 0x100 child: 0x10a name: 1m.bin)
+item 0x09: DIR_ITEM (parent: 0x100 child: 0x111 name: 16m.bin)
+item 0x0a: DIR_ITEM (parent: 0x100 child: 0x110 name: 4m.bin)
+item 0x0b: DIR_ITEM (parent: 0x100 child: 0x10e name: 64k.bin)
+item 0x0c: DIR_ITEM (parent: 0x100 child: 0x102 name: dirB)
+item 0x0d: DIR_ITEM (parent: 0x100 child: 0x101 name: dirA)
+item 0x0e: DIR_INDEX (index: 0x02)
+item 0x0f: DIR_INDEX (index: 0x03)
+item 0x10: DIR_INDEX (index: 0x04)
+item 0x11: DIR_INDEX (index: 0x05)
+item 0x12: DIR_INDEX (index: 0x07)
+item 0x13: DIR_INDEX (index: 0x08)
+item 0x14: DIR_INDEX (index: 0x09)
+item 0x15: DIR_INDEX (index: 0x0a)
+item 0x16: DIR_INDEX (index: 0x0b)
+item 0x17: DIR_INDEX (index: 0x0c)
+item 0x18: DIR_INDEX (index: 0x0d)
+item 0x19: DIR_INDEX (index: 0x0e)
+item 0x1a: INODE_ITEM (0x101)
+item 0x1b: INODE_REF (0x101 -> "dirA")
+item 0x1c: DIR_ITEM (parent: 0x101 child: 0x106 name: dir3)
+item 0x1d: DIR_ITEM (parent: 0x101 child: 0x104 name: dir1)
+item 0x1e: DIR_ITEM (parent: 0x101 child: 0x105 name: dir2)
+item 0x1f: DIR_INDEX (index: 0x02)
+item 0x20: DIR_INDEX (index: 0x03)
+item 0x21: DIR_INDEX (index: 0x04)
+item 0x22: INODE_ITEM (0x102)
+item 0x23: INODE_REF (0x102 -> "dirB")
+item 0x24: INODE_ITEM (0x103)
+item 0x25: INODE_REF (0x103 -> "dirC")
+item 0x26: INODE_ITEM (0x104)
+item 0x27: INODE_REF (0x104 -> "dir1")
+item 0x28: DIR_ITEM (parent: 0x104 child: 0x108 name: smiley.txt)
+item 0x29: DIR_INDEX (index: 0x02)
+item 0x2a: INODE_ITEM (0x105)
+item 0x2b: INODE_REF (0x105 -> "dir2")
+item 0x2c: INODE_ITEM (0x106)
+item 0x2d: INODE_REF (0x106 -> "dir3")
+item 0x2e: INODE_ITEM (0x107)
+item 0x2f: INODE_REF (0x107 -> "helloworld.txt")
+item 0x30: EXTENT_DATA (type: inline size: 0x0d data: "Hello world!\n")
+
+
+fs tree level 0[1] [0x1c6d000]:
+
+0x1b items
+
+item 0x00: INODE_ITEM (0x0x108)
+item 0x01: INODE_REF (0x108 -> "smiley.txt")
+item 0x02: EXTENT_DATA (type: inline size: 0x09 data: ":) :) :)\n")
+item 0x03: INODE_ITEM (0x10a)
+item 0x04: INODE_REF (0x10a -> "1m.bin")
+item 0x05: EXTENT_DATA (type: regular size: 0x100000 data: ...)
+item 0x06: INODE_ITEM (0x10b)
+item 0x07: INODE_REF (0x10b -> "256b.bin")
+item 0x08: EXTENT_DATA (type: inline size: 0x100 data: ...)
+item 0x09: INODE_ITEM (0x10c)
+item 0x0a: INODE_REF (0x10c -> "1k.bin")
+item 0x0b: EXTENT_DATA (type: inline size: 0x400 data: ...)
+item 0x0c: INODE_ITEM (0x10d)
+item 0x0d: INODE_REF (0x10d -> "4k.bin")
+item 0x0e: EXTENT_DATA (type: regular size: 0x1000 data: ...)
+item 0x0f: INODE_ITEM (0x10e)
+item 0x10: INODE_REF (0x10e -> "64k.bin")
+item 0x11: EXTENT_DATA (type: regular size: 0x10000 data: ...)
+item 0x12: INODE_ITEM (0x10f)
+item 0x13: INODE_REF (0x10f -> "256k.bin")
+item 0x14: EXTENT_DATA (type: regular size: 0x400000 data: ...)
+item 0x15: INODE_ITEM (0x110)
+item 0x16: INODE_REF (0x110 -> "4m.bin")
+item 0x17: EXTENT_DATA (type: regular size: 0x4000000 data: ...)
+item 0x18: INODE_ITEM (0x111)
+item 0x19: INODE_REF (0x111 -> "16m.bin")
+item 0x1a: EXTENT_DATA (type: regular size: 0x10000000 data: ...)
