@@ -12,6 +12,7 @@
  */
 
 #include <intrin.h>
+#include <assert.h>
 
 int archIsBigEndian = -1;
 
@@ -19,11 +20,19 @@ void endianDetect()
 {
 	union
 	{
-		unsigned short s;
-		unsigned char c[2];
-	} bigint = { 0x0102 };
+		unsigned int l;
+		unsigned char c[4];
+	} bigint = { 0x01020304 };
+	const char be[] = { 0x01, 0x02, 0x03, 0x04 },
+		le[] = { 0x04, 0x03, 0x02, 0x01 };
 
-	archIsBigEndian = (bigint.c[0] == 1);
+	if (memcmp(bigint.c, be, 4) == 0)
+		archIsBigEndian = 1;
+	else if (memcmp(bigint.c, le, 4) == 0)
+		archIsBigEndian = 0;
+
+	/* middle endian?! */
+	assert(archIsBigEndian != -1);
 }
 
 unsigned short endian16(unsigned short leFromDisk)
