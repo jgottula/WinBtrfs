@@ -29,3 +29,9 @@ Inputs:
 [1] const unsigned __int64 *	ptr to file/dir's object ID
 Outputs:
 [1] char *						file/dir's name
+
+FSOP_ID_TO_PARENT_ID
+Inputs:
+[1] const unsigned __int64 *	ptr to child's object ID
+Outputs:
+[1] unsigned __int64 *			parent's object ID

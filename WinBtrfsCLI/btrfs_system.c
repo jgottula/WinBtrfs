@@ -557,6 +557,43 @@ int parseFSTreeRec(unsigned __int64 addr, int operation, void *input1, void *inp
 					}
 				}
 			}
+			else if (operation == FSOP_ID_TO_PARENT_ID)
+			{
+				/* pointer aliases */
+				const unsigned __int64 *childID = (const unsigned __int64 *)input1;
+				unsigned __int64 *parentID = (unsigned __int64 *)output1;
+
+				if (item->key.type == TYPE_DIR_ITEM)
+				{
+					BtrfsDirItem *dirItem = (BtrfsDirItem *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset));
+					
+					while (1)
+					{
+						/* ensure that the variably sized item fits entirely in the node block */
+						assert((unsigned char *)dirItem + sizeof(BtrfsDirItem) <= (unsigned char *)nodeBlock + endian32(super.nodeSize) &&
+							(unsigned char *)dirItem + sizeof(BtrfsDirItem) + endian16(dirItem->m) + endian16(dirItem->n) <=
+							(unsigned char *)nodeBlock + endian32(super.nodeSize));
+						
+						if (endian64(dirItem->child.objectID) == *childID)
+						{
+							*parentID = item->key.objectID;
+
+							doneEarly = 1;
+							rtnCode = 0;
+							break;
+						}
+						
+						/* advance to the next DIR_ITEM if there are more */
+						if (endian32(item->size) > sizeof(BtrfsDirItem) + endian16(dirItem->m) + endian16(dirItem->n))
+						{
+							dirItem = (BtrfsDirItem *)((unsigned char *)dirItem + sizeof(BtrfsDirItem) +
+								endian16(dirItem->m) + endian16(dirItem->n));
+						}
+						else
+							break;
+					}
+				}
+			}
 			else
 				printf("parseFSTreeRec: unknown operation (0x%02x)!\n", operation);
 

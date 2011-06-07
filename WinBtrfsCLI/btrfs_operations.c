@@ -130,19 +130,26 @@ int getPathID(const char *path, unsigned __int64 *output)
 	return 0;
 }
 
-int getInode(unsigned __int64 objectID, Inode *output)
+int getInode(unsigned __int64 objectID, Inode *output, int checkHidden)
 {
 	BtrfsInodeItem inodeItem;
 	char name[MAX_PATH];
 
 	if (parseFSTree(FSOP_ID_TO_INODE, &objectID, NULL, NULL, &inodeItem, NULL) != 0)
 		return 1;
-	if (parseFSTree(FSOP_ID_TO_NAME, &objectID, NULL, NULL, name, NULL) != 0)
-		return 1;
 
 	output->objectID = objectID;
-	output->hidden = (name[0] == '.' ? 1 : 0);
 	output->compressed = 0; // TODO: implement this for real
+
+	if (checkHidden)
+	{
+		if (parseFSTree(FSOP_ID_TO_NAME, &objectID, NULL, NULL, name, NULL) != 0)
+			return 1;
+		
+		output->hidden = (name[0] == '.' ? 1 : 0);
+	}
+	else
+		output->hidden = 0;
 
 	memcpy(&(output->inodeItem), &inodeItem, sizeof(BtrfsInodeItem));
 
@@ -159,7 +166,7 @@ int getName(unsigned __int64 objectID, char *output)
 
 int dirList(unsigned __int64 objectID, DirList *output)
 {
-	unsigned __int64 numChildren = 0, *children = NULL;
+	unsigned __int64 numChildren = 0, *children = NULL, parentID;
 	int i;
 
 	if (parseFSTree(FSOP_ID_TO_CHILD_IDS, &objectID, NULL, NULL, &numChildren, &children) != 0)
@@ -178,14 +185,40 @@ int dirList(unsigned __int64 objectID, DirList *output)
 		
 		if (getName(children[i], output->names[i]) != 0)
 			goto error;
-		
-		if (getInode(children[i], &(output->inodes[i])) != 0)
+		if (getInode(children[i], &(output->inodes[i]), 1) != 0)
 			goto error;
 	}
+
+	/* for directories other than the root dir, add entries for "." and ".." */
+	if (objectID != OBJID_ROOT_DIR)
+	{
+		output->numEntries += 2;
+
+		output->inodes = (Inode *)realloc(output->inodes, sizeof(Inode) * output->numEntries);
+		output->names = (char **)realloc(output->names, sizeof(char **) * output->numEntries);
+		output->names[0] = (char *)realloc(output->names[0], MAX_PATH * output->numEntries);
+
+		/* readjust ALL of these because realloc might have moved the block */
+		for (i = 0; i < output->numEntries; i++)
+			output->names[i] = output->names[0] + (MAX_PATH * i);
+
+		strcpy(output->names[output->numEntries - 2], ".");
+		strcpy(output->names[output->numEntries - 1], "..");
+
+		if (getInode(objectID, (&output->inodes[output->numEntries - 2]), 0) != 0)
+			return 1;
+		if (parseFSTree(FSOP_ID_TO_PARENT_ID, &objectID, NULL, NULL, &parentID, NULL) != 0)
+			return 1;
+		if (getInode(parentID, (&output->inodes[output->numEntries - 1]), 0) != 0)
+			return 1;
+	}
+
+	free(children);
 
 	return 0;
 
 error:
+	free(children);
 	free(output->inodes);
 	free(output->names[0]);
 	free(output->names);

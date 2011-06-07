@@ -100,7 +100,7 @@ int DOKAN_CALLBACK btrfsGetFileInformation(LPCWSTR fileName, LPBY_HANDLE_FILE_IN
 
 	if (getPathID(fileNameB, &objectID) != 0)
 		return -ERROR_FILE_NOT_FOUND;
-	if (getInode(objectID, &inode) != 0)
+	if (getInode(objectID, &inode, 1) != 0)
 		return -ERROR_FILE_NOT_FOUND;
 	
 	/* TODO: FILE_ATTRIBUTE_COMPRESSED, FILE_ATTRIBUTE_SPARSE_FILE, FILE_ATTRIBUTE_REPARSE_POINT (maybe) */
