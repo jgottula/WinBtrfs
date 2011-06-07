@@ -3,6 +3,8 @@ Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "WinBtrfsCLI", "WinBtrfsCLI\WinBtrfsCLI.vcxproj", "{BB6E39AC-8DF6-414E-924D-A190E2D15939}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DirLister", "DirLister\DirLister.vcxproj", "{B9FE42F3-762E-4425-9DDD-CEE1CBC9E394}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -13,6 +15,10 @@ Global
 		{BB6E39AC-8DF6-414E-924D-A190E2D15939}.Debug|Win32.Build.0 = Debug|Win32
 		{BB6E39AC-8DF6-414E-924D-A190E2D15939}.Release|Win32.ActiveCfg = Release|Win32
 		{BB6E39AC-8DF6-414E-924D-A190E2D15939}.Release|Win32.Build.0 = Release|Win32
+		{B9FE42F3-762E-4425-9DDD-CEE1CBC9E394}.Debug|Win32.ActiveCfg = Debug|Win32
+		{B9FE42F3-762E-4425-9DDD-CEE1CBC9E394}.Debug|Win32.Build.0 = Debug|Win32
+		{B9FE42F3-762E-4425-9DDD-CEE1CBC9E394}.Release|Win32.ActiveCfg = Release|Win32
+		{B9FE42F3-762E-4425-9DDD-CEE1CBC9E394}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
