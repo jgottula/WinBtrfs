@@ -63,6 +63,13 @@ void firstTasks()
 		exit(1);
 	}
 
+	if ((errorCode = setupBigDokanLock()) != 0)
+	{
+		printf("Failed to setup the Big Dokan Lock! (GetLastError: %d)\n", errorCode);
+
+		exit(1);
+	}
+
 	if ((errorCode = readPrimarySB()) != 0)
 	{
 		printf("Failed to read the primary superblock! (GetLastError: %d)\n", errorCode);

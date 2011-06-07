@@ -11,6 +11,7 @@
  * any later version.
  */
 
+DWORD setupBigDokanLock();
 int DOKAN_CALLBACK btrfsCreateFile(LPCWSTR fileName, DWORD desiredAccess, DWORD shareMode, DWORD creationDisposition,
 	DWORD flagsAndAttributes, PDOKAN_FILE_INFO info);
 int DOKAN_CALLBACK btrfsOpenDirectory(LPCWSTR fileName, PDOKAN_FILE_INFO info);

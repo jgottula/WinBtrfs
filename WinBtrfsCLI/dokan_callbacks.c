@@ -24,6 +24,18 @@
 
 extern BtrfsSuperblock super;
 
+HANDLE hBigDokanLock = INVALID_HANDLE_VALUE;
+
+DWORD setupBigDokanLock()
+{
+	hBigDokanLock = CreateMutex(NULL, FALSE, NULL);
+
+	if (hBigDokanLock == INVALID_HANDLE_VALUE)
+		return GetLastError();
+	else
+		return ERROR_SUCCESS;
+}
+
 // CreateFile
 //   If file is a directory, CreateFile (not OpenDirectory) may be called.
 //   In this case, CreateFile should return 0 when that directory can be opened.
@@ -96,12 +108,21 @@ int DOKAN_CALLBACK btrfsGetFileInformation(LPCWSTR fileName, LPBY_HANDLE_FILE_IN
 	unsigned __int64 objectID;
 	Inode inode;
 
+	if (WaitForSingleObject(hBigDokanLock, 10000) != WAIT_OBJECT_0)
+		return -ERROR_SEM_TIMEOUT; // error code looks sketchy
+
 	assert(wcstombs(fileNameB, fileName, MAX_PATH) == wcslen(fileName));
 
 	if (getPathID(fileNameB, &objectID) != 0)
+	{
+		ReleaseMutex(hBigDokanLock);
 		return -ERROR_FILE_NOT_FOUND;
+	}
 	if (getInode(objectID, &inode, 1) != 0)
+	{
+		ReleaseMutex(hBigDokanLock);
 		return -ERROR_FILE_NOT_FOUND;
+	}
 	
 	/* TODO: FILE_ATTRIBUTE_COMPRESSED, FILE_ATTRIBUTE_SPARSE_FILE, FILE_ATTRIBUTE_REPARSE_POINT (maybe) */
 	buffer->dwFileAttributes = 0;
@@ -128,6 +149,8 @@ int DOKAN_CALLBACK btrfsGetFileInformation(LPCWSTR fileName, LPBY_HANDLE_FILE_IN
 	buffer->nFileIndexHigh = (DWORD)(endian64(inode.objectID) << 32);
 	buffer->nFileIndexLow = (DWORD)endian64(inode.objectID);
 	
+	ReleaseMutex(hBigDokanLock);
+
 	return ERROR_SUCCESS;
 }
 
@@ -140,12 +163,21 @@ int DOKAN_CALLBACK btrfsFindFiles(LPCWSTR pathName, PFillFindData pFillFindData,
 	WIN32_FIND_DATAW findData;
 	int i;
 
+	if (WaitForSingleObject(hBigDokanLock, 10000) != WAIT_OBJECT_0)
+		return -ERROR_SEM_TIMEOUT; // error code looks sketchy
+
 	assert(wcstombs(pathNameB, pathName, MAX_PATH) == wcslen(pathName));
 	
 	if (getPathID(pathNameB, &objectID) != 0)
+	{
+		ReleaseMutex(hBigDokanLock);
 		return -ERROR_PATH_NOT_FOUND;
+	}
 	if (dirList(objectID, &listing) != 0)
+	{
+		ReleaseMutex(hBigDokanLock);
 		return -ERROR_PATH_NOT_FOUND; // probably not an adequate error code
+	}
 
 	for (i = 0; i < listing.numEntries; i++)
 	{
@@ -178,6 +210,8 @@ int DOKAN_CALLBACK btrfsFindFiles(LPCWSTR pathName, PFillFindData pFillFindData,
 	}
 
 	destroyDirList(&listing);
+
+	ReleaseMutex(hBigDokanLock);
 
 	return ERROR_SUCCESS;
 }
@@ -267,6 +301,8 @@ int DOKAN_CALLBACK btrfsGetDiskFreeSpace(PULONGLONG freeBytesAvailable, PULONGLO
 {
 	ULONGLONG free, total;
 
+	/* Big Dokan Lock not needed here */
+
 	total = endian64(super.totalBytes);
 	free =  total - endian64(super.bytesUsed);
 	
@@ -283,6 +319,8 @@ int DOKAN_CALLBACK btrfsGetVolumeInformation(LPWSTR volumeNameBuffer, DWORD volu
 {
 	CHAR labelS[MAX_PATH + 1];
 	
+	/* Big Dokan Lock not needed here */
+
 	/* TODO: switch to strcpy_s & mbstowcs_s; this currently causes pointers to go bad,
 		which presumably indicates some sort of vulnerability in the present code that
 		the *_s functions are systematically preventing by padding with 0xfefefefe etc. */
