@@ -84,7 +84,6 @@ btrfs_256m directory structure as of 2011.06.05
   - 256b.bin
   - 1k.bin
   - 4k.bin
-  - 16k.bin
   - 64k.bin
   - 256k.bin
   - 1m.bin
