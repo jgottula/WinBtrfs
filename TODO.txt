@@ -22,8 +22,13 @@ Cache frequently used blocks in memory, especially FS tree nodes and other trees
 Multithread support for everything: make block reading threadsafe, and ensure that calls to btrfs_filesystem.c functions
 	from different threads will not cause serious race conditions and/or destruction
 Check all malloc/realloc calls and end fatally upon malloc failure
-Develop a better system for error reporting than just piling on a bunch of assertions (look up assert best practices)
+Develop a better system for nonfatal error reporting than just piling on a bunch of assertions (look up assert best practices)
 Rectify comiler warnings
 Make sure performance isn't horrendous for filesystems with big FS trees (i.e. large directory structures)
 	Do, say, a Linux installation on a Btrfs partition and then feed the image into WinBtrfs and have it do a dirlist or something
 	Fix this with... caching? or something?
+Verify that weird-ass Windows unicode path strings don't crash the driver program
+Make sure that file times get converted absolutely precisely
+Add symlinks and hard links to the test FS and make sure they work as intended
+Try to hit all the outward-facing filesystem interfaces (especially btrfs_operations.c) with extra-long strings for buffer overrun testing
+Optimize situations where I used realloc to pound the memory allocator at least a little less
