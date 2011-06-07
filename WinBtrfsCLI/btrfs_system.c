@@ -395,18 +395,24 @@ void parseRootTree()
 }
 
 /* extend this function to have an option for the operation we want, plus an output/returnval */
-void parseFSTreeRec(unsigned __int64 addr, int operation, void *inputA, void *inputB, void *inputC, void *output)
+int parseFSTreeRec(unsigned __int64 addr, int operation, void *input1, void *input2, void *input3, void *output1, void *output2)
 {
 	unsigned char *nodeBlock, *nodePtr;
 	BtrfsHeader *header;
 	BtrfsItem *item;
-	int i, j, done = 0;
+	int i, j, doneEarly = 0, rtnCode;
 
 	loadNode(addr, ADDR_LOGICAL, &nodeBlock, &header);
 
 	assert(header->tree == OBJID_FS_TREE);
 	
 	nodePtr = nodeBlock + sizeof(BtrfsHeader);
+
+	/* set default return code by operation */
+	if (operation == FSOP_ID_TO_CHILD_IDS)
+		rtnCode = 0;
+	else
+		rtnCode = 1;
 
 	if (header->level == 0) // leaf node
 	{
@@ -417,10 +423,10 @@ void parseFSTreeRec(unsigned __int64 addr, int operation, void *inputA, void *in
 			if (operation == FSOP_NAME_TO_ID)
 			{
 				/* pointer aliases */
-				const unsigned __int64 *parentID = (const unsigned __int64 *)inputA;
-				const unsigned __int64 *hash = (const unsigned __int64 *)inputB;
-				const char *name = (const char *)inputC;
-				unsigned __int64 *childID = (unsigned __int64 *)output;
+				const unsigned __int64 *parentID = (const unsigned __int64 *)input1;
+				const unsigned __int64 *hash = (const unsigned __int64 *)input2;
+				const char *name = (const char *)input3;
+				unsigned __int64 *childID = (unsigned __int64 *)output1;
 				
 				/* TODO: fix hash matching */
 				if (item->key.type == TYPE_DIR_ITEM && endian64(item->key.objectID) == *parentID/* &&
@@ -439,7 +445,9 @@ void parseFSTreeRec(unsigned __int64 addr, int operation, void *inputA, void *in
 						{
 							/* found a match */
 							*childID = dirItem->child.objectID;
-							done = 1;
+
+							rtnCode = 0;
+							doneEarly = 1;
 							break;
 						}
 					
@@ -457,8 +465,8 @@ void parseFSTreeRec(unsigned __int64 addr, int operation, void *inputA, void *in
 			else if (operation == FSOP_ID_TO_INODE)
 			{
 				/* pointer aliases */
-				const unsigned __int64 *objectID = (const unsigned __int64 *)inputA;
-				BtrfsInodeItem *inode = (BtrfsInodeItem *)output;
+				const unsigned __int64 *objectID = (const unsigned __int64 *)input1;
+				BtrfsInodeItem *inode = (BtrfsInodeItem *)output1;
 
 				if (item->key.type == TYPE_INODE_ITEM && endian64(item->key.objectID) == *objectID)
 				{
@@ -469,13 +477,90 @@ void parseFSTreeRec(unsigned __int64 addr, int operation, void *inputA, void *in
 
 					memcpy(inode, inodeItem, sizeof(BtrfsInodeItem));
 
-					done = 1;
+					rtnCode = 0;
+					doneEarly = 1;
+				}
+			}
+			else if (operation == FSOP_ID_TO_CHILD_IDS)
+			{
+				/* pointer aliases */
+				const unsigned __int64 *parentID = (const unsigned __int64 *)input1;
+				unsigned __int64 *numChildren = (unsigned __int64 *)output1;
+				unsigned __int64 **children = (unsigned __int64 **)output2;
+
+				if (item->key.type == TYPE_DIR_ITEM && endian64(item->key.objectID) == *parentID)
+				{
+					BtrfsDirItem *dirItem = (BtrfsDirItem *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset));
+					
+					while (1)
+					{
+						/* ensure that the variably sized item fits entirely in the node block */
+						assert((unsigned char *)dirItem + sizeof(BtrfsDirItem) <= (unsigned char *)nodeBlock + endian32(super.nodeSize) &&
+							(unsigned char *)dirItem + sizeof(BtrfsDirItem) + endian16(dirItem->m) + endian16(dirItem->n) <=
+							(unsigned char *)nodeBlock + endian32(super.nodeSize));
+						
+						if (*children == NULL)
+							*children = (unsigned __int64 *)malloc(sizeof(unsigned __int64));
+						else
+							*children = (unsigned __int64 *)realloc(*children, sizeof(unsigned __int64) * (*numChildren + 1));
+
+						(*children)[*numChildren] = dirItem->child.objectID;
+
+						(*numChildren)++;
+						
+						/* advance to the next DIR_ITEM if there are more */
+						if (endian32(item->size) > sizeof(BtrfsDirItem) + endian16(dirItem->m) + endian16(dirItem->n))
+						{
+							dirItem = (BtrfsDirItem *)((unsigned char *)dirItem + sizeof(BtrfsDirItem) +
+								endian16(dirItem->m) + endian16(dirItem->n));
+						}
+						else
+							break;
+					}
+				}
+			}
+			else if (operation == FSOP_ID_TO_NAME)
+			{
+				/* pointer aliases */
+				const unsigned __int64 *childID = (const unsigned __int64 *)input1;
+				char *name = (char *)output1;
+
+				if (item->key.type == TYPE_DIR_ITEM)
+				{
+					BtrfsDirItem *dirItem = (BtrfsDirItem *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset));
+					
+					while (1)
+					{
+						/* ensure that the variably sized item fits entirely in the node block */
+						assert((unsigned char *)dirItem + sizeof(BtrfsDirItem) <= (unsigned char *)nodeBlock + endian32(super.nodeSize) &&
+							(unsigned char *)dirItem + sizeof(BtrfsDirItem) + endian16(dirItem->m) + endian16(dirItem->n) <=
+							(unsigned char *)nodeBlock + endian32(super.nodeSize));
+						
+						if (endian64(dirItem->child.objectID) == *childID)
+						{
+							memcpy(name, (char *)dirItem + sizeof(BtrfsDirItem), endian16(dirItem->n));
+							name[endian16(dirItem->n)] = 0;
+
+							doneEarly = 1;
+							rtnCode = 0;
+							break;
+						}
+						
+						/* advance to the next DIR_ITEM if there are more */
+						if (endian32(item->size) > sizeof(BtrfsDirItem) + endian16(dirItem->m) + endian16(dirItem->n))
+						{
+							dirItem = (BtrfsDirItem *)((unsigned char *)dirItem + sizeof(BtrfsDirItem) +
+								endian16(dirItem->m) + endian16(dirItem->n));
+						}
+						else
+							break;
+					}
 				}
 			}
 			else
 				printf("parseFSTreeRec: unknown operation (0x%02x)!\n", operation);
 
-			if (done)
+			if (doneEarly)
 				break;
 
 			nodePtr += sizeof(BtrfsItem);
@@ -488,18 +573,33 @@ void parseFSTreeRec(unsigned __int64 addr, int operation, void *inputA, void *in
 			BtrfsKeyPtr *keyPtr = (BtrfsKeyPtr *)nodePtr;
 
 			/* recurse down one level of the tree */
-			parseFSTreeRec(endian64(keyPtr->blockNum), operation, inputA, inputB, inputC, output);
+			if (parseFSTreeRec(endian64(keyPtr->blockNum), operation, input1, input2, input3, output1, output2) == 0)
+				rtnCode = 0;
 
 			nodePtr += sizeof(BtrfsKeyPtr);
 		}
 	}
 
 	free(nodeBlock);
+
+	return rtnCode;
 }
 
-void parseFSTree(int operation, void *inputA, void *inputB, void *inputC, void *output)
+int parseFSTree(int operation, void *input1, void *input2, void *input3, void *output1, void *output2)
 {
-	parseFSTreeRec(getFSRootBlockNum(), operation, inputA, inputB, inputC, output);
+	/* pre tasks */
+	if (operation == FSOP_ID_TO_CHILD_IDS)
+	{
+		/* pointer aliases */
+		const unsigned __int64 *parentID = (const unsigned __int64 *)input1;
+		unsigned __int64 *numChildren = (unsigned __int64 *)output1;
+		unsigned __int64 **children = (unsigned _int64 **)output2;
+
+		*numChildren = 0;
+		*children = NULL;
+	}
+	
+	return parseFSTreeRec(getFSRootBlockNum(), operation, input1, input2, input3, output1, output2);
 }
 
 unsigned __int64 getFSRootBlockNum()

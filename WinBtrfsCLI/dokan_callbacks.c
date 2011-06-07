@@ -20,6 +20,7 @@
 #include "structures.h"
 #include "endian.h"
 #include "btrfs_system.h"
+#include "btrfs_operations.h"
 
 extern BtrfsSuperblock super;
 
@@ -92,21 +93,21 @@ int DOKAN_CALLBACK btrfsFlushFileBuffers(LPCWSTR fileName, PDOKAN_FILE_INFO info
 int DOKAN_CALLBACK btrfsGetFileInformation(LPCWSTR fileName, LPBY_HANDLE_FILE_INFORMATION buffer, PDOKAN_FILE_INFO info)
 {
 	char fileNameB[MAX_PATH];
+	unsigned __int64 objectID;
 	Inode inode;
-	
-	printf("btrfsGetFileInformation: OK [%s]\n", fileName);
 
 	assert(wcstombs(fileNameB, fileName, MAX_PATH) == wcslen(fileName));
 
-	if (getInode(fileNameB, &inode) == 1) // error
+	if (getPathID(fileNameB, &objectID) != 0)
+		return -ERROR_FILE_NOT_FOUND;
+	if (getInode(objectID, &inode) != 0)
 		return -ERROR_FILE_NOT_FOUND;
 	
-	/* TODO: FILE_ATTRIBUTE_COMPRESSED, FILE_ATTRIBUTE_SPARSE_FILE */
+	/* TODO: FILE_ATTRIBUTE_COMPRESSED, FILE_ATTRIBUTE_SPARSE_FILE, FILE_ATTRIBUTE_REPARSE_POINT (maybe) */
 	buffer->dwFileAttributes = 0;
 	if (endian32(inode.inodeItem.stMode) & S_IFBLK) buffer->dwFileAttributes |= FILE_ATTRIBUTE_DEVICE; // is this right?
 	if (endian32(inode.inodeItem.stMode) & S_IFDIR) buffer->dwFileAttributes |= FILE_ATTRIBUTE_DIRECTORY;
 	if (inode.hidden) buffer->dwFileAttributes |= FILE_ATTRIBUTE_HIDDEN;
-	if (endian32(inode.inodeItem.stMode) & S_IFLNK) buffer->dwFileAttributes |= FILE_ATTRIBUTE_REPARSE_POINT;
 
 	/* not sure if this is necessary, but it seems to be what you're supposed to do */
 	if (buffer->dwFileAttributes == 0)
@@ -130,9 +131,53 @@ int DOKAN_CALLBACK btrfsGetFileInformation(LPCWSTR fileName, LPBY_HANDLE_FILE_IN
 	return ERROR_SUCCESS;
 }
 
-int DOKAN_CALLBACK btrfsFindFiles(LPCWSTR pathName, PFillFindData data, PDOKAN_FILE_INFO info)
+int DOKAN_CALLBACK btrfsFindFiles(LPCWSTR pathName, PFillFindData pFillFindData, PDOKAN_FILE_INFO info)
 {
-	printf("btrfsFindFiles: unimplemented! [%s]\n", pathName);
+	char pathNameB[MAX_PATH];
+	wchar_t nameW[MAX_PATH];
+	unsigned __int64 objectID;
+	DirList listing;
+	WIN32_FIND_DATAW findData;
+	int i;
+
+	assert(wcstombs(pathNameB, pathName, MAX_PATH) == wcslen(pathName));
+	
+	if (getPathID(pathNameB, &objectID) != 0)
+		return -ERROR_PATH_NOT_FOUND;
+	if (dirList(objectID, &listing) != 0)
+		return -ERROR_PATH_NOT_FOUND; // probably not an adequate error code
+
+	for (i = 0; i < listing.numEntries; i++)
+	{
+		/* TODO: FILE_ATTRIBUTE_COMPRESSED, FILE_ATTRIBUTE_SPARSE_FILE, FILE_ATTRIBUTE_REPARSE_POINT (maybe) */
+		findData.dwFileAttributes = 0;
+		if (endian32(listing.inodes[i].inodeItem.stMode) & S_IFBLK) findData.dwFileAttributes |= FILE_ATTRIBUTE_DEVICE; // is this right?
+		if (endian32(listing.inodes[i].inodeItem.stMode) & S_IFDIR) findData.dwFileAttributes |= FILE_ATTRIBUTE_DIRECTORY;
+		if (listing.inodes[i].hidden) findData.dwFileAttributes |= FILE_ATTRIBUTE_HIDDEN;
+
+		/* not sure if this is necessary, but it seems to be what you're supposed to do */
+		if (findData.dwFileAttributes == 0)
+			findData.dwFileAttributes = FILE_ATTRIBUTE_NORMAL;
+		
+		convertTime(&(listing.inodes[i].inodeItem.stCTime), &findData.ftCreationTime);
+		convertTime(&(listing.inodes[i].inodeItem.stATime), &findData.ftLastAccessTime);
+		convertTime(&(listing.inodes[i].inodeItem.stMTime), &findData.ftLastWriteTime);
+
+		findData.nFileSizeHigh = (DWORD)(endian64(listing.inodes[i].inodeItem.stSize) >> 32);
+		findData.nFileSizeLow = (DWORD)endian64(listing.inodes[i].inodeItem.stSize);
+
+		assert(mbstowcs(nameW, listing.names[i], MAX_PATH) == strlen(listing.names[i]));
+
+		wcscpy(findData.cFileName, nameW);
+		findData.cAlternateFileName[0] = 0; // no 8.3 name
+
+		/* assuming that calling pFillFindData multiple times with the same pointer arg will work as intended */
+
+		/* call the function pointer */
+		(*pFillFindData)(&findData, info);
+	}
+
+	destroyDirList(&listing);
 
 	return ERROR_SUCCESS;
 }
@@ -224,8 +269,6 @@ int DOKAN_CALLBACK btrfsGetDiskFreeSpace(PULONGLONG freeBytesAvailable, PULONGLO
 
 	total = endian64(super.totalBytes);
 	free =  total - endian64(super.bytesUsed);
-
-	printf("btrfsGetDiskFreeSpace: %I64u of %I64u KiB free\n", free / 1024, total / 1024);
 	
 	*freeBytesAvailable = free;
 	*totalNumberOfBytes = total;
@@ -239,8 +282,6 @@ int DOKAN_CALLBACK btrfsGetVolumeInformation(LPWSTR volumeNameBuffer, DWORD volu
 	PDOKAN_FILE_INFO info)
 {
 	CHAR labelS[MAX_PATH + 1];
-
-	printf("btrfsGetVolumeInformation: OK\n");
 	
 	/* TODO: switch to strcpy_s & mbstowcs_s; this currently causes pointers to go bad,
 		which presumably indicates some sort of vulnerability in the present code that
@@ -264,8 +305,6 @@ int DOKAN_CALLBACK btrfsGetVolumeInformation(LPWSTR volumeNameBuffer, DWORD volu
 
 int DOKAN_CALLBACK btrfsUnmount(PDOKAN_FILE_INFO info)
 {
-	printf("btrfsUnmount: OK\n");
-
 	/* nothing to do */
 	
 	return ERROR_SUCCESS;

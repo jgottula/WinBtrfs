@@ -255,3 +255,10 @@ typedef struct
 	int						hidden;
 	int						compressed;
 } Inode;
+
+typedef struct
+{
+	unsigned __int64		numEntries;
+	Inode					*inodes;
+	char					**names;
+} DirList;

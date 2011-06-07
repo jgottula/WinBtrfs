@@ -105,12 +105,11 @@ int componentizePath(const char *path, char ***output)
 	return numComponents;
 }
 
-int getInode(const char *path, Inode *inode)
+int getPathID(const char *path, unsigned __int64 *output)
 {
 	char vPath[MAX_PATH], **components;
 	unsigned __int64 parentID = OBJID_ROOT_DIR, childID, hash;
 	int i, numComponents = -1;
-	BtrfsInodeItem inodeItem;
 
 	validatePath(path, vPath);
 	numComponents = componentizePath(path, &components);
@@ -119,23 +118,78 @@ int getInode(const char *path, Inode *inode)
 	{
 		childID = -1;
 		hash = crc32c(0, (const unsigned char *)(components[i]), strlen(components[i]));
-		parseFSTree(FSOP_NAME_TO_ID, &parentID, &hash, components[i], &childID);
 
-		if (childID == -1)
+		if (parseFSTree(FSOP_NAME_TO_ID, &parentID, &hash, components[i], &childID, NULL) != 0)
 			return 1;
 
 		parentID = childID;
 	}
 
-	parseFSTree(FSOP_ID_TO_INODE, &parentID, NULL, NULL, &inodeItem);
-
-	inode->objectID = parentID;
-	inode->hidden = (numComponents > 0 && components[numComponents - 1][0] == '.') ? 1 : 0;
-	inode->compressed = 0; // TODO: implement this for real
-
-	memcpy(&(inode->inodeItem), &inodeItem, sizeof(BtrfsInodeItem));
+	*output = parentID;
 
 	return 0;
+}
+
+int getInode(unsigned __int64 objectID, Inode *output)
+{
+	BtrfsInodeItem inodeItem;
+	char name[MAX_PATH];
+
+	if (parseFSTree(FSOP_ID_TO_INODE, &objectID, NULL, NULL, &inodeItem, NULL) != 0)
+		return 1;
+	if (parseFSTree(FSOP_ID_TO_NAME, &objectID, NULL, NULL, name, NULL) != 0)
+		return 1;
+
+	output->objectID = objectID;
+	output->hidden = (name[0] == '.' ? 1 : 0);
+	output->compressed = 0; // TODO: implement this for real
+
+	memcpy(&(output->inodeItem), &inodeItem, sizeof(BtrfsInodeItem));
+
+	return 0;
+}
+
+int getName(unsigned __int64 objectID, char *output)
+{
+	if (parseFSTree(FSOP_ID_TO_NAME, &objectID, NULL, NULL, output, NULL) != 0)
+		return 1;
+
+	return 0;
+}
+
+int dirList(unsigned __int64 objectID, DirList *output)
+{
+	unsigned __int64 numChildren = 0, *children = NULL;
+	int i;
+
+	if (parseFSTree(FSOP_ID_TO_CHILD_IDS, &objectID, NULL, NULL, &numChildren, &children) != 0)
+		return 1;
+
+	output->numEntries = numChildren;
+	output->inodes = (Inode *)malloc(sizeof(Inode) * numChildren);
+	output->names = (char **)malloc(sizeof(char *) * numChildren);
+
+	for (i = 0; i < numChildren; i++)
+	{
+		if (i == 0)
+			output->names[i] = (char *)malloc(MAX_PATH * numChildren);
+		else
+			output->names[i] = output->names[0] + (MAX_PATH * i);
+		
+		if (getName(children[i], output->names[i]) != 0)
+			goto error;
+		
+		if (getInode(children[i], &(output->inodes[i])) != 0)
+			goto error;
+	}
+
+	return 0;
+
+error:
+	free(output->inodes);
+	free(output->names[0]);
+	free(output->names);
+	return 1;
 }
 
 void convertTime(BtrfsTime *bTime, PFILETIME wTime)
@@ -147,4 +201,14 @@ void convertTime(BtrfsTime *bTime, PFILETIME wTime)
 
 	wTime->dwHighDateTime = (DWORD)(s64 >> 32);
 	wTime->dwLowDateTime = (DWORD)s64;
+}
+
+void destroyDirList(DirList *listing)
+{
+	free(listing->inodes);
+	
+	if (listing->numEntries > 0)
+		free(listing->names[0]);
+
+	free(listing->names);
 }

@@ -67,6 +67,8 @@
 /* FS tree parser operations */
 #define FSOP_NAME_TO_ID			0x00
 #define FSOP_ID_TO_INODE		0x01
+#define FSOP_ID_TO_CHILD_IDS	0x02
+#define FSOP_ID_TO_NAME			0x03
 
 /* stat mode constants */
 #define S_IFMT					0170000	// bitmask for file type fields
