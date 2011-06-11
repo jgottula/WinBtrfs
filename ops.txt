@@ -3,7 +3,7 @@ Operations
 
 FS ops
 
-FSOP_NAME_TO_ID
+FSOP_NAME_TO_ID: Finds the object ID for a named file or dir
 Inputs:
 [1] const unsigned __int64 *	ptr to parent's object ID
 [2] const unsigned __int64 *	ptr to hash of the child file/dir's name
@@ -11,27 +11,30 @@ Inputs:
 Outputs:
 [1] unsigned __int64 *			child's object ID
 
-FSOP_ID_TO_INODE
+FSOP_ID_TO_INODE: Returns the inode associated with a given object ID
 Inputs:
 [1] const unsigned __int64 *	ptr to file/dir's object ID
 Outputs:
 [1] BtrfsInodeItem *			inode for the file/dir
 
-FSOP_ID_TO_CHILD_IDS
+FSOP_ID_TO_CHILD_IDS: Returns all object IDs that are children of the given object ID
 Inputs:
 [1] const unsigned __int64 *	ptr to parent's object ID
 Outputs:
 [1] unsigned __int64 *			number of child IDs returned
 [2] unsigned __int64 **			ptr to an array of child IDs
 
-FSOP_ID_TO_NAME
+FSOP_ID_TO_NAME: Finds the name associated with a given object ID
 Inputs:
 [1] const unsigned __int64 *	ptr to file/dir's object ID
 Outputs:
 [1] char *						file/dir's name
 
-FSOP_ID_TO_PARENT_ID
+FSOP_ID_TO_PARENT_ID: Finds the parent for a given object ID
 Inputs:
 [1] const unsigned __int64 *	ptr to child's object ID
 Outputs:
 [1] unsigned __int64 *			parent's object ID
+
+FSOP_DUMP_TREE: Dumps the entire FS tree to stdout
+No inputs or outputs
