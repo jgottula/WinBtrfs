@@ -1,4 +1,4 @@
-WinBtfrs — Readme/FAQ
+WinBtrfs — Readme/FAQ
 
 Last updated 2011.06.10
 
