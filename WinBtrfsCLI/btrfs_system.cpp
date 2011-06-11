@@ -19,10 +19,9 @@
 #include "endian.h"
 #include "crc32c.h"
 #include "btrfs_system.h"
+#include "block_reader.h"
 
-extern WCHAR devicePath[MAX_PATH];
-
-HANDLE hRead = INVALID_HANDLE_VALUE, hReadMutex = INVALID_HANDLE_VALUE;
+BlockReader *blockReader;
 BtrfsSuperblock super;
 BtrfsDevItem *devices = NULL;
 int numDevices = -1;
@@ -33,22 +32,14 @@ int numRoots = -1;
 
 DWORD init()
 {
-	hRead = CreateFile(devicePath, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
-
-	if (hRead == INVALID_HANDLE_VALUE)
-		return GetLastError();
-
-	hReadMutex = CreateMutex(NULL, FALSE, NULL);
-
-	if (hReadMutex == INVALID_HANDLE_VALUE)
-		return GetLastError();
-
+	blockReader = new BlockReader();
+	
 	return 0;
 }
 
 void cleanUp()
 {
-	CloseHandle(hRead);
+	delete blockReader;
 }
 
 unsigned __int64 logiToPhys(unsigned __int64 logiAddr, unsigned __int64 len)
@@ -76,46 +67,9 @@ unsigned __int64 logiToPhys(unsigned __int64 logiAddr, unsigned __int64 len)
 	return (logiAddr - chunks[chunk].logiOffset) + chunks[chunk].stripes[0].offset;
 }
 
-DWORD readBlock(unsigned __int64 addr, int addrType, unsigned __int64 len, unsigned char *dest)
-{
-	LARGE_INTEGER li;
-	DWORD bytesRead;
-
-	/* hope you called init first! */
-	assert(hRead != INVALID_HANDLE_VALUE);
-	assert(hReadMutex != INVALID_HANDLE_VALUE);
-
-	if (addrType == ADDR_LOGICAL)
-		addr = logiToPhys(addr, len);
-
-	/* because Win32 uses a signed (??) value for the address from which to read,
-		our address space is cut in half from what Btrfs technically allows */
-	li.QuadPart = (LONGLONG)addr;
-
-	/* using SetFilePointerEx and then ReadFile is clearly not threadsafe, so for now
-		I'm using a mutex here; in the future, this should be fully threaded
-		(perhaps a separate read handle per thread? this would require a CreateFile on each
-		call—or perhaps declare a static local that would retain value per thread?) */
-	if (WaitForSingleObject(hReadMutex, 10000) != WAIT_OBJECT_0)
-		goto error;
-
-	if (SetFilePointerEx(hRead, li, NULL, 0) == 0)
-		goto error;
-
-	if (ReadFile(hRead, dest, (DWORD)len, &bytesRead, NULL) == 0 || bytesRead != len)
-		goto error;
-
-	ReleaseMutex(hReadMutex);
-	return 0;
-
-error:
-	ReleaseMutex(hReadMutex);
-	return GetLastError();
-}
-
 DWORD readPrimarySB()
 {
-	return readBlock(SUPERBLOCK_1_PADDR, ADDR_PHYSICAL, sizeof(BtrfsSuperblock), (unsigned char *)&super);
+	return blockReader->directRead(SUPERBLOCK_1_PADDR, ADDR_PHYSICAL, sizeof(BtrfsSuperblock), (unsigned char *)&super);
 }
 
 int validateSB(BtrfsSuperblock *s)
@@ -149,15 +103,15 @@ int findSecondarySBs()
 
 	/* read each superblock (if present) and validate */
 
-	if (readBlock(SUPERBLOCK_2_PADDR, ADDR_PHYSICAL, sizeof(BtrfsSuperblock), (unsigned char *)&s2) == 0 &&
+	if (blockReader->directRead(SUPERBLOCK_2_PADDR, ADDR_PHYSICAL, sizeof(BtrfsSuperblock), (unsigned char *)&s2) == 0 &&
 		validateSB(&s2) == 0 && endian64(s2.generation) > bestGen)
 		best = 2, sBest = &s2, bestGen = endian64(s2.generation);
 
-	if (readBlock(SUPERBLOCK_2_PADDR, ADDR_PHYSICAL, sizeof(BtrfsSuperblock), (unsigned char *)&s3) == 0 &&
+	if (blockReader->directRead(SUPERBLOCK_2_PADDR, ADDR_PHYSICAL, sizeof(BtrfsSuperblock), (unsigned char *)&s3) == 0 &&
 		validateSB(&s3) == 0 && endian64(s3.generation) > bestGen)
 		best = 3, sBest = &s3, bestGen = endian64(s3.generation);
 
-	if (readBlock(SUPERBLOCK_2_PADDR, ADDR_PHYSICAL, sizeof(BtrfsSuperblock), (unsigned char *)&s4) == 0 &&
+	if (blockReader->directRead(SUPERBLOCK_2_PADDR, ADDR_PHYSICAL, sizeof(BtrfsSuperblock), (unsigned char *)&s4) == 0 &&
 		validateSB(&s4) == 0 && endian64(s4.generation) > bestGen)
 		best = 4, sBest = &s4, bestGen = endian64(s4.generation);
 
@@ -225,7 +179,7 @@ void loadNode(unsigned __int64 blockAddr, int addrType, unsigned char **nodeDest
 	*nodeDest = (unsigned char *)malloc(blockSize);
 
 	/* this might not always be fatal, so in the future an assertion may be inappropriate */
-	assert(readBlock(blockAddr, addrType, blockSize, *nodeDest) == 0);
+	assert(blockReader->cachedRead(blockAddr, addrType, blockSize, *nodeDest) == 0);
 
 	*header = (BtrfsHeader *)(*nodeDest);
 

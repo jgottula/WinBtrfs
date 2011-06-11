@@ -11,6 +11,8 @@
  * any later version.
  */
 
+#pragma once
+
 /* pack structs the way they are on the disk */
 #pragma pack(1)
 

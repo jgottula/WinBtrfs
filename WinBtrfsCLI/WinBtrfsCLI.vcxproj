@@ -98,6 +98,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="block_reader.cpp" />
     <ClCompile Include="btrfs_operations.cpp" />
     <ClCompile Include="btrfs_system.cpp" />
     <ClCompile Include="dokan_callbacks.cpp" />
@@ -106,6 +107,7 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="block_reader.h" />
     <ClInclude Include="btrfs_operations.h" />
     <ClInclude Include="btrfs_system.h" />
     <ClInclude Include="dokan_callbacks.h" />
@@ -113,6 +115,9 @@
     <ClInclude Include="crc32c.h" />
     <ClInclude Include="endian.h" />
     <ClInclude Include="structures.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="WinBtrfsCLI.psess" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

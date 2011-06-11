@@ -11,10 +11,12 @@
  * any later version.
  */
 
+#include <Windows.h>
+#include "structures.h"
+
 DWORD init();
 void cleanUp();
 unsigned __int64 logiToPhys(unsigned __int64 logiAddr, unsigned __int64 len);
-DWORD readBlock(unsigned __int64 addr, int addrType, unsigned __int64 len, unsigned char *dest);
 DWORD readPrimarySB();
 int validateSB(BtrfsSuperblock *s);
 int findSecondarySBs();
