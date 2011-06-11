@@ -32,3 +32,4 @@ Make sure that file times get converted absolutely precisely
 Add symlinks and hard links to the test FS and make sure they work as intended
 Try to hit all the outward-facing filesystem interfaces (especially btrfs_operations.c) with extra-long strings for buffer overrun testing
 Optimize situations where I used realloc to pound the memory allocator at least a little less
+Test FSes with: weird node/sector/leafsizes; tons of small files; deep directory structures
