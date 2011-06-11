@@ -1,6 +1,6 @@
-WinBtfrs - Readme/FAQ
+WinBtfrs — Readme/FAQ
 
-Last updated 2011.06.06
+Last updated 2011.06.10
 
 
 NOTE: WinBtrfs is NOT EVEN CLOSE to a finished product, and is not yet ready for use by most users. See the project status question below for more details.
