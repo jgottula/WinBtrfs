@@ -173,6 +173,7 @@ int DOKAN_CALLBACK btrfsFindFiles(LPCWSTR pathName, PFillFindData pFillFindData,
 		ReleaseMutex(hBigDokanLock);
 		return -ERROR_PATH_NOT_FOUND;
 	}
+
 	if (dirList(objectID, &listing) != 0)
 	{
 		ReleaseMutex(hBigDokanLock);
@@ -223,8 +224,8 @@ int DOKAN_CALLBACK btrfsSetFileAttributes(LPCWSTR fileName, DWORD fileAttributes
 	return ERROR_SUCCESS;
 }
 
-int DOKAN_CALLBACK btrfsSetFileTime(LPCWSTR fileName, CONST PFILETIME creationTime, CONST PFILETIME lastAccessTime,
-	CONST PFILETIME lastWriteTime, PDOKAN_FILE_INFO info)
+int DOKAN_CALLBACK btrfsSetFileTime(LPCWSTR fileName, CONST FILETIME *creationTime, CONST FILETIME *lastAccessTime,
+	CONST FILETIME *lastWriteTime, PDOKAN_FILE_INFO info)
 {
 	printf("btrfsSetFileTime: SHOULD NEVER BE CALLED!! [%s]\n", fileName);
 
