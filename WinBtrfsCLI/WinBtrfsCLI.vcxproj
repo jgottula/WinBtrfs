@@ -98,12 +98,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="btrfs_operations.c" />
-    <ClCompile Include="btrfs_system.c" />
-    <ClCompile Include="dokan_callbacks.c" />
-    <ClCompile Include="crc32c.c" />
-    <ClCompile Include="endian.c" />
-    <ClCompile Include="main.c" />
+    <ClCompile Include="btrfs_operations.cpp" />
+    <ClCompile Include="btrfs_system.cpp" />
+    <ClCompile Include="dokan_callbacks.cpp" />
+    <ClCompile Include="crc32c.cpp" />
+    <ClCompile Include="endian.cpp" />
+    <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="btrfs_operations.h" />

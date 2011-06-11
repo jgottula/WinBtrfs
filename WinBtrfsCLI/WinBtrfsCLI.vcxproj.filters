@@ -15,22 +15,22 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="endian.c">
+    <ClCompile Include="btrfs_operations.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="main.c">
+    <ClCompile Include="btrfs_system.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="crc32c.c">
+    <ClCompile Include="crc32c.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="btrfs_system.c">
+    <ClCompile Include="dokan_callbacks.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="dokan_callbacks.c">
+    <ClCompile Include="endian.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="btrfs_operations.c">
+    <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
