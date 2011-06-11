@@ -1,4 +1,4 @@
-/* btrfs_operations.c
+/* btrfs_operations.cpp
  * high-level filesystem operations
  *
  * WinBtrfs

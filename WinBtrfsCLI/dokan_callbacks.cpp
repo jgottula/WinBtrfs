@@ -1,4 +1,4 @@
-/* dokan_callbacks.c
+/* dokan_callbacks.cpp
  * implementations of Dokan callback functions
  *
  * WinBtrfs

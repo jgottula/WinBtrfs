@@ -1,4 +1,4 @@
-/* main.c
+/* main.cpp
  * CLI processing and Dokan stuff
  *
  * WinBtrfs
