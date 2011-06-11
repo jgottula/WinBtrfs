@@ -20,19 +20,19 @@
 	(use endian16(), endian32(), and endian64() to convert them)
 	any other struct members WILL ALWAYS be in native endian! */
 
-typedef struct
+struct BtrfsTime
 {
 	__int64					secSince1970;
 	unsigned int			nanoseconds;
-} BtrfsTime;
+};
 
-typedef struct
+struct BtrfsChecksum
 {
 	unsigned int			crc32c;
 	unsigned char			padding				[0x1c];
-} BtrfsChecksum;
+};
 
-typedef struct
+struct BtrfsHeader
 {
 	BtrfsChecksum			csum;
 	unsigned char			fsID				[0x10];
@@ -44,30 +44,30 @@ typedef struct
 	unsigned __int64		tree;
 	unsigned int			nrItems;
 	unsigned char			level;
-} BtrfsHeader;
+};
 
-typedef struct
+struct BtrfsDiskKey
 {
 	unsigned __int64		objectID;
 	unsigned char			type;
 	unsigned __int64		offset;
-} BtrfsDiskKey;
+};
 
-typedef struct
+struct BtrfsKeyPtr
 {
 	BtrfsDiskKey			key;
 	unsigned __int64		blockNum;
 	unsigned __int64		generation;
-} BtrfsKeyPtr;
+};
 
-typedef struct
+struct BtrfsItem
 {
 	BtrfsDiskKey			key;
 	unsigned int			offset;
 	unsigned int			size;
-} BtrfsItem;
+};
 
-typedef struct
+struct BtrfsInodeItem
 {
 	unsigned __int64		generation;
 	unsigned __int64		transID;
@@ -86,17 +86,17 @@ typedef struct
 	BtrfsTime				stCTime;
 	BtrfsTime				stMTime;
 	BtrfsTime				oTime;
-} BtrfsInodeItem;
+};
 
-typedef struct
+struct BtrfsInodeRef
 {
 	unsigned __int64		index;
 	unsigned short			nameLen;
 	char					name				[0x0a];
-} BtrfsInodeRef;
+};
 
 /* this structure may be repeated if multiple items have the same hash */
-typedef struct
+struct BtrfsDirItem
 {
 	BtrfsDiskKey			child;
 	unsigned __int64		transID;
@@ -107,12 +107,12 @@ typedef struct
 	/* the following two items are of variable size */
 	// char					name[n];
 	// unsigned char		data[m];
-} BtrfsDirItem;
+};
 
 /* same contents as BtrfsDirItem, but will never repeat */
 typedef BtrfsDirItem BtrfsDirIndex;
 
-typedef struct
+struct BtrfsExtentData
 {
 	unsigned __int64		generation;
 	unsigned __int64		n;
@@ -120,17 +120,17 @@ typedef struct
 	unsigned char			encryption;
 	unsigned short			otherEncoding;
 	unsigned char			type;
-} BtrfsExtentData;
+};
 
-typedef struct
+struct BtrfsExtentDataNonInline
 {
 	unsigned __int64		extAddr;
 	unsigned __int64		extSize;
 	unsigned __int64		offset;
 	unsigned __int64		bytesInFile;
-} BtrfsExtentDataNonInline;
+};
 
-typedef struct
+struct BtrfsRootItem
 {
 	BtrfsInodeItem			inodeItem;
 	unsigned __int64		expectedGeneration;
@@ -144,9 +144,9 @@ typedef struct
 	BtrfsDiskKey			dropProgress;
 	unsigned char			dropLevel;
 	unsigned char			rootLevel;
-} BtrfsRootItem;
+};
 
-/*typedef struct
+/*struct BtrfsExtentItem
 {
 	unsigned __int64		refCount;
 	unsigned __int64		generation;
@@ -154,16 +154,16 @@ typedef struct
 	BtrfsDiskKey			firstEntryKey;
 	unsigned char			nodeLevel;
 	// ...
-} BtrfsExtentItem;*/
+};*/
 
-typedef struct
+struct BtrfsBlockGroupItem
 {
 	unsigned __int64		usedAmount;
 	unsigned __int64		chunkTreeID;
 	unsigned __int64		flags;
-} BtrfsBlockGroupItem;
+};
 
-typedef struct
+struct BtrfsDevItem
 {
 	unsigned __int64		devID;
 	unsigned __int64		numBytes;
@@ -179,9 +179,9 @@ typedef struct
 	unsigned char			bandwidth;
 	unsigned char			devUUID				[0x10];
 	unsigned char			fsUUID				[0x10];
-} BtrfsDevItem;
+};
 
-typedef struct
+struct BtrfsChunkItem
 {
 	unsigned __int64		chunkSize;
 	unsigned __int64		rootObjIDref;
@@ -192,16 +192,16 @@ typedef struct
 	unsigned int			minIOSize;
 	unsigned short			numStripes;
 	unsigned short			subStripes;
-} BtrfsChunkItem;
+};
 
-typedef struct
+struct BtrfsChunkItemStripe
 {
 	unsigned __int64		devID;
 	unsigned __int64		offset;
 	unsigned char			devUUID				[0x10];
-} BtrfsChunkItemStripe;
+};
 
-typedef struct
+struct BtrfsSuperblock
 {
 	BtrfsChecksum			csum;
 	unsigned char			uuid				[0x10];
@@ -235,32 +235,32 @@ typedef struct
 	unsigned char			reserved			[0x100];
 	unsigned char			chunkData			[0x800];
 	unsigned char			unused				[0x4d5];
-} BtrfsSuperblock;
+};
 
-typedef struct
+struct Chunk
 {
 	unsigned __int64		logiOffset;
 	BtrfsChunkItem			chunkItem;
 	BtrfsChunkItemStripe	*stripes;
-} Chunk;
+};
 
-typedef struct
+struct Root
 {
 	unsigned __int64		objectID;
 	BtrfsRootItem			rootItem;
-} Root;
+};
 
-typedef struct
+struct Inode
 {
 	unsigned __int64		objectID;
 	BtrfsInodeItem			inodeItem;
 	int						hidden;
 	int						compressed;
-} Inode;
+};
 
-typedef struct
+struct DirList
 {
 	unsigned __int64		numEntries;
 	Inode					*inodes;
 	char					**names;
-} DirList;
+};
