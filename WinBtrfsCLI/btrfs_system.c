@@ -394,7 +394,6 @@ void parseRootTree()
 	parseRootTreeRec(endian64(super.rootTreeLAddr));
 }
 
-/* extend this function to have an option for the operation we want, plus an output/returnval */
 int parseFSTreeRec(unsigned __int64 addr, int operation, void *input1, void *input2, void *input3, void *output1, void *output2)
 {
 	unsigned char *nodeBlock, *nodePtr;
@@ -409,10 +408,28 @@ int parseFSTreeRec(unsigned __int64 addr, int operation, void *input1, void *inp
 	nodePtr = nodeBlock + sizeof(BtrfsHeader);
 
 	/* set default return code by operation */
-	if (operation == FSOP_ID_TO_CHILD_IDS)
+	if (operation == FSOP_ID_TO_CHILD_IDS || operation == FSOP_DUMP_TREE)
 		rtnCode = 0;
 	else
 		rtnCode = 1;
+
+	if (operation == FSOP_DUMP_TREE)
+	{
+		printf("[Node] addr = 0x%016I64X level = 0x%02X nrItems = 0x%08X\n\n", addr, header->level, header->nrItems);
+
+		if (header->level != 0)
+		{
+			for (i = 0; i < endian32(header->nrItems); i++)
+			{
+				BtrfsKeyPtr *keyPtr = (BtrfsKeyPtr *)(nodePtr + (sizeof(BtrfsKeyPtr) * i));
+
+				printf("[%02X] {%016I64X|%016I64X} KeyPtr: block 0x%016I64X generation 0x%016I64X\n",
+					i, keyPtr->key.objectID, keyPtr->key.offset, keyPtr->blockNum, keyPtr->generation);
+			}
+		}
+
+		printf("\n");
+	}
 
 	if (header->level == 0) // leaf node
 	{
@@ -594,6 +611,10 @@ int parseFSTreeRec(unsigned __int64 addr, int operation, void *input1, void *inp
 					}
 				}
 			}
+			else if (operation == FSOP_DUMP_TREE)
+			{
+				printf("parseFSTreeRec: can't dump regular items\n");
+			}
 			else
 				printf("parseFSTreeRec: unknown operation (0x%02x)!\n", operation);
 
@@ -635,6 +656,8 @@ int parseFSTree(int operation, void *input1, void *input2, void *input3, void *o
 		*numChildren = 0;
 		*children = NULL;
 	}
+	else if (operation == FSOP_DUMP_TREE)
+		printf("parseFSTree: operation is FSOP_DUMP_TREE, preparing to take a dump...\n\n");
 	
 	return parseFSTreeRec(getFSRootBlockNum(), operation, input1, input2, input3, output1, output2);
 }
@@ -701,6 +724,7 @@ void dump()
 			printf("%s0x%016X", (j == 0 ? "" : ", "), endian64(chunks[i].stripes[j].offset));
 		printf("\n");
 	}
+	printf("\n");
 
 	printf("dump: dumping roots\n\n");
 	for (i = 0; i < numRoots; i++)

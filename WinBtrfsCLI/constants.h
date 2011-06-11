@@ -70,6 +70,7 @@
 #define FSOP_ID_TO_CHILD_IDS	0x02
 #define FSOP_ID_TO_NAME			0x03
 #define FSOP_ID_TO_PARENT_ID	0x04
+#define FSOP_DUMP_TREE			0x05
 
 /* stat mode constants */
 #define S_IFMT					0170000	// bitmask for file type fields

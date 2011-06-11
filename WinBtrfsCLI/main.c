@@ -15,6 +15,7 @@
 #include <assert.h>
 #include <Windows.h>
 #include <dokan.h>
+#include "constants.h"
 #include "structures.h"
 #include "endian.h"
 #include "btrfs_system.h"
@@ -103,6 +104,7 @@ void firstTasks()
 	parseChunkTree();
 	parseRootTree();
 	dump();
+	//parseFSTree(FSOP_DUMP_TREE, NULL, NULL, NULL, NULL, NULL);
 }
 
 void dokanError(int dokanResult)
