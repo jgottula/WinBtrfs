@@ -105,7 +105,7 @@ int DOKAN_CALLBACK btrfsFlushFileBuffers(LPCWSTR fileName, PDOKAN_FILE_INFO info
 int DOKAN_CALLBACK btrfsGetFileInformation(LPCWSTR fileName, LPBY_HANDLE_FILE_INFORMATION buffer, PDOKAN_FILE_INFO info)
 {
 	char fileNameB[MAX_PATH];
-	unsigned __int64 objectID;
+	BtrfsObjID objectID;
 	Inode inode;
 
 	if (WaitForSingleObject(hBigDokanLock, 10000) != WAIT_OBJECT_0)
@@ -158,7 +158,7 @@ int DOKAN_CALLBACK btrfsFindFiles(LPCWSTR pathName, PFillFindData pFillFindData,
 {
 	char pathNameB[MAX_PATH];
 	wchar_t nameW[MAX_PATH];
-	unsigned __int64 objectID;
+	BtrfsObjID objectID;
 	DirList listing;
 	WIN32_FIND_DATAW findData;
 	int i;

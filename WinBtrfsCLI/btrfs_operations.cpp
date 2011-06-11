@@ -105,10 +105,11 @@ int componentizePath(const char *path, char ***output)
 	return numComponents;
 }
 
-int getPathID(const char *path, unsigned __int64 *output)
+int getPathID(const char *path, BtrfsObjID *output)
 {
 	char vPath[MAX_PATH], **components;
-	unsigned __int64 parentID = OBJID_ROOT_DIR, childID, hash;
+	BtrfsObjID parentID = OBJID_ROOT_DIR, childID;
+	unsigned __int64 hash;
 	int i, numComponents = -1;
 
 	validatePath(path, vPath);
@@ -116,7 +117,6 @@ int getPathID(const char *path, unsigned __int64 *output)
 
 	for (i = 0; i < numComponents; i++)
 	{
-		childID = -1;
 		hash = crc32c(0, (const unsigned char *)(components[i]), strlen(components[i]));
 
 		if (parseFSTree(FSOP_NAME_TO_ID, &parentID, &hash, components[i], &childID, NULL) != 0)
@@ -130,7 +130,7 @@ int getPathID(const char *path, unsigned __int64 *output)
 	return 0;
 }
 
-int getInode(unsigned __int64 objectID, Inode *output, int checkHidden)
+int getInode(BtrfsObjID objectID, Inode *output, int checkHidden)
 {
 	BtrfsInodeItem inodeItem;
 	char name[MAX_PATH];
@@ -156,7 +156,7 @@ int getInode(unsigned __int64 objectID, Inode *output, int checkHidden)
 	return 0;
 }
 
-int getName(unsigned __int64 objectID, char *output)
+int getName(BtrfsObjID objectID, char *output)
 {
 	if (parseFSTree(FSOP_ID_TO_NAME, &objectID, NULL, NULL, output, NULL) != 0)
 		return 1;
@@ -164,9 +164,10 @@ int getName(unsigned __int64 objectID, char *output)
 	return 0;
 }
 
-int dirList(unsigned __int64 objectID, DirList *output)
+int dirList(BtrfsObjID objectID, DirList *output)
 {
-	unsigned __int64 numChildren = 0, *children = NULL, parentID;
+	unsigned __int64 numChildren = 0;
+	BtrfsObjID *children = NULL, parentID;
 	int i;
 
 	if (parseFSTree(FSOP_ID_TO_CHILD_IDS, &objectID, NULL, NULL, &numChildren, &children) != 0)

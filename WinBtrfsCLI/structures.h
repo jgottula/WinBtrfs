@@ -16,6 +16,8 @@
 /* pack structs the way they are on the disk */
 #pragma pack(1)
 
+#include "constants.h"
+
 /* ALL multibyte integers in Btrfs_____ structs WILL ALWAYS be little-endian!
 	(use endian16(), endian32(), and endian64() to convert them)
 	any other struct members WILL ALWAYS be in native endian! */
@@ -48,8 +50,8 @@ struct BtrfsHeader
 
 struct BtrfsDiskKey
 {
-	unsigned __int64		objectID;
-	unsigned char			type;
+	BtrfsObjID				objectID;
+	BtrfsItemType			type;
 	unsigned __int64		offset;
 };
 
@@ -134,7 +136,7 @@ struct BtrfsRootItem
 {
 	BtrfsInodeItem			inodeItem;
 	unsigned __int64		expectedGeneration;
-	unsigned __int64		objID;
+	BtrfsObjID				objID;
 	unsigned __int64		rootNodeBlockNum;
 	unsigned __int64		byteLimit;
 	unsigned __int64		bytesUsed;
@@ -159,7 +161,7 @@ struct BtrfsRootItem
 struct BtrfsBlockGroupItem
 {
 	unsigned __int64		usedAmount;
-	unsigned __int64		chunkTreeID;
+	BtrfsObjID				chunkTreeID;
 	unsigned __int64		flags;
 };
 
@@ -184,7 +186,7 @@ struct BtrfsDevItem
 struct BtrfsChunkItem
 {
 	unsigned __int64		chunkSize;
-	unsigned __int64		rootObjIDref;
+	BtrfsObjID				rootObjIDref;
 	unsigned __int64		stripeLen;
 	unsigned __int64		type;
 	unsigned int			bestIOAlign;
@@ -215,7 +217,7 @@ struct BtrfsSuperblock
 	unsigned __int64		logRootTransID;
 	unsigned __int64		totalBytes;
 	unsigned __int64		bytesUsed;
-	unsigned __int64		rootDirObjectID;
+	BtrfsObjID				rootDirObjectID;
 	unsigned __int64		numDevices;
 	unsigned int			sectorSize;
 	unsigned int			nodeSize;
@@ -246,13 +248,13 @@ struct Chunk
 
 struct Root
 {
-	unsigned __int64		objectID;
+	BtrfsObjID				objectID;
 	BtrfsRootItem			rootItem;
 };
 
 struct Inode
 {
-	unsigned __int64		objectID;
+	BtrfsObjID				objectID;
 	BtrfsInodeItem			inodeItem;
 	int						hidden;
 	int						compressed;

@@ -11,6 +11,8 @@
  * any later version.
  */
 
+#pragma once
+
 enum BtrfsObjID : unsigned __int64
 {
 	OBJID_ROOT_TREE = 0x01,
