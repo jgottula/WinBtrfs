@@ -45,14 +45,16 @@ DWORD setupBigDokanLock()
 int DOKAN_CALLBACK btrfsCreateFile(LPCWSTR fileName, DWORD desiredAccess, DWORD shareMode, DWORD creationDisposition,
 	DWORD flagsAndAttributes, PDOKAN_FILE_INFO info)
 {
-	wprintf(L"btrfsCreateFile: unimplemented! [%s]\n", fileName);
+	wprintf(L"btrfsCreateFile: IsDirectory? %c [%s]\n", info->IsDirectory ? L'y' : L'n', fileName);
+
+	assert(creationDisposition != CREATE_ALWAYS && creationDisposition != OPEN_ALWAYS);
 	
 	return ERROR_SUCCESS;
 }
 
 int DOKAN_CALLBACK btrfsOpenDirectory(LPCWSTR fileName, PDOKAN_FILE_INFO info)
 {
-	printf("btrfsOpenDirectory: unimplemented! [%s]\n", fileName);
+	wprintf(L"btrfsOpenDirectory: IsDirectory? %c [%s]\n", info->IsDirectory ? L'y' : L'n', fileName);
 	
 	return ERROR_SUCCESS;
 }
@@ -107,6 +109,8 @@ int DOKAN_CALLBACK btrfsGetFileInformation(LPCWSTR fileName, LPBY_HANDLE_FILE_IN
 	char fileNameB[MAX_PATH];
 	BtrfsObjID objectID;
 	Inode inode;
+	
+	wprintf(L"btrfsGetFileInformation: OK [%s]\n", fileName);
 
 	if (WaitForSingleObject(hBigDokanLock, 10000) != WAIT_OBJECT_0)
 		return -ERROR_SEM_TIMEOUT; // error code looks sketchy
@@ -162,6 +166,8 @@ int DOKAN_CALLBACK btrfsFindFiles(LPCWSTR pathName, PFillFindData pFillFindData,
 	DirList listing;
 	WIN32_FIND_DATAW findData;
 	int i;
+	
+	wprintf(L"btrfsFindFiles: OK [%s]\n", pathName);
 
 	if (WaitForSingleObject(hBigDokanLock, 10000) != WAIT_OBJECT_0)
 		return -ERROR_SEM_TIMEOUT; // error code looks sketchy
