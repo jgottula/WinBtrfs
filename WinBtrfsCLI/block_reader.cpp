@@ -20,13 +20,12 @@ extern WCHAR devicePath[MAX_PATH];
 
 BlockReader::BlockReader()
 {
-	/* gotta love C++ and its stupid constructor pointer/reference bullshit */
-	nodeArr = *(new std::map<unsigned __int64, CacheNode>());
-
 	hPhysical = CreateFile(devicePath, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
 	assert(hPhysical != INVALID_HANDLE_VALUE);
 	hReadMutex = CreateMutex(NULL, FALSE, NULL);
 	assert(hReadMutex != INVALID_HANDLE_VALUE);
+
+	cacheSize = 0;
 }
 
 BlockReader::~BlockReader()
@@ -38,20 +37,29 @@ BlockReader::~BlockReader()
 /* consolidate cachedRead and directRead in the future */
 DWORD BlockReader::cachedRead(unsigned __int64 addr, int addrType, unsigned __int64 len, unsigned char *dest)
 {
+	std::list<CacheNode>::iterator it;
+	bool foundNode = false;
 	LARGE_INTEGER li;
 	DWORD bytesRead;
 
 	if (addrType == ADDR_LOGICAL)
 		addr = logiToPhys(addr, len);
 
-	CacheNode& cNode = nodeArr[addr];
-
-	if (cNode.numReads == 0 || cNode.size != len) // cache miss
+	for (it = nodeArr.begin(); it != nodeArr.end(); ++it)
 	{
-		if (cNode.numReads != 0) // old node
-			free(cNode.data);
-		
-		cNode.numReads = 0;
+		if (it->physAddr == addr && it->size == len)
+		{
+			foundNode = true;
+			break;
+		}
+	}
+
+	if (!foundNode) // cache miss
+	{
+		CacheNode cNode;
+
+		cNode.numReads = 1;
+		cNode.physAddr = addr;
 		cNode.size = len;
 
 		/* because Win32 uses a signed (??) 64-bit value for the address from which to read,
@@ -81,12 +89,55 @@ DWORD BlockReader::cachedRead(unsigned __int64 addr, int addrType, unsigned __in
 		}
 
 		ReleaseMutex(hReadMutex);
+		
+		/* increase the cache size, then purge BEFORE adding the new node so we never
+			really exceed the limit */
+		cacheSize += len;
+		purge();
+
+		/* try to insert this element at the BEGINNING of all the numReads==1 elements
+			(see the purge member function for more details about why) */
+		for (it = nodeArr.begin(); it != nodeArr.end(); ++it)
+		{
+			if (it->numReads == cNode.numReads)
+				break;
+		}
+
+		/* this does a copy operation, which is OK here */
+		nodeArr.insert(it, cNode);
+
+		/* this is really a needless copy. probably best to remove this memcpy (and the others in this
+			function and directRead) and have callers reference the pointer WE return and not free it
+			like they're doing now. */
+		memcpy(dest, cNode.data, len);
+
+		/*printf("BlockReader::cachedRead: miss!\n");
+		dump();*/
+		return 0;
 	}
+	else // cache hit
+	{
+		CacheNode& cNode = *it;
 
-	memcpy(dest, cNode.data, len);
-	cNode.numReads++;
+		cNode.numReads++;
 
-	return 0;
+		for (std::list<CacheNode>::iterator itS = nodeArr.begin(); itS != it; ++itS)
+		{
+			if (itS->numReads < cNode.numReads) // this node needs to be moved up
+			{
+				/* move it up! */
+				nodeArr.splice(itS, nodeArr, it);
+
+				break;
+			}
+		}
+
+		memcpy(dest, cNode.data, len);
+		
+		/*printf("BlockReader::cachedRead: hit!\n");
+		dump();*/
+		return 0;
+	}
 }
 
 DWORD BlockReader::directRead(unsigned __int64 addr, int addrType, unsigned __int64 len, unsigned char *dest)
@@ -123,4 +174,36 @@ DWORD BlockReader::directRead(unsigned __int64 addr, int addrType, unsigned __in
 	ReleaseMutex(hReadMutex);
 
 	return 0;
+}
+
+void BlockReader::dump()
+{
+	std::list<CacheNode>::iterator it;
+	int i;
+
+	printf("BlockReader::dump: nodeArr.size() = %d cacheSize = %d\n", nodeArr.size(), cacheSize);
+	
+	for (it = nodeArr.begin(), i = 0; it != nodeArr.end(); ++it, i++)
+		printf("%3d] numReads: %I64d size: %I64d physAddr: %I64x\n", i, it->numReads, it->size,
+			it->physAddr);
+
+	printf("\n");
+}
+
+void BlockReader::purge()
+{
+	while (cacheSize > MAX_CACHE_SIZE)
+	{
+		/* this function assumes that (a) elements are sorted from most reads to least, and that
+			(b) when elements have equal numbers of reads, they are sorted from most recent to least */
+		CacheNode& last = nodeArr.back();
+
+		cacheSize -= last.size;
+		free(last.data);
+
+		nodeArr.pop_back();
+	}
+
+	/*printf("BlockReader::purge: removed least-used nodes.\n");
+	dump();*/
 }

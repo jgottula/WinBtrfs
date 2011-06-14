@@ -11,17 +11,13 @@
  * any later version.
  */
 
-#include <map>
+#include <list>
 #include <Windows.h>
 
 struct CacheNode
 {
-	CacheNode()
-	{
-		numReads = 0;
-	}
-	
 	unsigned __int64 numReads;
+	unsigned __int64 physAddr;
 	unsigned __int64 size;
 	unsigned char *data;
 };
@@ -34,8 +30,14 @@ public:
 
 	DWORD cachedRead(unsigned __int64 addr, int addrType, unsigned __int64 len, unsigned char *dest);
 	DWORD directRead(unsigned __int64 addr, int addrType, unsigned __int64 len, unsigned char *dest);
+	void dump();
 
 private:
-	std::map<unsigned __int64, CacheNode> nodeArr;
+	static const unsigned __int64 MAX_CACHE_SIZE = 8 * 1024 * 1024; // 8 MiB
+
+	std::list<CacheNode> nodeArr;
 	HANDLE hPhysical, hReadMutex;
+	unsigned __int64 cacheSize;
+
+	void purge();
 };
