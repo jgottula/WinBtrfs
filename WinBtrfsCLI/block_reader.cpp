@@ -37,7 +37,7 @@ BlockReader::~BlockReader()
 /* consolidate cachedRead and directRead in the future */
 DWORD BlockReader::cachedRead(unsigned __int64 addr, int addrType, unsigned __int64 len, unsigned char *dest)
 {
-	std::list<CacheNode>::iterator it;
+	std::list<CacheNode>::iterator it, end = nodeArr.end();
 	bool foundNode = false;
 	LARGE_INTEGER li;
 	DWORD bytesRead;
@@ -45,7 +45,7 @@ DWORD BlockReader::cachedRead(unsigned __int64 addr, int addrType, unsigned __in
 	if (addrType == ADDR_LOGICAL)
 		addr = logiToPhys(addr, len);
 
-	for (it = nodeArr.begin(); it != nodeArr.end(); ++it)
+	for (it = nodeArr.begin(); it != end; ++it)
 	{
 		if (it->physAddr == addr && it->size == len)
 		{
@@ -97,7 +97,7 @@ DWORD BlockReader::cachedRead(unsigned __int64 addr, int addrType, unsigned __in
 
 		/* try to insert this element at the BEGINNING of all the numReads==1 elements
 			(see the purge member function for more details about why) */
-		for (it = nodeArr.begin(); it != nodeArr.end(); ++it)
+		for (it = nodeArr.begin(); it != end; ++it)
 		{
 			if (it->numReads == cNode.numReads)
 				break;
