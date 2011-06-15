@@ -50,8 +50,6 @@ int DOKAN_CALLBACK btrfsCreateFile(LPCWSTR fileName, DWORD desiredAccess, DWORD 
 	char fileNameB[MAX_PATH];
 	BtrfsObjID objectID;
 	FilePkg filePkg;
-	
-	wprintf(L"btrfsCreateFile: IsDirectory? %c [%s]\n", info->IsDirectory ? L'y' : L'n', fileName);
 
 	assert(creationDisposition != CREATE_ALWAYS && creationDisposition != OPEN_ALWAYS);
 	assert(wcstombs(fileNameB, fileName, MAX_PATH) == wcslen(fileName));
@@ -60,17 +58,22 @@ int DOKAN_CALLBACK btrfsCreateFile(LPCWSTR fileName, DWORD desiredAccess, DWORD 
 	info->Context = 0x0;
 	
 	if (WaitForSingleObject(hBigDokanLock, 10000) != WAIT_OBJECT_0)
+	{
+		wprintf(L"btrfsCreateFile: couldn't get ownership of the Big Dokan Lock! [%s]\n", fileName);
 		return -ERROR_SEM_TIMEOUT; // error code looks sketchy
+	}
 
 	if (getPathID(fileNameB, &objectID) != 0)
 	{
 		ReleaseMutex(hBigDokanLock);
+		wprintf(L"btrfsCreateFile: getPathID failed! [%s]\n", fileName);
 		return -ERROR_FILE_NOT_FOUND;
 	}
 
 	if (parseFSTree(FSOP_GET_FILE_PKG, &objectID, NULL, NULL, &filePkg, NULL) != 0)
 	{
 		ReleaseMutex(hBigDokanLock);
+		wprintf(L"btrfsCreateFile: parseFSTree with FSOP_GET_FILE_PKG failed! [%s]\n", fileName);
 		return -ERROR_FILE_NOT_FOUND;
 	}
 	
@@ -98,6 +101,7 @@ int DOKAN_CALLBACK btrfsCreateFile(LPCWSTR fileName, DWORD desiredAccess, DWORD 
 
 	/* TODO: respect the desiredAccess parameter and lock the file based on shareMode */
 	
+	wprintf(L"btrfsCreateFile: OK [%s]\n", fileName);
 	return ERROR_SUCCESS;
 }
 
@@ -108,25 +112,28 @@ int DOKAN_CALLBACK btrfsOpenDirectory(LPCWSTR fileName, PDOKAN_FILE_INFO info)
 	BtrfsObjID objectID;
 	FilePkg filePkg;
 	
-	wprintf(L"btrfsOpenDirectory: IsDirectory? %c [%s]\n", info->IsDirectory ? L'y' : L'n', fileName);
-
 	assert(wcstombs(fileNameB, fileName, MAX_PATH) == wcslen(fileName));
 
 	/* just in case */
 	info->Context = 0x0;
 	
 	if (WaitForSingleObject(hBigDokanLock, 10000) != WAIT_OBJECT_0)
+	{
+		wprintf(L"btrfsOpenDirectory: couldn't get ownership of the Big Dokan Lock! [%s]\n", fileName);
 		return -ERROR_SEM_TIMEOUT; // error code looks sketchy
+	}
 
 	if (getPathID(fileNameB, &objectID) != 0)
 	{
 		ReleaseMutex(hBigDokanLock);
+		wprintf(L"btrfsOpenDirectory: getPathID failed! [%s]\n", fileName);
 		return -ERROR_FILE_NOT_FOUND;
 	}
 
 	if (parseFSTree(FSOP_GET_FILE_PKG, &objectID, NULL, NULL, &filePkg, NULL) != 0)
 	{
 		ReleaseMutex(hBigDokanLock);
+		wprintf(L"btrfsOpenDirectory: parseFSTree with FSOP_GET_FILE_PKG failed! [%s]\n", fileName);
 		return -ERROR_FILE_NOT_FOUND;
 	}
 	
@@ -152,6 +159,7 @@ int DOKAN_CALLBACK btrfsOpenDirectory(LPCWSTR fileName, PDOKAN_FILE_INFO info)
 	if (!info->IsDirectory && (filePkg.inode.stMode & S_IFDIR))
 		info->IsDirectory = TRUE;
 	
+	wprintf(L"btrfsOpenDirectory: OK [%s]\n", fileName);
 	return ERROR_SUCCESS;
 }
 
@@ -164,8 +172,6 @@ int DOKAN_CALLBACK btrfsCreateDirectory(LPCWSTR fileName, PDOKAN_FILE_INFO info)
 
 int DOKAN_CALLBACK btrfsCleanup(LPCWSTR fileName, PDOKAN_FILE_INFO info)
 {
-	printf("btrfsCleanup: OK [%s]\n", fileName);
-
 	std::list<FilePkg>::iterator it = openFiles.begin(), end = openFiles.end();
 	for ( ; it != end; ++it)
 	{
@@ -179,13 +185,13 @@ int DOKAN_CALLBACK btrfsCleanup(LPCWSTR fileName, PDOKAN_FILE_INFO info)
 	free(it->childIDs);
 	openFiles.erase(it);
 	
+	printf("btrfsCleanup: OK [%s]\n", fileName);
 	return ERROR_SUCCESS;
 }
 
 int DOKAN_CALLBACK btrfsCloseFile(LPCWSTR fileName, PDOKAN_FILE_INFO info)
 {
-	printf("btrfsCloseFile: unimplemented! [%s]\n", fileName);
-	
+	printf("btrfsCloseFile: OK [%s]\n", fileName);
 	return ERROR_SUCCESS;
 }
 
@@ -221,8 +227,6 @@ int DOKAN_CALLBACK btrfsGetFileInformation(LPCWSTR fileName, LPBY_HANDLE_FILE_IN
 {
 	/* Big Dokan Lock not needed here */
 
-	wprintf(L"btrfsGetFileInformation: OK [%s]\n", fileName);
-
 	std::list<FilePkg>::iterator it = openFiles.begin(), end = openFiles.end();
 	for ( ; it != end; ++it)
 	{
@@ -257,7 +261,8 @@ int DOKAN_CALLBACK btrfsGetFileInformation(LPCWSTR fileName, LPBY_HANDLE_FILE_IN
 
 	buffer->nFileIndexHigh = (DWORD)(endian64(it->objectID) << 32);
 	buffer->nFileIndexLow = (DWORD)endian64(it->objectID);
-
+	
+	wprintf(L"btrfsGetFileInformation: OK [%s]\n", fileName);
 	return ERROR_SUCCESS;
 }
 
@@ -431,7 +436,8 @@ int DOKAN_CALLBACK btrfsGetDiskFreeSpace(PULONGLONG freeBytesAvailable, PULONGLO
 	*freeBytesAvailable = free;
 	*totalNumberOfBytes = total;
 	*totalNumberOfFreeBytes = free;
-
+	
+	wprintf(L"btrfsGetDiskFreeSpace: OK\n");
 	return ERROR_SUCCESS;
 }
 
@@ -459,7 +465,8 @@ int DOKAN_CALLBACK btrfsGetVolumeInformation(LPWSTR volumeNameBuffer, DWORD volu
 
 	/* TODO: switch to wcscpy_s */
 	wcscpy(fileSystemNameBuffer, L"Btrfs");
-
+	
+	wprintf(L"btrfsGetVolumeInformation: OK\n");
 	return ERROR_SUCCESS;
 }
 
