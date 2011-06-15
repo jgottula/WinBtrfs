@@ -331,7 +331,7 @@ int DOKAN_CALLBACK btrfsFindFiles(LPCWSTR pathName, PFillFindData pFillFindData,
 		wcscpy(findData.cFileName, nameW);
 		findData.cAlternateFileName[0] = 0; // no 8.3 name
 
-		/* assuming that calling pFillFindData multiple times with the same pointer arg will work as intended */
+		/* calling pFillFindData multiple times with the same pointer arg (but different contents) should work properly */
 
 		/* call the function pointer */
 		(*pFillFindData)(&findData, info);
