@@ -170,6 +170,9 @@ void unitTests()
 	assert(sizeof(BtrfsChunkItemStripe) == 0x20);
 	assert(sizeof(BtrfsDevItem) == 0x62);
 	assert(sizeof(BtrfsSuperblock) == 0x1000);
+
+	/* ensure that enums are sized properly */
+	assert(sizeof(BtrfsObjID) == sizeof(unsigned __int64));
 }
 
 int main(int argc, char **argv)
