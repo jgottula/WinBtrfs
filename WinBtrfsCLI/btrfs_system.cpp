@@ -44,12 +44,12 @@ void cleanUp()
 
 unsigned __int64 logiToPhys(unsigned __int64 logiAddr, unsigned __int64 len)
 {
-	int i, chunk = -1;
+	int chunk = -1;
 
 	/* cannot possibly succeed unless chunks have been loaded */
 	assert(numChunks > 0 && chunks != NULL);
 	
-	for (i = 0; i < numChunks; i++)
+	for (int i = 0; i < numChunks; i++)
 	{
 		/* find the first chunk mapping that fits the block we want */
 		if (logiAddr >= chunks[i].logiOffset && logiAddr + len <= chunks[i].logiOffset + chunks[i].chunkItem.chunkSize)
@@ -130,7 +130,6 @@ void getSBChunks()
 	unsigned char *sbPtr = super.chunkData, *sbMax = super.chunkData + endian32(super.n);
 	BtrfsDiskKey *key;
 	Chunk *chunk;
-	int i;
 
 	/* this function only needs to be run ONCE */
 	assert(chunks == NULL && numChunks == -1);
@@ -164,7 +163,7 @@ void getSBChunks()
 
 		chunk->stripes = (BtrfsChunkItemStripe *)malloc(sizeof(BtrfsChunkItemStripe) * endian16(chunk->chunkItem.numStripes));
 
-		for (i = 0; i < endian16(chunk->chunkItem.numStripes); i++)
+		for (int i = 0; i < endian16(chunk->chunkItem.numStripes); i++)
 		{
 			chunk->stripes[i] = *((BtrfsChunkItemStripe *)sbPtr);
 			sbPtr += sizeof(BtrfsChunkItemStripe);
@@ -192,7 +191,6 @@ void parseChunkTreeRec(unsigned __int64 addr)
 	unsigned char *nodeBlock, *nodePtr;
 	BtrfsHeader *header;
 	BtrfsItem *item;
-	int i, j;
 
 	loadNode(addr, ADDR_LOGICAL, &nodeBlock, &header);
 
@@ -201,13 +199,13 @@ void parseChunkTreeRec(unsigned __int64 addr)
 	nodePtr = nodeBlock + sizeof(BtrfsHeader);
 
 	/* clear out the superblock chunk items to make way for the chunk tree chunk items */
-	for (i = 0; i < numChunks; i++)
+	for (int i = 0; i < numChunks; i++)
 		free(chunks[i].stripes);
 	numChunks = 0;
 
 	if (header->level == 0) // leaf node
 	{
-		for (i = 0; i < endian32(header->nrItems); i++)
+		for (int i = 0; i < endian32(header->nrItems); i++)
 		{
 			item = (BtrfsItem *)nodePtr;
 
@@ -241,7 +239,7 @@ void parseChunkTreeRec(unsigned __int64 addr)
 				chunks[numChunks].stripes = (BtrfsChunkItemStripe *)malloc(sizeof(BtrfsChunkItemStripe) *
 					endian16(chunks[numChunks].chunkItem.numStripes));
 
-				for (j = 0; j < endian16(chunks[numChunks].chunkItem.numStripes); j++)
+				for (int j = 0; j < endian16(chunks[numChunks].chunkItem.numStripes); j++)
 					chunks[numChunks].stripes[j] = *((BtrfsChunkItemStripe *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset) +
 						sizeof(BtrfsChunkItem) + (sizeof(BtrfsChunkItemStripe) * j)));
 
@@ -257,7 +255,7 @@ void parseChunkTreeRec(unsigned __int64 addr)
 	}
 	else // non-leaf node
 	{
-		for (i = 0; i < endian32(header->nrItems); i++)
+		for (int i = 0; i < endian32(header->nrItems); i++)
 		{
 			BtrfsKeyPtr *keyPtr = (BtrfsKeyPtr *)nodePtr;
 
@@ -286,7 +284,6 @@ void parseRootTreeRec(unsigned __int64 addr)
 	unsigned char *nodeBlock, *nodePtr;
 	BtrfsHeader *header;
 	BtrfsItem *item;
-	int i, j;
 
 	loadNode(addr, ADDR_LOGICAL, &nodeBlock, &header);
 
@@ -296,7 +293,7 @@ void parseRootTreeRec(unsigned __int64 addr)
 
 	if (header->level == 0) // leaf node
 	{
-		for (i = 0; i < endian32(header->nrItems); i++)
+		for (int i = 0; i < endian32(header->nrItems); i++)
 		{
 			item = (BtrfsItem *)nodePtr;
 
@@ -329,7 +326,7 @@ void parseRootTreeRec(unsigned __int64 addr)
 	}
 	else // non-leaf node
 	{
-		for (i = 0; i < endian32(header->nrItems); i++)
+		for (int i = 0; i < endian32(header->nrItems); i++)
 		{
 			BtrfsKeyPtr *keyPtr = (BtrfsKeyPtr *)nodePtr;
 
@@ -354,7 +351,6 @@ void parseFSTreeRec(unsigned __int64 addr, int operation, void *input1, void *in
 	unsigned char *nodeBlock, *nodePtr;
 	BtrfsHeader *header;
 	BtrfsItem *item;
-	int i, j;
 
 	loadNode(addr, ADDR_LOGICAL, &nodeBlock, &header);
 
@@ -368,7 +364,7 @@ void parseFSTreeRec(unsigned __int64 addr, int operation, void *input1, void *in
 
 		if (header->level != 0)
 		{
-			for (i = 0; i < endian32(header->nrItems); i++)
+			for (int i = 0; i < endian32(header->nrItems); i++)
 			{
 				BtrfsKeyPtr *keyPtr = (BtrfsKeyPtr *)(nodePtr + (sizeof(BtrfsKeyPtr) * i));
 
@@ -382,7 +378,7 @@ void parseFSTreeRec(unsigned __int64 addr, int operation, void *input1, void *in
 
 	if (header->level == 0) // leaf node
 	{
-		for (i = 0; i < endian32(header->nrItems); i++)
+		for (int i = 0; i < endian32(header->nrItems); i++)
 		{
 			item = (BtrfsItem *)nodePtr;
 
@@ -676,7 +672,7 @@ void parseFSTreeRec(unsigned __int64 addr, int operation, void *input1, void *in
 					/* ensure that the item fits entirely in the node block */
 					assert((unsigned char *)inodeItem + sizeof(BtrfsInodeItem) <= (unsigned char *)nodeBlock + endian32(super.nodeSize));
 
-					for (j = 0; j < dirList->numEntries; j++) // try to find a matching entry
+					for (int j = 0; j < dirList->numEntries; j++) // try to find a matching entry
 					{
 						if (endian64(item->key.objectID) == dirList->entries[j].objectID)
 						{
@@ -700,7 +696,7 @@ void parseFSTreeRec(unsigned __int64 addr, int operation, void *input1, void *in
 						
 						if (endian64(item->key.objectID) == *objectID) // filter by parent for a quick speed bost
 						{
-							for (j = 0; j < dirList->numEntries; j++) // try to find a matching entry
+							for (int j = 0; j < dirList->numEntries; j++) // try to find a matching entry
 							{
 								if (endian64(dirItem->child.objectID) == dirList->entries[j].objectID)
 								{
@@ -738,7 +734,7 @@ void parseFSTreeRec(unsigned __int64 addr, int operation, void *input1, void *in
 	}
 	else // non-leaf node
 	{
-		for (i = 0; i < endian32(header->nrItems); i++)
+		for (int i = 0; i < endian32(header->nrItems); i++)
 		{
 			BtrfsKeyPtr *keyPtr = (BtrfsKeyPtr *)nodePtr;
 
@@ -872,7 +868,6 @@ int parseFSTree(int operation, void *input1, void *input2, void *input3, void *o
 unsigned __int64 getFSRootBlockNum()
 {
 	static int fsRoot = -1;
-	int i;
 
 	/* this only needs to be done the first time the function is called */
 	if (fsRoot == -1)
@@ -880,7 +875,7 @@ unsigned __int64 getFSRootBlockNum()
 		/* no way we can find the FS root node without the root tree */
 		assert(numRoots > 0 && roots != NULL);
 	
-		for (i = 0; i < numRoots; i++)
+		for (int i = 0; i < numRoots; i++)
 		{
 			if (endian64(roots[i].objectID) == OBJID_FS_TREE)
 			{
@@ -898,11 +893,9 @@ unsigned __int64 getFSRootBlockNum()
 
 void dump()
 {
-	int i, j;
-
 	/* take a dump */
 	printf("dump: dumping devices\n\n");
-	for (i = 0; i < numDevices; i++)
+	for (int i = 0; i < numDevices; i++)
 	{
 		printf("devices[%d]:\n", i);
 		printf("devID         0x%016X\n", endian64(devices[i].devID));
@@ -917,24 +910,24 @@ void dump()
 		printf("devGroup              0x%08X\n", endian32(devices[i].devGroup));
 		printf("seekSpeed                   0x%02X\n", devices[i].seekSpeed);
 		printf("bandwidth                   0x%02X\n", devices[i].bandwidth);
-		printf("devUUID         "); for (j = 0; j < 16; j++) printf("%c", devices[i].devUUID[j]); printf("\n");
-		printf("fsUUID          "); for (j = 0; j < 16; j++) printf("%c", devices[i].fsUUID[j]); printf("\n\n");
+		printf("devUUID         "); for (int j = 0; j < 16; j++) printf("%c", devices[i].devUUID[j]); printf("\n");
+		printf("fsUUID          "); for (int j = 0; j < 16; j++) printf("%c", devices[i].fsUUID[j]); printf("\n\n");
 	}
 
 	printf("dump: dumping chunks\n\n");
-	for (i = 0; i < numChunks; i++)
+	for (int i = 0; i < numChunks; i++)
 	{
 		printf("chunks[%d]: ", i);
 		printf("size: 0x%016X; ", endian64(chunks[i].chunkItem.chunkSize));
 		printf("0x%016X -> ", chunks[i].logiOffset);
-		for (j = 0; j < endian16(chunks[i].chunkItem.numStripes); j++)
+		for (int j = 0; j < endian16(chunks[i].chunkItem.numStripes); j++)
 			printf("%s0x%016X", (j == 0 ? "" : ", "), endian64(chunks[i].stripes[j].offset));
 		printf("\n");
 	}
 	printf("\n");
 
 	printf("dump: dumping roots\n\n");
-	for (i = 0; i < numRoots; i++)
+	for (int i = 0; i < numRoots; i++)
 	{
 		printf("roots[%d]:\n", i);
 		printf("[objectID]          0x%016X\n", roots[i].objectID);

@@ -178,12 +178,10 @@ DWORD BlockReader::directRead(unsigned __int64 addr, int addrType, unsigned __in
 
 void BlockReader::dump()
 {
-	std::list<CacheNode>::iterator it;
-	int i;
-
 	printf("BlockReader::dump: nodeArr.size() = %d cacheSize = %d\n", nodeArr.size(), cacheSize);
 	
-	for (it = nodeArr.begin(), i = 0; it != nodeArr.end(); ++it, i++)
+	std::list<CacheNode>::iterator it = nodeArr.begin(), end = nodeArr.end();
+	for (int i = 0; it != end; i++, ++it)
 		printf("%3d] numReads: %I64d size: %I64d physAddr: %I64x\n", i, it->numReads, it->size,
 			it->physAddr);
 
