@@ -423,134 +423,6 @@ void parseFSTreeRec(unsigned __int64 addr, int operation, void *input1, void *in
 					}
 				}
 			}
-			else if (operation == FSOP_ID_TO_INODE)
-			{
-				const BtrfsObjID *objectID = (const BtrfsObjID *)input1;
-				BtrfsInodeItem *inode = (BtrfsInodeItem *)output1;
-
-				if (item->key.type == TYPE_INODE_ITEM && endian64(item->key.objectID) == *objectID)
-				{
-					BtrfsInodeItem *inodeItem = (BtrfsInodeItem *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset));
-					
-					/* ensure that the item fits entirely in the node block */
-					assert((unsigned char *)inodeItem + sizeof(BtrfsInodeItem) <= (unsigned char *)nodeBlock + endian32(super.nodeSize));
-
-					memcpy(inode, inodeItem, sizeof(BtrfsInodeItem));
-					
-					*returnCode = 0;
-					*shortCircuit = true;
-				}
-			}
-			else if (operation == FSOP_ID_TO_CHILD_IDS)
-			{
-				const BtrfsObjID *parentID = (const BtrfsObjID *)input1;
-				unsigned __int64 *numChildren = (unsigned __int64 *)output1;
-				BtrfsObjID **children = (BtrfsObjID **)output2;
-
-				if (item->key.type == TYPE_DIR_ITEM && endian64(item->key.objectID) == *parentID)
-				{
-					BtrfsDirItem *dirItem = (BtrfsDirItem *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset));
-					
-					while (true)
-					{
-						/* ensure that the variably sized item fits entirely in the node block */
-						assert((unsigned char *)dirItem + sizeof(BtrfsDirItem) <= (unsigned char *)nodeBlock + endian32(super.nodeSize) &&
-							(unsigned char *)dirItem + sizeof(BtrfsDirItem) + endian16(dirItem->m) + endian16(dirItem->n) <=
-							(unsigned char *)nodeBlock + endian32(super.nodeSize));
-						
-						if (*children == NULL)
-							*children = (BtrfsObjID *)malloc(sizeof(BtrfsObjID));
-						else
-							*children = (BtrfsObjID *)realloc(*children, sizeof(BtrfsObjID) * (*numChildren + 1));
-
-						(*children)[*numChildren] = (BtrfsObjID)endian64(dirItem->child.objectID);
-
-						(*numChildren)++;
-						
-						/* advance to the next DIR_ITEM if there are more */
-						if (endian32(item->size) > sizeof(BtrfsDirItem) + endian16(dirItem->m) + endian16(dirItem->n))
-						{
-							dirItem = (BtrfsDirItem *)((unsigned char *)dirItem + sizeof(BtrfsDirItem) +
-								endian16(dirItem->m) + endian16(dirItem->n));
-						}
-						else
-							break;
-					}
-				}
-			}
-			else if (operation == FSOP_ID_TO_NAME)
-			{
-				const BtrfsObjID *childID = (const BtrfsObjID *)input1;
-				char *name = (char *)output1;
-
-				if (item->key.type == TYPE_DIR_ITEM)
-				{
-					BtrfsDirItem *dirItem = (BtrfsDirItem *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset));
-					
-					while (true)
-					{
-						/* ensure that the variably sized item fits entirely in the node block */
-						assert((unsigned char *)dirItem + sizeof(BtrfsDirItem) <= (unsigned char *)nodeBlock + endian32(super.nodeSize) &&
-							(unsigned char *)dirItem + sizeof(BtrfsDirItem) + endian16(dirItem->m) + endian16(dirItem->n) <=
-							(unsigned char *)nodeBlock + endian32(super.nodeSize));
-						
-						if (endian64(dirItem->child.objectID) == *childID)
-						{
-							memcpy(name, (char *)dirItem + sizeof(BtrfsDirItem), endian16(dirItem->n));
-							name[endian16(dirItem->n)] = 0;
-							
-							*returnCode = 0;
-							*shortCircuit = true;
-							break;
-						}
-						
-						/* advance to the next DIR_ITEM if there are more */
-						if (endian32(item->size) > sizeof(BtrfsDirItem) + endian16(dirItem->m) + endian16(dirItem->n))
-						{
-							dirItem = (BtrfsDirItem *)((unsigned char *)dirItem + sizeof(BtrfsDirItem) +
-								endian16(dirItem->m) + endian16(dirItem->n));
-						}
-						else
-							break;
-					}
-				}
-			}
-			else if (operation == FSOP_ID_TO_PARENT_ID)
-			{
-				const BtrfsObjID *childID = (const BtrfsObjID *)input1;
-				BtrfsObjID *parentID = (BtrfsObjID *)output1;
-
-				if (item->key.type == TYPE_DIR_ITEM)
-				{
-					BtrfsDirItem *dirItem = (BtrfsDirItem *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset));
-					
-					while (true)
-					{
-						/* ensure that the variably sized item fits entirely in the node block */
-						assert((unsigned char *)dirItem + sizeof(BtrfsDirItem) <= (unsigned char *)nodeBlock + endian32(super.nodeSize) &&
-							(unsigned char *)dirItem + sizeof(BtrfsDirItem) + endian16(dirItem->m) + endian16(dirItem->n) <=
-							(unsigned char *)nodeBlock + endian32(super.nodeSize));
-						
-						if (endian64(dirItem->child.objectID) == *childID)
-						{
-							*parentID = (BtrfsObjID)endian64(item->key.objectID);
-							
-							*returnCode = 0;
-							*shortCircuit = true;
-							break;
-						}
-						
-						/* advance to the next DIR_ITEM if there are more */
-						if (endian32(item->size) > sizeof(BtrfsDirItem) + endian16(dirItem->m) + endian16(dirItem->n))
-						{
-							dirItem = (BtrfsDirItem *)((unsigned char *)dirItem + sizeof(BtrfsDirItem) +
-								endian16(dirItem->m) + endian16(dirItem->n));
-						}
-						else
-							break;
-					}
-				}
-			}
 			else if (operation == FSOP_DUMP_TREE)
 				printf("parseFSTreeRec: haven't yet implemented leaf node item dumping!\n");
 			else if (operation == FSOP_GET_FILE_PKG)
@@ -739,7 +611,6 @@ int parseFSTree(int operation, void *input1, void *input2, void *input3, void *o
 	
 	switch (operation)
 	{
-	case FSOP_ID_TO_CHILD_IDS:	// always succeeds
 	case FSOP_DUMP_TREE:		// always succeeds
 	case FSOP_DIR_LIST:			// begins at zero for other reasons
 		returnCode = 0;
@@ -754,15 +625,7 @@ int parseFSTree(int operation, void *input1, void *input2, void *input3, void *o
 	}
 	
 	/* pre tasks */
-	if (operation == FSOP_ID_TO_CHILD_IDS)
-	{
-		unsigned __int64 *numChildren = (unsigned __int64 *)output1;
-		unsigned __int64 **children = (unsigned _int64 **)output2;
-
-		*numChildren = 0;
-		*children = NULL;
-	}
-	else if (operation == FSOP_DUMP_TREE)
+	if (operation == FSOP_DUMP_TREE)
 		printf("parseFSTree: operation is FSOP_DUMP_TREE, preparing to take a dump...\n\n");
 	else if (operation == FSOP_GET_FILE_PKG)
 	{
