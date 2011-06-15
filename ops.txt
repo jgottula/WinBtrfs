@@ -45,18 +45,6 @@ Inputs:
 Outputs:
 [1] FilePkg *					ptr to FilePkg struct to fill
 
-FSOP_DIR_LIST_A: Finds all the children of the given directory and initializes the entries in a DirList structure with their obj IDs
-Inputs:
-[1] const unsigned __int64 *	ptr to dir's object ID
-Outputs:
-[1] DirList *					ptr to DirList struct to fill
-
-FSOP_DIR_LIST_B: Takes an initialized DirList struct and fills out each DirEntry within
-Inputs:
-[1] const unsigned __int64 *	ptr to dir's object ID
-Outputs:
-[1] DirList *					ptr to DirList struct to fill
-
 FSOP_DIR_LIST: Performs a directory listing of the dir represented by the object ID given in one step
 Inputs:
 [1] const unsigned __int64 *	ptr to dir's object ID
