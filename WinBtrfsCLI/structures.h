@@ -94,7 +94,7 @@ struct BtrfsInodeRef
 {
 	unsigned __int64		index;
 	unsigned short			nameLen;
-	char					name				[0x0a];
+	char					name				[0x01];
 };
 
 /* this structure may be repeated if multiple items have the same hash */
