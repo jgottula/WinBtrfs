@@ -19,9 +19,9 @@ Code stuff:
 Rectify inconsistent struct member names: num/nr, csum/cSum/crc32c/etc, generation/gen, objectID/objID, len/length
 Rectify inconsistent function arg names: len/length, addr/lAddr/logicalAddr/physAddr/etc, super/SB/superblock
 Cache frequently used blocks in memory, especially FS tree nodes and other trees that are references multiple times (extent tree?)
-Multithread support for everything: make block reading threadsafe, and ensure that calls to btrfs_filesystem.c functions
-	from different threads will not cause serious race conditions and/or destruction
-Check all malloc/realloc calls and end fatally upon malloc failure
+Multithread support for everything: make block reading threadsafe, and ensure that calls to btrfs_operations.cpp functions
+	from different threads do not use any shared state
+Check all malloc/realloc calls and end fatally upon malloc failure (return win32 equivalent of -ENOMEM)
 Develop a better system for nonfatal error reporting than just piling on a bunch of assertions (look up assert best practices)
 Rectify comiler warnings
 Make sure performance isn't horrendous for filesystems with big FS trees (i.e. large directory structures)
@@ -44,3 +44,10 @@ Eliminate memcpy from cachedRead and directRead and make callers just receive a 
 Move i, j, etc. into for-loop definitions if they are scope-limited like they should be
 Reimplement the block cache system so it works on recentness rather than number of reads: sort by most-recent to least-recent (easy splicing)
 	and remove oldest nodes. have a static int increment on each cached read and store that number in the node struct on each read.
+Retool the FS tree return code system so it returns Windows error codes that are descriptive and can be passed back to the OS
+	when control returns to the Dokan callback
+Is MS's STL threadsafe? If not, we may have problems with the openFiles linked list being used in multiple threads in dokan_callbacks.cpp
+Reimplement the openFiles array in dokan_callbacks.cpp as a multimap<BtrfsObjID, FileStruct> where FileStruct is a new struct that holds,
+	in addition to a FilePkg, the values passed as desiredAccess and shareMode to CreateFile; this should allow duplicates and properly
+	respect sharing and access mode requests from CreateFile
+Attempts to dir list on what is actually a file should result in 267 (dir name is invalid)
