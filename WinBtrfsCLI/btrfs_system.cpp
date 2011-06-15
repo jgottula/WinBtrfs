@@ -395,7 +395,7 @@ void parseFSTreeRec(unsigned __int64 addr, int operation, void *input1, void *in
 				{
 					BtrfsDirItem *dirItem = (BtrfsDirItem *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset));
 
-					while (1)
+					while (true)
 					{
 						/* ensure that the variably sized item fits entirely in the node block */
 						assert((unsigned char *)dirItem + sizeof(BtrfsDirItem) <= (unsigned char *)nodeBlock + endian32(super.nodeSize) &&
@@ -451,7 +451,7 @@ void parseFSTreeRec(unsigned __int64 addr, int operation, void *input1, void *in
 				{
 					BtrfsDirItem *dirItem = (BtrfsDirItem *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset));
 					
-					while (1)
+					while (true)
 					{
 						/* ensure that the variably sized item fits entirely in the node block */
 						assert((unsigned char *)dirItem + sizeof(BtrfsDirItem) <= (unsigned char *)nodeBlock + endian32(super.nodeSize) &&
@@ -487,7 +487,7 @@ void parseFSTreeRec(unsigned __int64 addr, int operation, void *input1, void *in
 				{
 					BtrfsDirItem *dirItem = (BtrfsDirItem *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset));
 					
-					while (1)
+					while (true)
 					{
 						/* ensure that the variably sized item fits entirely in the node block */
 						assert((unsigned char *)dirItem + sizeof(BtrfsDirItem) <= (unsigned char *)nodeBlock + endian32(super.nodeSize) &&
@@ -524,7 +524,7 @@ void parseFSTreeRec(unsigned __int64 addr, int operation, void *input1, void *in
 				{
 					BtrfsDirItem *dirItem = (BtrfsDirItem *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset));
 					
-					while (1)
+					while (true)
 					{
 						/* ensure that the variably sized item fits entirely in the node block */
 						assert((unsigned char *)dirItem + sizeof(BtrfsDirItem) <= (unsigned char *)nodeBlock + endian32(super.nodeSize) &&
@@ -576,7 +576,7 @@ void parseFSTreeRec(unsigned __int64 addr, int operation, void *input1, void *in
 				{
 					BtrfsDirItem *dirItem = (BtrfsDirItem *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset));
 					
-					while (1)
+					while (true)
 					{
 						/* ensure that the variably sized item fits entirely in the node block */
 						assert((unsigned char *)dirItem + sizeof(BtrfsDirItem) <= (unsigned char *)nodeBlock + endian32(super.nodeSize) &&
@@ -617,7 +617,7 @@ void parseFSTreeRec(unsigned __int64 addr, int operation, void *input1, void *in
 				{
 					BtrfsDirItem *dirItem = (BtrfsDirItem *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset));
 					
-					while (1)
+					while (true)
 					{
 						/* ensure that the variably sized item fits entirely in the node block */
 						assert((unsigned char *)dirItem + sizeof(BtrfsDirItem) <= (unsigned char *)nodeBlock + endian32(super.nodeSize) &&
@@ -687,7 +687,7 @@ void parseFSTreeRec(unsigned __int64 addr, int operation, void *input1, void *in
 				{
 					BtrfsDirItem *dirItem = (BtrfsDirItem *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset));
 					
-					while (1)
+					while (true)
 					{
 						/* ensure that the variably sized item fits entirely in the node block */
 						assert((unsigned char *)dirItem + sizeof(BtrfsDirItem) <= (unsigned char *)nodeBlock + endian32(super.nodeSize) &&
