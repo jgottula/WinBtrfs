@@ -130,6 +130,7 @@ int getPathID(const char *path, BtrfsObjID *output)
 	return 0;
 }
 
+#if 0
 int getInode(BtrfsObjID objectID, Inode *output, int checkHidden)
 {
 	BtrfsInodeItem inodeItem;
@@ -225,6 +226,7 @@ error:
 	free(output->names);
 	return 1;
 }
+#endif
 
 void convertTime(BtrfsTime *bTime, PFILETIME wTime)
 {
@@ -237,6 +239,7 @@ void convertTime(BtrfsTime *bTime, PFILETIME wTime)
 	wTime->dwLowDateTime = (DWORD)s64;
 }
 
+#if 0
 void destroyDirList(DirList *listing)
 {
 	free(listing->inodes);
@@ -246,3 +249,4 @@ void destroyDirList(DirList *listing)
 
 	free(listing->names);
 }
+#endif

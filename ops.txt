@@ -38,3 +38,9 @@ Outputs:
 
 FSOP_DUMP_TREE: Dumps the entire FS tree to stdout
 No inputs or outputs
+
+FSOP_GET_FILE_PKG: Returns a FilePkg struct containing information about a file from its object ID
+Inputs:
+[1] const unsigned __int64 *	ptr to object ID
+Outputs:
+[1] FilePkg *					ptr to FilePkg struct to fill

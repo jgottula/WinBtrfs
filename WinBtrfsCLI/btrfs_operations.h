@@ -14,8 +14,8 @@
 void validatePath(const char *input, char *output);
 int componentizePath(const char *path, char ***output);
 int getPathID(const char *path, BtrfsObjID *output);
-int getInode(BtrfsObjID objectID, Inode *output, int checkHidden);
+/*int getInode(BtrfsObjID objectID, Inode *output, int checkHidden);
 int getName(BtrfsObjID objectID, char **output);
-int dirList(BtrfsObjID objectID, DirList *output);
+int dirList(BtrfsObjID objectID, DirList *output);*/
 void convertTime(BtrfsTime *bTime, PFILETIME wTime);
-void destroyDirList(DirList *listing);
+/*void destroyDirList(DirList *listing);*/

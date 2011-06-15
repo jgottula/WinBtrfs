@@ -14,6 +14,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
+#include <list>
 #include <Windows.h>
 #include <dokan.h>
 #include "constants.h"
@@ -24,6 +25,7 @@
 
 extern BtrfsSuperblock super;
 
+std::list<FilePkg> openFiles;
 HANDLE hBigDokanLock = INVALID_HANDLE_VALUE;
 
 DWORD setupBigDokanLock()
@@ -45,16 +47,102 @@ DWORD setupBigDokanLock()
 int DOKAN_CALLBACK btrfsCreateFile(LPCWSTR fileName, DWORD desiredAccess, DWORD shareMode, DWORD creationDisposition,
 	DWORD flagsAndAttributes, PDOKAN_FILE_INFO info)
 {
+	char fileNameB[MAX_PATH];
+	BtrfsObjID objectID;
+	FilePkg filePkg;
+	
 	wprintf(L"btrfsCreateFile: IsDirectory? %c [%s]\n", info->IsDirectory ? L'y' : L'n', fileName);
 
 	assert(creationDisposition != CREATE_ALWAYS && creationDisposition != OPEN_ALWAYS);
+	assert(wcstombs(fileNameB, fileName, MAX_PATH) == wcslen(fileName));
+
+	/* just in case */
+	info->Context = 0x0;
+	
+	if (WaitForSingleObject(hBigDokanLock, 10000) != WAIT_OBJECT_0)
+		return -ERROR_SEM_TIMEOUT; // error code looks sketchy
+
+	if (getPathID(fileNameB, &objectID) != 0)
+	{
+		ReleaseMutex(hBigDokanLock);
+		return -ERROR_FILE_NOT_FOUND;
+	}
+
+	if (parseFSTree(FSOP_GET_FILE_PKG, &objectID, NULL, NULL, &filePkg, NULL) != 0)
+	{
+		ReleaseMutex(hBigDokanLock);
+		return -ERROR_FILE_NOT_FOUND;
+	}
+	
+	ReleaseMutex(hBigDokanLock);
+
+	std::list<FilePkg>::iterator it = openFiles.begin(), end = openFiles.end();
+	for ( ; it != end; ++it)
+	{
+		/* there should not be any duplicate records in this array! */
+		assert(it->objectID != objectID);
+		
+		if (it->objectID >= objectID)
+			break;
+	}
+
+	openFiles.insert(it, filePkg);
+
+	info->Context = objectID;
+
+	if (!info->IsDirectory && (filePkg.inode.stMode & S_IFDIR))
+		info->IsDirectory = TRUE;
 	
 	return ERROR_SUCCESS;
 }
 
+/* TODO: merge this with btrfsCreateFile */
 int DOKAN_CALLBACK btrfsOpenDirectory(LPCWSTR fileName, PDOKAN_FILE_INFO info)
 {
+	char fileNameB[MAX_PATH];
+	BtrfsObjID objectID;
+	FilePkg filePkg;
+	
 	wprintf(L"btrfsOpenDirectory: IsDirectory? %c [%s]\n", info->IsDirectory ? L'y' : L'n', fileName);
+
+	assert(wcstombs(fileNameB, fileName, MAX_PATH) == wcslen(fileName));
+
+	/* just in case */
+	info->Context = 0x0;
+	
+	if (WaitForSingleObject(hBigDokanLock, 10000) != WAIT_OBJECT_0)
+		return -ERROR_SEM_TIMEOUT; // error code looks sketchy
+
+	if (getPathID(fileNameB, &objectID) != 0)
+	{
+		ReleaseMutex(hBigDokanLock);
+		return -ERROR_FILE_NOT_FOUND;
+	}
+
+	if (parseFSTree(FSOP_GET_FILE_PKG, &objectID, NULL, NULL, &filePkg, NULL) != 0)
+	{
+		ReleaseMutex(hBigDokanLock);
+		return -ERROR_FILE_NOT_FOUND;
+	}
+	
+	ReleaseMutex(hBigDokanLock);
+
+	std::list<FilePkg>::iterator it = openFiles.begin(), end = openFiles.end();
+	for ( ; it != end; ++it)
+	{
+		/* there should not be any duplicate records in this array! */
+		assert(it->objectID != objectID);
+		
+		if (it->objectID >= objectID)
+			break;
+	}
+
+	openFiles.insert(it, filePkg);
+
+	info->Context = objectID;
+
+	if (!info->IsDirectory && (filePkg.inode.stMode & S_IFDIR))
+		info->IsDirectory = TRUE;
 	
 	return ERROR_SUCCESS;
 }
@@ -69,7 +157,20 @@ int DOKAN_CALLBACK btrfsCreateDirectory(LPCWSTR fileName, PDOKAN_FILE_INFO info)
 // When FileInfo->DeleteOnClose is true, you must delete the file in Cleanup.
 int DOKAN_CALLBACK btrfsCleanup(LPCWSTR fileName, PDOKAN_FILE_INFO info)
 {
-	printf("btrfsCleanup: unimplemented! [%s]\n", fileName);
+	printf("btrfsCleanup: OK [%s]\n", fileName);
+
+	std::list<FilePkg>::iterator it = openFiles.begin(), end = openFiles.end();
+	for ( ; it != end; ++it)
+	{
+		if (it->objectID == (BtrfsObjID)info->Context)
+			break;
+	}
+
+	/* we should always be able to find an entry in openFiles */
+	assert(it != end);
+
+	free(it->childIDs);
+	openFiles.erase(it);
 	
 	return ERROR_SUCCESS;
 }
@@ -106,60 +207,51 @@ int DOKAN_CALLBACK btrfsFlushFileBuffers(LPCWSTR fileName, PDOKAN_FILE_INFO info
 
 int DOKAN_CALLBACK btrfsGetFileInformation(LPCWSTR fileName, LPBY_HANDLE_FILE_INFORMATION buffer, PDOKAN_FILE_INFO info)
 {
-	char fileNameB[MAX_PATH];
-	BtrfsObjID objectID;
-	Inode inode;
-	
+	/* Big Dokan Lock not needed here */
+
 	wprintf(L"btrfsGetFileInformation: OK [%s]\n", fileName);
 
-	if (WaitForSingleObject(hBigDokanLock, 10000) != WAIT_OBJECT_0)
-		return -ERROR_SEM_TIMEOUT; // error code looks sketchy
-
-	assert(wcstombs(fileNameB, fileName, MAX_PATH) == wcslen(fileName));
-
-	if (getPathID(fileNameB, &objectID) != 0)
+	std::list<FilePkg>::iterator it = openFiles.begin(), end = openFiles.end();
+	for ( ; it != end; ++it)
 	{
-		ReleaseMutex(hBigDokanLock);
-		return -ERROR_FILE_NOT_FOUND;
+		if (it->objectID == (BtrfsObjID)info->Context)
+			break;
 	}
-	if (getInode(objectID, &inode, 1) != 0)
-	{
-		ReleaseMutex(hBigDokanLock);
-		return -ERROR_FILE_NOT_FOUND;
-	}
-	
+
+	/* failing to find the element is NOT an option */
+	assert(it != end);
+
 	/* TODO: FILE_ATTRIBUTE_COMPRESSED, FILE_ATTRIBUTE_SPARSE_FILE, FILE_ATTRIBUTE_REPARSE_POINT (maybe) */
 	buffer->dwFileAttributes = 0;
-	if (endian32(inode.inodeItem.stMode) & S_IFBLK) buffer->dwFileAttributes |= FILE_ATTRIBUTE_DEVICE; // is this right?
-	if (endian32(inode.inodeItem.stMode) & S_IFDIR) buffer->dwFileAttributes |= FILE_ATTRIBUTE_DIRECTORY;
-	if (inode.hidden) buffer->dwFileAttributes |= FILE_ATTRIBUTE_HIDDEN;
+	if (endian32(it->inode.stMode) & S_IFBLK) buffer->dwFileAttributes |= FILE_ATTRIBUTE_DEVICE; // is this right?
+	if (endian32(it->inode.stMode) & S_IFDIR) buffer->dwFileAttributes |= FILE_ATTRIBUTE_DIRECTORY;
+	if (it->hidden) buffer->dwFileAttributes |= FILE_ATTRIBUTE_HIDDEN;
 
 	/* not sure if this is necessary, but it seems to be what you're supposed to do */
 	if (buffer->dwFileAttributes == 0)
 		buffer->dwFileAttributes = FILE_ATTRIBUTE_NORMAL;
 
-	convertTime(&inode.inodeItem.stCTime, &buffer->ftCreationTime);
-	convertTime(&inode.inodeItem.stATime, &buffer->ftLastAccessTime);
-	convertTime(&inode.inodeItem.stMTime, &buffer->ftLastWriteTime);
+	convertTime(&it->inode.stCTime, &buffer->ftCreationTime);
+	convertTime(&it->inode.stATime, &buffer->ftLastAccessTime);
+	convertTime(&it->inode.stMTime, &buffer->ftLastWriteTime);
 	
-	/* using the last 4 bytes of the UUID */
+	/* using the least significant 4 bytes of the UUID */
 	buffer->dwVolumeSerialNumber = super.uuid[0] + (super.uuid[1] << 8) + (super.uuid[2] << 16) + (super.uuid[3] << 24);
 
-	buffer->nFileSizeHigh = (DWORD)(endian64(inode.inodeItem.stSize) >> 32);
-	buffer->nFileSizeLow = (DWORD)endian64(inode.inodeItem.stSize);
+	buffer->nFileSizeHigh = (DWORD)(endian64(it->inode.stSize) >> 32);
+	buffer->nFileSizeLow = (DWORD)endian64(it->inode.stSize);
 
-	buffer->nNumberOfLinks = endian32(inode.inodeItem.stNLink);
+	buffer->nNumberOfLinks = endian32(it->inode.stNLink);
 
-	buffer->nFileIndexHigh = (DWORD)(endian64(inode.objectID) << 32);
-	buffer->nFileIndexLow = (DWORD)endian64(inode.objectID);
-	
-	ReleaseMutex(hBigDokanLock);
+	buffer->nFileIndexHigh = (DWORD)(endian64(it->objectID) << 32);
+	buffer->nFileIndexLow = (DWORD)endian64(it->objectID);
 
 	return ERROR_SUCCESS;
 }
 
 int DOKAN_CALLBACK btrfsFindFiles(LPCWSTR pathName, PFillFindData pFillFindData, PDOKAN_FILE_INFO info)
 {
+#if 0
 	char pathNameB[MAX_PATH];
 	wchar_t nameW[MAX_PATH];
 	BtrfsObjID objectID;
@@ -169,10 +261,10 @@ int DOKAN_CALLBACK btrfsFindFiles(LPCWSTR pathName, PFillFindData pFillFindData,
 	
 	wprintf(L"btrfsFindFiles: OK [%s]\n", pathName);
 
+	assert(wcstombs(pathNameB, pathName, MAX_PATH) == wcslen(pathName));
+
 	if (WaitForSingleObject(hBigDokanLock, 10000) != WAIT_OBJECT_0)
 		return -ERROR_SEM_TIMEOUT; // error code looks sketchy
-
-	assert(wcstombs(pathNameB, pathName, MAX_PATH) == wcslen(pathName));
 	
 	if (getPathID(pathNameB, &objectID) != 0)
 	{
@@ -185,6 +277,8 @@ int DOKAN_CALLBACK btrfsFindFiles(LPCWSTR pathName, PFillFindData pFillFindData,
 		ReleaseMutex(hBigDokanLock);
 		return -ERROR_PATH_NOT_FOUND; // probably not an adequate error code
 	}
+	
+	ReleaseMutex(hBigDokanLock);
 
 	for (i = 0; i < listing.numEntries; i++)
 	{
@@ -218,8 +312,7 @@ int DOKAN_CALLBACK btrfsFindFiles(LPCWSTR pathName, PFillFindData pFillFindData,
 
 	destroyDirList(&listing);
 
-	ReleaseMutex(hBigDokanLock);
-
+#endif
 	return ERROR_SUCCESS;
 }
 

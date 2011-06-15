@@ -252,17 +252,19 @@ struct Root
 	BtrfsRootItem			rootItem;
 };
 
-struct Inode
+struct FilePkg
 {
 	BtrfsObjID				objectID;
-	BtrfsInodeItem			inodeItem;
-	int						hidden;
-	int						compressed;
+	BtrfsInodeItem			inode;
+	char					name[256];
+	BtrfsObjID				parentID;
+	unsigned __int64		numChildren;
+	BtrfsObjID				*childIDs;
+	bool					hidden;
 };
 
 struct DirList
 {
 	unsigned __int64		numEntries;
-	Inode					*inodes;
-	char					**names;
+	FilePkg					*entries;
 };
