@@ -18,4 +18,3 @@ int getPathID(const char *path, BtrfsObjID *output);
 int getName(BtrfsObjID objectID, char **output);
 int dirList(BtrfsObjID objectID, DirList *output);*/
 void convertTime(BtrfsTime *bTime, PFILETIME wTime);
-/*void destroyDirList(DirList *listing);*/

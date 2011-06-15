@@ -467,7 +467,7 @@ void parseFSTreeRec(unsigned __int64 addr, int operation, void *input1, void *in
 						else
 							*children = (BtrfsObjID *)realloc(*children, sizeof(BtrfsObjID) * (*numChildren + 1));
 
-						(*children)[*numChildren] = dirItem->child.objectID;
+						(*children)[*numChildren] = (BtrfsObjID)endian64(dirItem->child.objectID);
 
 						(*numChildren)++;
 						
@@ -603,9 +603,105 @@ void parseFSTreeRec(unsigned __int64 addr, int operation, void *input1, void *in
 								filePkg->childIDs = (BtrfsObjID *)realloc(filePkg->childIDs,
 									sizeof(BtrfsObjID) * (filePkg->numChildren + 1));
 
-							filePkg->childIDs[filePkg->numChildren] = dirItem->child.objectID;
+							filePkg->childIDs[filePkg->numChildren] = (BtrfsObjID)endian64(dirItem->child.objectID);
 
 							filePkg->numChildren++;
+						}
+						
+						/* advance to the next DIR_ITEM if there are more */
+						if (endian32(item->size) > sizeof(BtrfsDirItem) + endian16(dirItem->m) + endian16(dirItem->n))
+						{
+							dirItem = (BtrfsDirItem *)((unsigned char *)dirItem + sizeof(BtrfsDirItem) +
+								endian16(dirItem->m) + endian16(dirItem->n));
+						}
+						else
+							break;
+					}
+				}
+			}
+			else if (operation == FSOP_DIR_LIST_A)
+			{
+				const BtrfsObjID *objectID = (const BtrfsObjID *)input1;
+				DirList *dirList = (DirList *)output1;
+				
+				if (item->key.type == TYPE_DIR_ITEM && endian64(item->key.objectID) == *objectID)
+				{
+					BtrfsDirItem *dirItem = (BtrfsDirItem *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset));
+					
+					while (1)
+					{
+						/* ensure that the variably sized item fits entirely in the node block */
+						assert((unsigned char *)dirItem + sizeof(BtrfsDirItem) <= (unsigned char *)nodeBlock + endian32(super.nodeSize) &&
+							(unsigned char *)dirItem + sizeof(BtrfsDirItem) + endian16(dirItem->m) + endian16(dirItem->n) <=
+							(unsigned char *)nodeBlock + endian32(super.nodeSize));
+						
+						if (dirList->entries == NULL)
+							dirList->entries = (DirEntry *)malloc(sizeof(DirEntry));
+						else
+							dirList->entries = (DirEntry *)realloc(dirList->entries, sizeof(DirEntry) * (dirList->numEntries + 1));
+
+						dirList->entries[dirList->numEntries].objectID = (BtrfsObjID)endian64(dirItem->child.objectID);
+						dirList->numEntries++;
+						
+						/* advance to the next DIR_ITEM if there are more */
+						if (endian32(item->size) > sizeof(BtrfsDirItem) + endian16(dirItem->m) + endian16(dirItem->n))
+						{
+							dirItem = (BtrfsDirItem *)((unsigned char *)dirItem + sizeof(BtrfsDirItem) +
+								endian16(dirItem->m) + endian16(dirItem->n));
+						}
+						else
+							break;
+					}
+				}
+			}
+			else if (operation == FSOP_DIR_LIST_B)
+			{
+				const BtrfsObjID *objectID = (const BtrfsObjID *)input1;
+				DirList *dirList = (DirList *)output1;
+
+				if (item->key.type == TYPE_INODE_ITEM) // inode
+				{
+					BtrfsInodeItem *inodeItem = (BtrfsInodeItem *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset));
+					
+					/* ensure that the item fits entirely in the node block */
+					assert((unsigned char *)inodeItem + sizeof(BtrfsInodeItem) <= (unsigned char *)nodeBlock + endian32(super.nodeSize));
+
+					for (j = 0; j < dirList->numEntries; j++) // try to find a matching entry
+					{
+						if (endian64(item->key.objectID) == dirList->entries[j].objectID)
+						{
+							memcpy(&(dirList->entries[j].inode), inodeItem, sizeof(BtrfsInodeItem));
+
+							(*returnCode)--;
+							break;
+						}
+					}
+				}
+				else if (item->key.type == TYPE_DIR_ITEM) // name
+				{
+					BtrfsDirItem *dirItem = (BtrfsDirItem *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset));
+					
+					while (1)
+					{
+						/* ensure that the variably sized item fits entirely in the node block */
+						assert((unsigned char *)dirItem + sizeof(BtrfsDirItem) <= (unsigned char *)nodeBlock + endian32(super.nodeSize) &&
+							(unsigned char *)dirItem + sizeof(BtrfsDirItem) + endian16(dirItem->m) + endian16(dirItem->n) <=
+							(unsigned char *)nodeBlock + endian32(super.nodeSize));
+						
+						if (endian64(item->key.objectID) == *objectID) // parent match for speedup
+						{
+							for (j = 0; j < dirList->numEntries; j++) // try to find a matching entry
+							{
+								if (endian64(dirItem->child.objectID) == dirList->entries[j].objectID)
+								{
+									memcpy(dirList->entries[j].name, (char *)dirItem + sizeof(BtrfsDirItem),
+										(endian16(dirItem->n) <= 255 ? endian16(dirItem->n) : 255)); // limit to 255
+									dirList->entries[j].name[endian16(dirItem->n)] = 0;
+									
+									(*returnCode)--;
+									break;
+								}
+							}
 						}
 						
 						/* advance to the next DIR_ITEM if there are more */
@@ -622,7 +718,7 @@ void parseFSTreeRec(unsigned __int64 addr, int operation, void *input1, void *in
 			else
 				printf("parseFSTreeRec: unknown operation (0x%02x)!\n", operation);
 
-			if (shortCircuit)
+			if (*shortCircuit)
 				break;
 
 			nodePtr += sizeof(BtrfsItem);
@@ -638,7 +734,7 @@ void parseFSTreeRec(unsigned __int64 addr, int operation, void *input1, void *in
 			parseFSTreeRec(endian64(keyPtr->blockNum), operation, input1, input2, input3, output1, output2,
 				returnCode, shortCircuit);
 
-			if (shortCircuit)
+			if (*shortCircuit)
 				break;
 
 			nodePtr += sizeof(BtrfsKeyPtr);
@@ -657,10 +753,17 @@ int parseFSTree(int operation, void *input1, void *input2, void *input3, void *o
 	{
 	case FSOP_ID_TO_CHILD_IDS:
 	case FSOP_DUMP_TREE:
+	case FSOP_DIR_LIST_A:
 		returnCode = 0; // always succeeds
 		break;
 	case FSOP_GET_FILE_PKG:
-		returnCode = 0x3; // 2 bits = 2 parts MUST be fulfilled
+		returnCode = 0x1; // always need the inode
+		if (*((BtrfsObjID *)input1) != OBJID_ROOT_DIR)
+			returnCode |= 0x2; // need parent & name for all except the root dir
+		break;
+	case FSOP_DIR_LIST_B:
+		/* warning: possible integer overflow for cases with tons of files */
+		returnCode = ((DirList *)output1)->numEntries * 2; // if decremented the proper number of times, this will reach zero
 		break;
 	default:
 		returnCode = 0x1; // 1 bit = 1 part MUST be fulfilled
@@ -669,7 +772,6 @@ int parseFSTree(int operation, void *input1, void *input2, void *input3, void *o
 	/* pre tasks */
 	if (operation == FSOP_ID_TO_CHILD_IDS)
 	{
-		const BtrfsObjID *parentID = (const BtrfsObjID *)input1;
 		unsigned __int64 *numChildren = (unsigned __int64 *)output1;
 		unsigned __int64 **children = (unsigned _int64 **)output2;
 
@@ -687,6 +789,20 @@ int parseFSTree(int operation, void *input1, void *input2, void *input3, void *o
 		filePkg->hidden = false;
 		filePkg->numChildren = 0;
 		filePkg->childIDs = NULL;
+
+		/* for the special case of the root dir, this stuff wouldn't get filled in by any other means */
+		if (*objectID == OBJID_ROOT_DIR)
+		{
+			strcpy(filePkg->name, "ROOT_DIR");
+			filePkg->parentID = (BtrfsObjID)0x0;
+		}
+	}
+	else if (operation == FSOP_DIR_LIST_A)
+	{
+		DirList *dirList = (DirList *)output1;
+
+		dirList->numEntries = 0;
+		dirList->entries = NULL;
 	}
 	
 	parseFSTreeRec(getFSRootBlockNum(), operation, input1, input2, input3, output1, output2,
@@ -694,17 +810,42 @@ int parseFSTree(int operation, void *input1, void *input2, void *input3, void *o
 
 	if (operation == FSOP_GET_FILE_PKG)
 	{
-		const BtrfsObjID *objectID = (const BtrfsObjID *)input1;
 		FilePkg *filePkg = (FilePkg *)output1;
 
 		if (returnCode == 0)
 		{
-			if (strcmp(filePkg->name, ".") != 0 && strcmp(filePkg->name, "..") != 0 &&
-				filePkg->name[0] == '.')
+			if (filePkg->name[0] == '.' && strcmp(filePkg->name, ".") != 0 && strcmp(filePkg->name, "..") != 0)
 				filePkg->hidden = true;
 		}
 		else
 			free(filePkg->childIDs);
+	}
+	else if (operation == FSOP_DIR_LIST_B)
+	{
+		DirList *dirList = (DirList *)output1;
+
+		/* TODO: after implementing the code in FSOP_DIR_LIST_A to add . and .. , returnCode WILL be 1
+			if we are getting a dir list for \ or \dir because the object IDs for '.' in the first
+			case or '..' in the second case won't map to names, as we found in the FilePkg case */
+
+		if (returnCode == 0)
+		{
+			for (int i = 0; i < dirList->numEntries; i++)
+			{
+				if (dirList->entries[i].name[0] == '.' && strcmp(dirList->entries[i].name, ".") != 0 &&
+					strcmp(dirList->entries[i].name, "..") != 0)
+					dirList->entries[i].hidden = true;
+			}
+			
+			// finalize the dir list by adding . and ..
+			// see btrfs_operations/dirList for details
+
+			/* todo: do this while parsing the tree so we don't have to go through the tree an extra time or two */
+			/* plan for doing this: add the object IDs for . and .. in part A (with the usual rule for
+				noninclusion in the root dir), then add them in like usual in part B */
+		}
+		else
+			; // free things up
 	}
 
 	return returnCode;

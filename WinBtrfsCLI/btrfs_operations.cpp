@@ -238,15 +238,3 @@ void convertTime(BtrfsTime *bTime, PFILETIME wTime)
 	wTime->dwHighDateTime = (DWORD)(s64 >> 32);
 	wTime->dwLowDateTime = (DWORD)s64;
 }
-
-#if 0
-void destroyDirList(DirList *listing)
-{
-	free(listing->inodes);
-	
-	if (listing->numEntries > 0)
-		free(listing->names[0]);
-
-	free(listing->names);
-}
-#endif

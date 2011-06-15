@@ -263,8 +263,16 @@ struct FilePkg
 	bool					hidden;
 };
 
+struct DirEntry
+{
+	BtrfsObjID				objectID;
+	BtrfsInodeItem			inode;
+	char					name[256];
+	bool					hidden;
+};
+
 struct DirList
 {
 	unsigned __int64		numEntries;
-	FilePkg					*entries;
+	DirEntry				*entries;
 };

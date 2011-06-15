@@ -80,7 +80,10 @@ int DOKAN_CALLBACK btrfsCreateFile(LPCWSTR fileName, DWORD desiredAccess, DWORD 
 	for ( ; it != end; ++it)
 	{
 		/* there should not be any duplicate records in this array! */
-		assert(it->objectID != objectID);
+		//assert(it->objectID != objectID);
+		/* actually, that's a *terrible* assumption. for now, we'll allow dupes under the knowledge that they will
+			contain exactly the same information, so it doesn't matter which one gets cleared up later. this should
+			be totally cleared up when we move over to a multimap container instead of the current linked list. */
 		
 		if (it->objectID >= objectID)
 			break;
@@ -92,6 +95,8 @@ int DOKAN_CALLBACK btrfsCreateFile(LPCWSTR fileName, DWORD desiredAccess, DWORD 
 
 	if (!info->IsDirectory && (filePkg.inode.stMode & S_IFDIR))
 		info->IsDirectory = TRUE;
+
+	/* TODO: respect the desiredAccess parameter and lock the file based on shareMode */
 	
 	return ERROR_SUCCESS;
 }
@@ -131,7 +136,10 @@ int DOKAN_CALLBACK btrfsOpenDirectory(LPCWSTR fileName, PDOKAN_FILE_INFO info)
 	for ( ; it != end; ++it)
 	{
 		/* there should not be any duplicate records in this array! */
-		assert(it->objectID != objectID);
+		//assert(it->objectID != objectID);
+		/* actually, that's a *terrible* assumption. for now, we'll allow dupes under the knowledge that they will
+			contain exactly the same information, so it doesn't matter which one gets cleared up later. this should
+			be totally cleared up when we move over to a multimap container instead of the current linked list. */
 		
 		if (it->objectID >= objectID)
 			break;
@@ -154,7 +162,6 @@ int DOKAN_CALLBACK btrfsCreateDirectory(LPCWSTR fileName, PDOKAN_FILE_INFO info)
 	return ERROR_SUCCESS;
 }
 
-// When FileInfo->DeleteOnClose is true, you must delete the file in Cleanup.
 int DOKAN_CALLBACK btrfsCleanup(LPCWSTR fileName, PDOKAN_FILE_INFO info)
 {
 	printf("btrfsCleanup: OK [%s]\n", fileName);
@@ -182,10 +189,15 @@ int DOKAN_CALLBACK btrfsCloseFile(LPCWSTR fileName, PDOKAN_FILE_INFO info)
 	return ERROR_SUCCESS;
 }
 
+// this may be called AFTER Cleanup in some cases in order to complete IO operations
 int DOKAN_CALLBACK btrfsReadFile(LPCWSTR fileName, LPVOID buffer, DWORD numberOfBytesToRead, LPDWORD numberOfBytesRead,
 	LONGLONG offset, PDOKAN_FILE_INFO info)
 {
 	printf("btrfsReadFile: unimplemented! [%s]\n", fileName);
+
+	/* TODO: probably DON'T go to all the trouble of parsing the extent tree IN THIS FUNCTION; get that information
+		ahead of time (or maybe just on the FIRST read so we don't do it needlessly on files that aren't read)
+		and store it in openFiles or somewhere else */
 
 	return ERROR_SUCCESS;
 }
@@ -251,55 +263,65 @@ int DOKAN_CALLBACK btrfsGetFileInformation(LPCWSTR fileName, LPBY_HANDLE_FILE_IN
 
 int DOKAN_CALLBACK btrfsFindFiles(LPCWSTR pathName, PFillFindData pFillFindData, PDOKAN_FILE_INFO info)
 {
-#if 0
 	char pathNameB[MAX_PATH];
 	wchar_t nameW[MAX_PATH];
 	BtrfsObjID objectID;
-	DirList listing;
+	DirList dirList;
 	WIN32_FIND_DATAW findData;
-	int i;
-	
-	wprintf(L"btrfsFindFiles: OK [%s]\n", pathName);
 
 	assert(wcstombs(pathNameB, pathName, MAX_PATH) == wcslen(pathName));
 
 	if (WaitForSingleObject(hBigDokanLock, 10000) != WAIT_OBJECT_0)
+	{
+		wprintf(L"btrfsFindFiles: couldn't get ownership of the Big Dokan Lock! [%s]\n", pathName);
 		return -ERROR_SEM_TIMEOUT; // error code looks sketchy
+	}
 	
 	if (getPathID(pathNameB, &objectID) != 0)
 	{
 		ReleaseMutex(hBigDokanLock);
+		wprintf(L"btrfsFindFiles: getPathID failed! [%s]\n", pathName);
 		return -ERROR_PATH_NOT_FOUND;
 	}
 
-	if (dirList(objectID, &listing) != 0)
+	if (parseFSTree(FSOP_DIR_LIST_A, &objectID, NULL, NULL, &dirList, NULL) != 0)
 	{
 		ReleaseMutex(hBigDokanLock);
+		free(dirList.entries);
+		wprintf(L"btrfsFindFiles: parseFSTree with FSOP_DIR_LIST_A failed! [%s]\n", pathName);
+		return -ERROR_PATH_NOT_FOUND; // probably not an adequate error code
+	}
+
+	if (parseFSTree(FSOP_DIR_LIST_B, &objectID, NULL, NULL, &dirList, NULL) != 0)
+	{
+		ReleaseMutex(hBigDokanLock);
+		free(dirList.entries);
+		wprintf(L"btrfsFindFiles: parseFSTree with FSOP_DIR_LIST_B failed! [%s]\n", pathName);
 		return -ERROR_PATH_NOT_FOUND; // probably not an adequate error code
 	}
 	
 	ReleaseMutex(hBigDokanLock);
 
-	for (i = 0; i < listing.numEntries; i++)
+	for (int i = 0; i < dirList.numEntries; i++)
 	{
 		/* TODO: FILE_ATTRIBUTE_COMPRESSED, FILE_ATTRIBUTE_SPARSE_FILE, FILE_ATTRIBUTE_REPARSE_POINT (maybe) */
 		findData.dwFileAttributes = 0;
-		if (endian32(listing.inodes[i].inodeItem.stMode) & S_IFBLK) findData.dwFileAttributes |= FILE_ATTRIBUTE_DEVICE; // is this right?
-		if (endian32(listing.inodes[i].inodeItem.stMode) & S_IFDIR) findData.dwFileAttributes |= FILE_ATTRIBUTE_DIRECTORY;
-		if (listing.inodes[i].hidden) findData.dwFileAttributes |= FILE_ATTRIBUTE_HIDDEN;
+		if (endian32(dirList.entries[i].inode.stMode) & S_IFBLK) findData.dwFileAttributes |= FILE_ATTRIBUTE_DEVICE; // is this right?
+		if (endian32(dirList.entries[i].inode.stMode) & S_IFDIR) findData.dwFileAttributes |= FILE_ATTRIBUTE_DIRECTORY;
+		if (dirList.entries[i].hidden) findData.dwFileAttributes |= FILE_ATTRIBUTE_HIDDEN;
 
 		/* not sure if this is necessary, but it seems to be what you're supposed to do */
 		if (findData.dwFileAttributes == 0)
 			findData.dwFileAttributes = FILE_ATTRIBUTE_NORMAL;
 		
-		convertTime(&(listing.inodes[i].inodeItem.stCTime), &findData.ftCreationTime);
-		convertTime(&(listing.inodes[i].inodeItem.stATime), &findData.ftLastAccessTime);
-		convertTime(&(listing.inodes[i].inodeItem.stMTime), &findData.ftLastWriteTime);
+		convertTime(&(dirList.entries[i].inode.stCTime), &findData.ftCreationTime);
+		convertTime(&(dirList.entries[i].inode.stATime), &findData.ftLastAccessTime);
+		convertTime(&(dirList.entries[i].inode.stMTime), &findData.ftLastWriteTime);
 
-		findData.nFileSizeHigh = (DWORD)(endian64(listing.inodes[i].inodeItem.stSize) >> 32);
-		findData.nFileSizeLow = (DWORD)endian64(listing.inodes[i].inodeItem.stSize);
+		findData.nFileSizeHigh = (DWORD)(endian64(dirList.entries[i].inode.stSize) >> 32);
+		findData.nFileSizeLow = (DWORD)endian64(dirList.entries[i].inode.stSize);
 
-		assert(mbstowcs(nameW, listing.names[i], MAX_PATH) == strlen(listing.names[i]));
+		assert(mbstowcs(nameW, dirList.entries[i].name, MAX_PATH) == strlen(dirList.entries[i].name));
 
 		wcscpy(findData.cFileName, nameW);
 		findData.cAlternateFileName[0] = 0; // no 8.3 name
@@ -309,10 +331,10 @@ int DOKAN_CALLBACK btrfsFindFiles(LPCWSTR pathName, PFillFindData pFillFindData,
 		/* call the function pointer */
 		(*pFillFindData)(&findData, info);
 	}
-
-	destroyDirList(&listing);
-
-#endif
+	
+	free(dirList.entries);
+	
+	wprintf(L"btrfsFindFiles: OK [%s]\n", pathName);
 	return ERROR_SUCCESS;
 }
 
