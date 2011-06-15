@@ -803,7 +803,6 @@ int parseFSTree(int operation, void *input1, void *input2, void *input3, void *o
 		FilePkg *filePkg = (FilePkg *)output1;
 
 		filePkg->objectID = *objectID;
-		filePkg->hidden = false;
 		filePkg->numChildren = 0;
 		filePkg->childIDs = NULL;
 
@@ -846,6 +845,8 @@ int parseFSTree(int operation, void *input1, void *input2, void *input3, void *o
 		{
 			if (filePkg->name[0] == '.' && strcmp(filePkg->name, ".") != 0 && strcmp(filePkg->name, "..") != 0)
 				filePkg->hidden = true;
+			else
+				filePkg->hidden = false;
 		}
 		else
 			free(filePkg->childIDs);
@@ -866,6 +867,8 @@ int parseFSTree(int operation, void *input1, void *input2, void *input3, void *o
 				if (dirList->entries[i].name[0] == '.' && strcmp(dirList->entries[i].name, ".") != 0 &&
 					strcmp(dirList->entries[i].name, "..") != 0)
 					dirList->entries[i].hidden = true;
+				else
+					dirList->entries[i].hidden = false;
 			}
 		}
 		else
