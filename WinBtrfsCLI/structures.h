@@ -255,17 +255,7 @@ struct Root
 struct FilePkg
 {
 	BtrfsObjID				objectID;
-	BtrfsInodeItem			inode;
-	char					name[256];
 	BtrfsObjID				parentID;
-	unsigned __int64		numChildren;
-	BtrfsObjID				*childIDs;
-	bool					hidden;
-};
-
-struct DirEntry
-{
-	BtrfsObjID				objectID;
 	BtrfsInodeItem			inode;
 	char					name[256];
 	bool					hidden;
@@ -274,5 +264,5 @@ struct DirEntry
 struct DirList
 {
 	unsigned __int64		numEntries;
-	DirEntry				*entries;
+	FilePkg					*entries;
 };

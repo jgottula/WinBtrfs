@@ -182,7 +182,6 @@ int DOKAN_CALLBACK btrfsCleanup(LPCWSTR fileName, PDOKAN_FILE_INFO info)
 	/* we should always be able to find an entry in openFiles */
 	assert(it != end);
 
-	free(it->childIDs);
 	openFiles.erase(it);
 	
 	printf("btrfsCleanup: OK [%s]\n", fileName);

@@ -572,6 +572,9 @@ void parseFSTreeRec(unsigned __int64 addr, int operation, void *input1, void *in
 					memcpy(&(filePkg->inode), inodeItem, sizeof(BtrfsInodeItem));
 					
 					*returnCode &= ~0x1; // clear bit 0
+
+					if (*returnCode == 0)
+						*shortCircuit = true;
 				}
 				else if (item->key.type == TYPE_DIR_ITEM) // name & parent
 				{
@@ -593,19 +596,9 @@ void parseFSTreeRec(unsigned __int64 addr, int operation, void *input1, void *in
 							filePkg->parentID = (BtrfsObjID)endian64(item->key.objectID);
 							
 							*returnCode &= ~0x2; // clear bit 1
-						}
 
-						if (endian64(item->key.objectID) == *objectID) // child info
-						{
-							if (filePkg->childIDs == NULL)
-								filePkg->childIDs = (BtrfsObjID *)malloc(sizeof(BtrfsObjID));
-							else
-								filePkg->childIDs = (BtrfsObjID *)realloc(filePkg->childIDs,
-									sizeof(BtrfsObjID) * (filePkg->numChildren + 1));
-
-							filePkg->childIDs[filePkg->numChildren] = (BtrfsObjID)endian64(dirItem->child.objectID);
-
-							filePkg->numChildren++;
+							if (*returnCode == 0)
+								*shortCircuit = true;
 						}
 						
 						/* advance to the next DIR_ITEM if there are more */
@@ -638,9 +631,9 @@ void parseFSTreeRec(unsigned __int64 addr, int operation, void *input1, void *in
 						if (endian64(item->key.objectID) == *objectID)
 						{
 							if (dirList->entries == NULL)
-								dirList->entries = (DirEntry *)malloc(sizeof(DirEntry));
+								dirList->entries = (FilePkg *)malloc(sizeof(FilePkg));
 							else
-								dirList->entries = (DirEntry *)realloc(dirList->entries, sizeof(DirEntry) * (dirList->numEntries + 1));
+								dirList->entries = (FilePkg *)realloc(dirList->entries, sizeof(FilePkg) * (dirList->numEntries + 1));
 
 							dirList->entries[dirList->numEntries].objectID = (BtrfsObjID)endian64(dirItem->child.objectID);
 							dirList->numEntries++;
@@ -650,9 +643,9 @@ void parseFSTreeRec(unsigned __int64 addr, int operation, void *input1, void *in
 						if (*objectID != OBJID_ROOT_DIR && endian64(dirItem->child.objectID) == *objectID)
 						{
 							if (dirList->entries == NULL)
-								dirList->entries = (DirEntry *)malloc(sizeof(DirEntry));
+								dirList->entries = (FilePkg *)malloc(sizeof(FilePkg));
 							else
-								dirList->entries = (DirEntry *)realloc(dirList->entries, sizeof(DirEntry) * (dirList->numEntries + 1));
+								dirList->entries = (FilePkg *)realloc(dirList->entries, sizeof(FilePkg) * (dirList->numEntries + 1));
 
 							dirList->entries[dirList->numEntries].objectID = (BtrfsObjID)endian64(item->key.objectID);
 							strcpy(dirList->entries[dirList->numEntries].name, "..");
@@ -694,7 +687,7 @@ void parseFSTreeRec(unsigned __int64 addr, int operation, void *input1, void *in
 						}
 					}
 				}
-				else if (item->key.type == TYPE_DIR_ITEM) // name
+				else if (item->key.type == TYPE_DIR_ITEM) // name & parent
 				{
 					BtrfsDirItem *dirItem = (BtrfsDirItem *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset));
 					
@@ -714,6 +707,8 @@ void parseFSTreeRec(unsigned __int64 addr, int operation, void *input1, void *in
 									memcpy(dirList->entries[j].name, (char *)dirItem + sizeof(BtrfsDirItem),
 										(endian16(dirItem->n) <= 255 ? endian16(dirItem->n) : 255)); // limit to 255
 									dirList->entries[j].name[endian16(dirItem->n)] = 0;
+
+									dirList->entries[j].parentID = (BtrfsObjID)endian64(item->key.objectID);
 									
 									(*returnCode)--;
 									break;
@@ -803,8 +798,6 @@ int parseFSTree(int operation, void *input1, void *input2, void *input3, void *o
 		FilePkg *filePkg = (FilePkg *)output1;
 
 		filePkg->objectID = *objectID;
-		filePkg->numChildren = 0;
-		filePkg->childIDs = NULL;
 
 		/* for the special case of the root dir, this stuff wouldn't get filled in by any other means */
 		if (*objectID == OBJID_ROOT_DIR)
@@ -821,7 +814,7 @@ int parseFSTree(int operation, void *input1, void *input2, void *input3, void *o
 		if (*objectID != OBJID_ROOT_DIR)
 		{
 			dirList->numEntries = 1;
-			dirList->entries = (DirEntry *)malloc(sizeof(DirEntry));
+			dirList->entries = (FilePkg *)malloc(sizeof(FilePkg));
 
 			/* add '.' to the list */
 			dirList->entries[0].objectID = *objectID;
@@ -848,8 +841,6 @@ int parseFSTree(int operation, void *input1, void *input2, void *input3, void *o
 			else
 				filePkg->hidden = false;
 		}
-		else
-			free(filePkg->childIDs);
 	}
 	else if (operation == FSOP_DIR_LIST_B)
 	{
