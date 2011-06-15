@@ -816,10 +816,23 @@ int parseFSTree(int operation, void *input1, void *input2, void *input3, void *o
 	}
 	else if (operation == FSOP_DIR_LIST_A)
 	{
+		const BtrfsObjID *objectID = (const BtrfsObjID *)input1;
 		DirList *dirList = (DirList *)output1;
 
-		dirList->numEntries = 0;
-		dirList->entries = NULL;
+		if (*objectID != OBJID_ROOT_DIR)
+		{
+			dirList->numEntries = 1;
+			dirList->entries = (DirEntry *)malloc(sizeof(DirEntry));
+
+			/* add '.' to the list */
+			dirList->entries[0].objectID = *objectID;
+			strcpy(dirList->entries[0].name, ".");
+		}
+		else
+		{
+			dirList->numEntries = 0;
+			dirList->entries = NULL;
+		}
 	}
 	
 	parseFSTreeRec(getFSRootBlockNum(), operation, input1, input2, input3, output1, output2,
@@ -836,21 +849,6 @@ int parseFSTree(int operation, void *input1, void *input2, void *input3, void *o
 		}
 		else
 			free(filePkg->childIDs);
-	}
-	else if (operation == FSOP_DIR_LIST_A)
-	{
-		const BtrfsObjID *objectID = (const BtrfsObjID *)input1;
-		DirList *dirList = (DirList *)output1;
-
-		/* add '.' to the list */
-		if (*objectID != OBJID_ROOT_DIR)
-		{
-			dirList->entries = (DirEntry *)realloc(dirList->entries, sizeof(DirEntry) * (dirList->numEntries + 1));
-			dirList->entries[dirList->numEntries].objectID = *objectID;
-			strcpy(dirList->entries[dirList->numEntries].name, ".");
-
-			dirList->numEntries++;
-		}
 	}
 	else if (operation == FSOP_DIR_LIST_B)
 	{
