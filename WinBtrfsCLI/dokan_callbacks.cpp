@@ -292,10 +292,10 @@ int DOKAN_CALLBACK btrfsFindFiles(LPCWSTR pathName, PFillFindData pFillFindData,
 		return -ERROR_SEM_TIMEOUT; // error code looks sketchy
 	}
 
+#if 0
 	if (parseFSTree(FSOP_DIR_LIST_A, &objectID, NULL, NULL, &dirList, NULL) != 0)
 	{
 		ReleaseMutex(hBigDokanLock);
-		free(dirList.entries);
 		wprintf(L"btrfsFindFiles: parseFSTree with FSOP_DIR_LIST_A failed! [%s]\n", pathName);
 		return -ERROR_PATH_NOT_FOUND; // probably not an adequate error code
 	}
@@ -303,8 +303,15 @@ int DOKAN_CALLBACK btrfsFindFiles(LPCWSTR pathName, PFillFindData pFillFindData,
 	if (parseFSTree(FSOP_DIR_LIST_B, &objectID, NULL, NULL, &dirList, NULL) != 0)
 	{
 		ReleaseMutex(hBigDokanLock);
-		free(dirList.entries);
 		wprintf(L"btrfsFindFiles: parseFSTree with FSOP_DIR_LIST_B failed! [%s]\n", pathName);
+		return -ERROR_PATH_NOT_FOUND; // probably not an adequate error code
+	}
+#endif
+
+	if (parseFSTree(FSOP_DIR_LIST, &objectID, NULL, NULL, &dirList, NULL) != 0)
+	{
+		ReleaseMutex(hBigDokanLock);
+		wprintf(L"btrfsFindFiles: parseFSTree with FSOP_DIR_LIST failed! [%s]\n", pathName);
 		return -ERROR_PATH_NOT_FOUND; // probably not an adequate error code
 	}
 	

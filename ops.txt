@@ -56,3 +56,9 @@ Inputs:
 [1] const unsigned __int64 *	ptr to dir's object ID
 Outputs:
 [1] DirList *					ptr to DirList struct to fill
+
+FSOP_DIR_LIST: Performs a directory listing of the dir represented by the object ID given in one step
+Inputs:
+[1] const unsigned __int64 *	ptr to dir's object ID
+Outputs:
+[1] DirList *					ptr to DirList struct to fill
