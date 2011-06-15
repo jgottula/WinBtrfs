@@ -269,23 +269,27 @@ int DOKAN_CALLBACK btrfsFindFiles(LPCWSTR pathName, PFillFindData pFillFindData,
 {
 	char pathNameB[MAX_PATH];
 	wchar_t nameW[MAX_PATH];
-	BtrfsObjID objectID;
+	BtrfsObjID objectID = (BtrfsObjID)info->Context;
 	DirList dirList;
 	WIN32_FIND_DATAW findData;
 
 	assert(wcstombs(pathNameB, pathName, MAX_PATH) == wcslen(pathName));
 
+	std::list<FilePkg>::iterator it = openFiles.begin(), end = openFiles.end();
+	for ( ; it != end; ++it)
+	{
+		/* return ERROR_DIRECTORY (267) if attempting to dirlist a file; this is what NTFS does */
+		if (it->objectID == objectID && !(it->inode.stMode & S_IFDIR))
+		{
+			wprintf(L"btrfsFindFiles: expected a dir but was given a file! [%s]\n", pathName);
+			return -ERROR_DIRECTORY; // for some reason, ERROR_FILE_NOT_FOUND is reported to FindFirstFile
+		}
+	}
+
 	if (WaitForSingleObject(hBigDokanLock, 10000) != WAIT_OBJECT_0)
 	{
 		wprintf(L"btrfsFindFiles: couldn't get ownership of the Big Dokan Lock! [%s]\n", pathName);
 		return -ERROR_SEM_TIMEOUT; // error code looks sketchy
-	}
-	
-	if (getPathID(pathNameB, &objectID) != 0)
-	{
-		ReleaseMutex(hBigDokanLock);
-		wprintf(L"btrfsFindFiles: getPathID failed! [%s]\n", pathName);
-		return -ERROR_PATH_NOT_FOUND;
 	}
 
 	if (parseFSTree(FSOP_DIR_LIST_A, &objectID, NULL, NULL, &dirList, NULL) != 0)
