@@ -1,6 +1,6 @@
 WinBtrfs — Readme/FAQ
 
-Last updated 2011.06.10
+Last updated 2011.06.15
 
 
 NOTE: WinBtrfs is NOT EVEN CLOSE to a finished product, and is not yet ready for use by most users. See the project status question below for more details.
@@ -19,6 +19,11 @@ Btrfs is a new Linux filesystem developed by Chris Mason and Oracle Corporation 
 Why WinBtrfs?
 
 I began development on WinBtrfs in early 2011, when I observed that although Btrfs had been in the Linux kernel for a decent amount of the time and the on-disk format was finalized, there was no way to mount a Btrfs volume in Windows. Taking after the example of several Windows ext2 and ext3 drivers, I decided to write my own read-only userspace implementation of the Btrfs filesystem so that I, as well as others, could make use of our new Btrfs volumes from Windows.
+
+
+What can WinBtrfs do right now?
+
+As of 2011.06.15, WinBtrfs will load a Btrfs filesystem (from the command line), display information such as the drive label and free space in the Drive Properties dialog, perform directory listings, and report file information (such as file size and attributes) for individual files. There is no installer or GUI at this time and files' contents cannot be read. WinBtrfs is known to be buggy with large Btrfs volumes at this time, but small test-case filesystems work properly.
 
 
 What dependencies are required for WinBtrfs?
