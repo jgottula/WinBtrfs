@@ -104,7 +104,7 @@ void firstTasks()
 	parseChunkTree();
 	parseRootTree();
 	dump();
-	//parseFSTree(FSOP_DUMP_TREE, NULL, NULL, NULL, NULL, NULL);
+	parseFSTree(FSOP_DUMP_TREE, NULL, NULL, NULL, NULL, NULL);
 }
 
 void dokanError(int dokanResult)

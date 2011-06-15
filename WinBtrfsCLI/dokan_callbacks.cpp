@@ -303,6 +303,8 @@ int DOKAN_CALLBACK btrfsFindFiles(LPCWSTR pathName, PFillFindData pFillFindData,
 
 	for (int i = 0; i < dirList.numEntries; i++)
 	{
+		/* TODO: extract this stuff out into a separate conversion function */
+		
 		/* TODO: FILE_ATTRIBUTE_COMPRESSED, FILE_ATTRIBUTE_SPARSE_FILE, FILE_ATTRIBUTE_REPARSE_POINT (maybe) */
 		findData.dwFileAttributes = 0;
 		if (endian32(dirList.entries[i].inode.stMode) & S_IFBLK) findData.dwFileAttributes |= FILE_ATTRIBUTE_DEVICE; // is this right?
