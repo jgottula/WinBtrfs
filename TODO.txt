@@ -1,10 +1,9 @@
 TODO list
 
 Roadmap:
-Get directory listings and file info working (fs tree queries)
 Get file data working (extents)
 - Remove Dokan callbacks that should never be called
-Esoteric Btrfs stuff
+Esoteric Btrfs stuff (add a README faq for "which Btrfs features are supported")
 - Compression (zlib)
 - Subvolumes
 - Multi-drive volumes
@@ -13,9 +12,10 @@ GUI (C#: which .NET version?)
 Installer (NSIS)
 MinGW/Cygwin[/Mono] build support
 UI translations
-Old OS testing
+OS testing: Win9x and ReactOS (provided Dokan supports these)
 
 Code stuff:
+Check for memleaks with valgrind
 Rectify inconsistent struct member names: num/nr, csum/cSum/crc32c/etc, generation/gen, objectID/objID, len/length
 Rectify inconsistent function arg names: len/length, addr/lAddr/logicalAddr/physAddr/etc, super/SB/superblock
 Cache frequently used blocks in memory, especially FS tree nodes and other trees that are references multiple times (extent tree?)
@@ -45,9 +45,15 @@ Move i, j, etc. into for-loop definitions if they are scope-limited like they sh
 Reimplement the block cache system so it works on recentness rather than number of reads: sort by most-recent to least-recent (easy splicing)
 	and remove oldest nodes. have a static int increment on each cached read and store that number in the node struct on each read.
 Retool the FS tree return code system so it returns Windows error codes that are descriptive and can be passed back to the OS
-	when control returns to the Dokan callback
+	when control returns to the Dokan callback; to do this, segregate the real return value (a win32 DWORD error code value) from
+	the int used internally to count things and ensure the call went successfully
 Is MS's STL threadsafe? If not, we may have problems with the openFiles linked list being used in multiple threads in dokan_callbacks.cpp
 Reimplement the openFiles array in dokan_callbacks.cpp as a multimap<BtrfsObjID, FileStruct> where FileStruct is a new struct that holds,
 	in addition to a FilePkg, the values passed as desiredAccess and shareMode to CreateFile; this should allow duplicates and properly
 	respect sharing and access mode requests from CreateFile
-Attempts to dir list on what is actually a file should result in 267 (dir name is invalid)
+Replace C casts with C++ casts possibly?
+Remove type punning (casting void pointers back and forth) from parseFSTree; instead, possibly create an interface that each FSOP
+	implements, and each implementation class can have its own values that are passed with it
+Add optimizations for FS tree parsing: use the rules of sorting within the tree to skip over parts entirely to get to the relevant item(s)
+	This is likely to be more feasible with smaller FSOPs, the likes of FSOP_NAME_TO_ID; although, for FSOP_DIR_LIST, it may be
+	highly effective to skip right to the INODE_ITEM for the parent directory and then resume parsing like usual
