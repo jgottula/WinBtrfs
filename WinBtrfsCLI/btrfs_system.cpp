@@ -359,7 +359,7 @@ void parseFSTreeRec(unsigned __int64 addr, int operation, void *input1, void *in
 	nodePtr = nodeBlock + sizeof(BtrfsHeader);
 
 	if (operation == FSOP_DUMP_TREE)
-		printf("[Node] addr = 0x%016I64x level = 0x%02x nrItems = 0x%08x\n\n", addr, header->level, header->nrItems);
+		printf("[Node] addr = 0x%I64x level = 0x%02x nrItems = 0x%08x\n\n", addr, header->level, header->nrItems);
 
 	if (header->level == 0) // leaf node
 	{
@@ -413,7 +413,7 @@ void parseFSTreeRec(unsigned __int64 addr, int operation, void *input1, void *in
 				switch (item->key.type)
 				{
 				case TYPE_INODE_ITEM:
-					printf("[%02x] INODE_ITEM: 0x%I64x\n", i, endian64(item->key.objectID));
+					printf("[%02x] INODE_ITEM 0x%I64x\n", i, endian64(item->key.objectID));
 					break;
 				case TYPE_INODE_REF:
 				{
@@ -424,7 +424,8 @@ void parseFSTreeRec(unsigned __int64 addr, int operation, void *input1, void *in
 					memcpy(name, inodeRef->name, len);
 					name[len] = 0;
 
-					printf("[%02x] INODE_REF: 0x%I64x -> '%s'\n", i, endian64(item->key.objectID), name);
+					printf("[%02x] INODE_REF 0x%I64x -> '%s' parent: 0x%I64x\n", i, endian64(item->key.objectID), name,
+						endian64(item->key.offset));
 
 					delete[] name;
 					break;
