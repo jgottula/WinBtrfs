@@ -5,23 +5,25 @@ FS ops
 
 FSOP_NAME_TO_ID: Finds the object ID for a named file or dir
 Inputs:
-[1] const unsigned __int64 *	ptr to parent's object ID
+[1] const BtrfsObjID *			ptr to parent's object ID
 [2] const unsigned __int64 *	ptr to hash of the child file/dir's name
 [3] const char *				child file/dir's name
 Outputs:
-[1] unsigned __int64 *			child's object ID
+[1] BtrfsObjID *				child's object ID
 
 FSOP_DUMP_TREE: Dumps the entire FS tree to stdout
-No inputs or outputs
+Inputs:
+[1] const unsigned __int64		ptr to addr of tree to dump; NULL will dump tree 0x5 (the normal FS tree)
+No outputs
 
 FSOP_GET_FILE_PKG: Returns a FilePkg struct containing information about a file from its object ID
 Inputs:
-[1] const unsigned __int64 *	ptr to object ID
+[1] const BtrfsObjID *			ptr to object ID
 Outputs:
 [1] FilePkg *					ptr to FilePkg struct to fill
 
 FSOP_DIR_LIST: Performs a directory listing of the dir represented by the object ID given in one step
 Inputs:
-[1] const unsigned __int64 *	ptr to dir's object ID
+[1] const BtrfsObjID *			ptr to dir's object ID
 Outputs:
 [1] DirList *					ptr to DirList struct to fill

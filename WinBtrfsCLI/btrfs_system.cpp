@@ -353,13 +353,12 @@ void parseFSTreeRec(unsigned __int64 addr, int operation, void *input1, void *in
 	BtrfsItem *item;
 
 	loadNode(addr, ADDR_LOGICAL, &nodeBlock, &header);
-
-	assert(header->tree == OBJID_FS_TREE);
 	
 	nodePtr = nodeBlock + sizeof(BtrfsHeader);
 
 	if (operation == FSOP_DUMP_TREE)
-		printf("[Node] addr = 0x%I64x level = 0x%02x nrItems = 0x%08x\n\n", addr, header->level, header->nrItems);
+		printf("[Node] tree = 0x%I64x addr = 0x%I64x level = 0x%02x nrItems = 0x%08x\n\n", endian64(header->tree),
+			addr, header->level, header->nrItems);
 
 	if (header->level == 0) // leaf node
 	{
@@ -661,6 +660,7 @@ void parseFSTreeRec(unsigned __int64 addr, int operation, void *input1, void *in
 
 int parseFSTree(int operation, void *input1, void *input2, void *input3, void *output1, void *output2)
 {
+	unsigned __int64 addr;
 	int returnCode;
 	bool shortCircuit = false;
 	BtrfsInodeItem inode;
@@ -719,8 +719,13 @@ int parseFSTree(int operation, void *input1, void *input2, void *input3, void *o
 			dirList->entries = NULL;
 		}
 	}
+
+	if (operation == FSOP_DUMP_TREE && input1 != NULL)
+		addr = *((unsigned __int64 *)input1);
+	else
+		addr = getFSRootBlockNum();
 	
-	parseFSTreeRec(getFSRootBlockNum(), operation, input1, input2, input3, output1, output2,
+	parseFSTreeRec(addr, operation, input1, input2, input3, output1, output2,
 		(operation == FSOP_DIR_LIST ? &inode : NULL), &returnCode, &shortCircuit);
 
 	if (operation == FSOP_GET_FILE_PKG)
