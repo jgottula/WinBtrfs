@@ -103,7 +103,6 @@ void firstTasks()
 
 	parseChunkTree();
 	parseRootTree();
-	dump();
 	parseFSTree(FSOP_DUMP_TREE, NULL, NULL, NULL, NULL, NULL);
 }
 
@@ -159,7 +158,7 @@ void unitTests()
 	assert(sizeof(BtrfsKeyPtr) == 0x21);
 	assert(sizeof(BtrfsItem) == 0x19);
 	assert(sizeof(BtrfsInodeItem) == 0xa0);
-	assert(sizeof(BtrfsInodeRef) == 0x0b);
+	assert(sizeof(BtrfsInodeRef) == 0x0a);
 	assert(sizeof(BtrfsDirItem) == 0x1e);
 	assert(sizeof(BtrfsDirIndex) == 0x1e);
 	assert(sizeof(BtrfsExtentData) == 0x15);

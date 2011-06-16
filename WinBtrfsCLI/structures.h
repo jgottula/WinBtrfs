@@ -94,7 +94,7 @@ struct BtrfsInodeRef
 {
 	unsigned __int64		index;
 	unsigned short			nameLen;
-	char					name				[0x01];
+	char					name				[0x0];
 };
 
 /* this structure may be repeated if multiple items have the same hash */
@@ -183,6 +183,13 @@ struct BtrfsDevItem
 	unsigned char			fsUUID				[0x10];
 };
 
+struct BtrfsChunkItemStripe
+{
+	unsigned __int64		devID;
+	unsigned __int64		offset;
+	unsigned char			devUUID				[0x10];
+};
+
 struct BtrfsChunkItem
 {
 	unsigned __int64		chunkSize;
@@ -194,13 +201,13 @@ struct BtrfsChunkItem
 	unsigned int			minIOSize;
 	unsigned short			numStripes;
 	unsigned short			subStripes;
+	BtrfsChunkItemStripe	stripes				[0x0];
 };
 
-struct BtrfsChunkItemStripe
+struct BtrfsSBChunk
 {
-	unsigned __int64		devID;
-	unsigned __int64		offset;
-	unsigned char			devUUID				[0x10];
+	BtrfsDiskKey			key;
+	BtrfsChunkItem			chunkItem;
 };
 
 struct BtrfsSuperblock
@@ -239,11 +246,10 @@ struct BtrfsSuperblock
 	unsigned char			unused				[0x4d5];
 };
 
-struct Chunk
+struct ItemPlus
 {
-	unsigned __int64		logiOffset;
-	BtrfsChunkItem			chunkItem;
-	BtrfsChunkItemStripe	*stripes;
+	BtrfsItem				item;
+	void					*data;
 };
 
 struct Root
