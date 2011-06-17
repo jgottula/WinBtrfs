@@ -16,7 +16,7 @@ Root tree
 [02] INODE_REF 0x5 -> 'default' parent: 0x6
 [03] ROOT_ITEM 0x5 -> 0x1c14000						// fs tree
 [04] ROOT_REF tree: 0x5 subtree: 0x100
-[05] ROOF_REF tree: 0x5 subtree: 0x101
+[05] ROOT_REF tree: 0x5 subtree: 0x101
 [06] INODE_ITEM 0x6
 [07] INODE_REF 0x6 -> '..'
 [08] DIR_ITEM parent: 0x6 child: 0x5 -> 'default'
