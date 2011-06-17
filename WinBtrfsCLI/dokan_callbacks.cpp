@@ -173,6 +173,12 @@ int DOKAN_CALLBACK btrfsCreateDirectory(LPCWSTR fileName, PDOKAN_FILE_INFO info)
 
 int DOKAN_CALLBACK btrfsCleanup(LPCWSTR fileName, PDOKAN_FILE_INFO info)
 {
+	printf("btrfsCleanup: OK [%s]\n", fileName);
+	return ERROR_SUCCESS;
+}
+
+int DOKAN_CALLBACK btrfsCloseFile(LPCWSTR fileName, PDOKAN_FILE_INFO info)
+{
 	std::list<FilePkg>::iterator it = openFiles.begin(), end = openFiles.end();
 	for ( ; it != end; ++it)
 	{
@@ -186,12 +192,6 @@ int DOKAN_CALLBACK btrfsCleanup(LPCWSTR fileName, PDOKAN_FILE_INFO info)
 	free(it->extentData);
 	openFiles.erase(it);
 	
-	printf("btrfsCleanup: OK [%s]\n", fileName);
-	return ERROR_SUCCESS;
-}
-
-int DOKAN_CALLBACK btrfsCloseFile(LPCWSTR fileName, PDOKAN_FILE_INFO info)
-{
 	printf("btrfsCloseFile: OK [%s]\n", fileName);
 	return ERROR_SUCCESS;
 }
@@ -200,13 +200,42 @@ int DOKAN_CALLBACK btrfsCloseFile(LPCWSTR fileName, PDOKAN_FILE_INFO info)
 int DOKAN_CALLBACK btrfsReadFile(LPCWSTR fileName, LPVOID buffer, DWORD numberOfBytesToRead, LPDWORD numberOfBytesRead,
 	LONGLONG offset, PDOKAN_FILE_INFO info)
 {
-	printf("btrfsReadFile: unimplemented! [%s]\n", fileName);
+	/* Big Dokan Lock not needed here */
 
-	/* TODO: probably DON'T go to all the trouble of parsing the extent tree IN THIS FUNCTION; get that information
-		ahead of time (or maybe just on the FIRST read so we don't do it needlessly on files that aren't read)
-		and store it in openFiles or somewhere else */
+	std::list<FilePkg>::iterator it = openFiles.begin(), end = openFiles.end();
+	for ( ; it != end; ++it)
+	{
+		if (it->objectID == (BtrfsObjID)info->Context)
+			break;
+	}
 
-	return ERROR_SUCCESS;
+	/* failing to find the element is NOT an option */
+	assert(it != end);
+
+	/* this really, really should not happen */
+	assert(it->extentData != NULL);
+
+	BtrfsExtentData *extentData = it->extentData;
+
+	if (extentData->type == FILEDATA_INLINE)
+	{
+		if (offset + numberOfBytesToRead <= extentData->n)
+			*numberOfBytesRead = numberOfBytesToRead; // the read fits the data
+		else
+			*numberOfBytesRead = extentData->n - offset; // doesn't fit, so MAKE IT FIT!
+
+		memcpy(buffer, extentData->inlineData + offset, *numberOfBytesRead);
+
+		printf("btrfsReadFile: OK [%s]\n", fileName);
+		return ERROR_SUCCESS;
+	}
+	else
+	{
+		*numberOfBytesRead = 0;
+		
+		printf("btrfsReadFile: can't handle non-inline file data yet!\n");
+		return ERROR_SUCCESS;
+	}
 }
 
 int DOKAN_CALLBACK btrfsWriteFile(LPCWSTR fileName, LPCVOID buffer, DWORD numberOfBytesToWrite, LPDWORD numberOfBytesWritten,
