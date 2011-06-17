@@ -166,6 +166,8 @@ void unitTests()
 	assert(sizeof(BtrfsExtentData) == 0x15);
 	assert(sizeof(BtrfsExtentDataNonInline) == 0x20);
 	assert(sizeof(BtrfsRootItem) == 0xef);
+	assert(sizeof(BtrfsRootBackref) == 0x12);
+	assert(sizeof(BtrfsRootRef) == 0x12);
 	assert(sizeof(BtrfsBlockGroupItem) == 0x18);
 	assert(sizeof(BtrfsChunkItem) == 0x30);
 	assert(sizeof(BtrfsChunkItemStripe) == 0x20);
