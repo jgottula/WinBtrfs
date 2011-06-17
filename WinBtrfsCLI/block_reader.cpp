@@ -35,7 +35,8 @@ BlockReader::~BlockReader()
 }
 
 /* consolidate cachedRead and directRead in the future */
-DWORD BlockReader::cachedRead(unsigned __int64 addr, int addrType, unsigned __int64 len, unsigned char *dest)
+DWORD BlockReader::cachedRead(unsigned __int64 addr, int addrType, unsigned __int64 len,
+	boost::shared_array<unsigned char> *out)
 {
 	std::list<CacheNode>::iterator it, end = nodeArr.end();
 	bool foundNode = false;
@@ -79,12 +80,12 @@ DWORD BlockReader::cachedRead(unsigned __int64 addr, int addrType, unsigned __in
 			return GetLastError();
 		}
 
-		cNode.data = (unsigned char *)malloc(len);
+		cNode.data = new boost::shared_array<unsigned char>(new unsigned char[len]);
 
-		if (ReadFile(hPhysical, cNode.data, (DWORD)len, &bytesRead, NULL) == 0 || bytesRead != len)
+		if (ReadFile(hPhysical, cNode.data->get(), (DWORD)len, &bytesRead, NULL) == 0 || bytesRead != len)
 		{
 			ReleaseMutex(hReadMutex);
-			free(cNode.data);
+			delete cNode.data;
 			return GetLastError();
 		}
 
@@ -102,14 +103,12 @@ DWORD BlockReader::cachedRead(unsigned __int64 addr, int addrType, unsigned __in
 			if (it->numReads == cNode.numReads)
 				break;
 		}
-
+		
 		/* this does a copy operation, which is OK here */
 		nodeArr.insert(it, cNode);
 
-		/* this is really a needless copy. probably best to remove this memcpy (and the others in this
-			function and directRead) and have callers reference the pointer WE return and not free it
-			like they're doing now. */
-		memcpy(dest, cNode.data, len);
+		/* create a new reference to the shared_array */
+		*out = *cNode.data;
 
 		/*printf("BlockReader::cachedRead: miss!\n");
 		dump();*/
@@ -131,8 +130,9 @@ DWORD BlockReader::cachedRead(unsigned __int64 addr, int addrType, unsigned __in
 				break;
 			}
 		}
-
-		memcpy(dest, cNode.data, len);
+		
+		/* create a new reference to the shared_array */
+		*out = *cNode.data;
 		
 		/*printf("BlockReader::cachedRead: hit!\n");
 		dump();*/
@@ -197,7 +197,9 @@ void BlockReader::purge()
 		CacheNode& last = nodeArr.back();
 
 		cacheSize -= last.size;
-		free(last.data);
+
+		/* remove a reference to the shared_ptr */
+		delete last.data;
 
 		nodeArr.pop_back();
 	}

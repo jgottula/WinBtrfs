@@ -12,6 +12,7 @@
  */
 
 #include <list>
+#include <boost/shared_array.hpp>
 #include <Windows.h>
 
 struct CacheNode
@@ -19,7 +20,7 @@ struct CacheNode
 	unsigned __int64 numReads;
 	unsigned __int64 physAddr;
 	unsigned __int64 size;
-	unsigned char *data;
+	boost::shared_array<unsigned char> *data;
 };
 
 class BlockReader
@@ -28,7 +29,7 @@ public:
 	BlockReader();
 	~BlockReader();
 
-	DWORD cachedRead(unsigned __int64 addr, int addrType, unsigned __int64 len, unsigned char *dest);
+	DWORD cachedRead(unsigned __int64 addr, int addrType, unsigned __int64 len, boost::shared_array<unsigned char> *out);
 	DWORD directRead(unsigned __int64 addr, int addrType, unsigned __int64 len, unsigned char *dest);
 	void dump();
 

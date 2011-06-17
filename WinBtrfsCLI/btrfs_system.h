@@ -11,6 +11,7 @@
  * any later version.
  */
 
+#include <boost/shared_array.hpp>
 #include <Windows.h>
 #include "structures.h"
 
@@ -21,7 +22,7 @@ DWORD readPrimarySB();
 int validateSB(BtrfsSuperblock *s);
 int findSecondarySBs();
 void loadSBChunks();
-void loadNode(unsigned __int64 blockAddr, int addrType, unsigned char **nodeDest, BtrfsHeader **header);
+boost::shared_array<unsigned char> *loadNode(unsigned __int64 blockAddr, int addrType, BtrfsHeader **header);
 void parseChunkTree();
 void parseRootTree();
 int parseFSTree(FSOperation operation, void *input1, void *input2, void *input3, void *output1, void *output2);
