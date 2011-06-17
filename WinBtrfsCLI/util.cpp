@@ -44,3 +44,49 @@ void uuidToStr(const unsigned char *uuid, char *dest)
 
 	strcat(dest, "}");
 }
+
+void stModeToStr(unsigned int mode, char *dest)
+{
+	if (mode & S_IFDIR)
+		dest[0] = 'd';
+	else if (mode & S_IFBLK)
+		dest[0] = 'b';
+	else if (mode & S_IFCHR)
+		dest[0] = 'c';
+	/* Btrfs seems to mark all files as symlinks for some reason */
+	/*else if (mode & S_IFLNK)
+		dest[0] = 'l';*/
+	else if (mode & S_IFIFO)
+		dest[0] = 'p';
+	/* Btrfs also appears to enjoy marking everything as a socket */
+	/*else if (mode & S_IFSOCK)
+		dest[0] = 's';*/
+	else
+		dest[0] = '-';
+
+	dest[1] = (mode & S_IRUSR) ? 'r' : '-';
+	dest[2] = (mode & S_IWUSR) ? 'w' : '-';
+
+	if (mode & S_ISUID)
+		dest[3] = (mode & S_IXUSR) ? 's' : 'S';
+	else
+		dest[3] = (mode & S_IXUSR) ? 'x' : '-';
+
+	dest[4] = (mode & S_IRGRP) ? 'r' : '-';
+	dest[5] = (mode & S_IWGRP) ? 'w' : '-';
+
+	if (mode & S_ISGID)
+		dest[6] = (mode & S_IXUSR) ? 's' : 'S';
+	else
+		dest[6] = (mode & S_IXUSR) ? 'x' : '-';
+
+	dest[7] = (mode & S_IROTH) ? 'r' : '-';
+	dest[8] = (mode & S_IWOTH) ? 'w' : '-';
+
+	if (mode & S_ISVTX)
+		dest[9] = (mode & S_IXUSR) ? 't' : 'T';
+	else
+		dest[9] = (mode & S_IXUSR) ? 'x' : '-';
+
+	dest[10] = 0;
+}

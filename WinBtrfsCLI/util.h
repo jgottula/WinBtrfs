@@ -16,3 +16,4 @@
 
 void convertTime(BtrfsTime *bTime, PFILETIME wTime);
 void uuidToStr(const unsigned char *uuid, char *dest);
+void stModeToStr(unsigned int mode, char *dest);
