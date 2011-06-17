@@ -62,7 +62,7 @@
       <LaunchMethod>Executable</LaunchMethod>
       <ExecutablePath>J:\Programming\WinBtrfs\WinBtrfs\Debug\WinBtrfsCLI.exe</ExecutablePath>
       <StartupDirectory>J:\Programming\WinBtrfs\WinBtrfs\WinBtrfsCLI\</StartupDirectory>
-      <Arguments>J:\Programming\WinBtrfs\btrfs_smallfiles.img X:</Arguments>
+      <Arguments>J:\Programming\WinBtrfs\btrfs_128files.img X:</Arguments>
       <NetAppHost>IIS</NetAppHost>
       <NetBrowser>InternetExplorer</NetBrowser>
       <ExcludeSmallFuncs>true</ExcludeSmallFuncs>
@@ -81,6 +81,15 @@
   <Reports>
     <Report>
       <Path>C:\Users\jgottula\Documents\Visual Studio 2010\Projects\WinBtrfs\WinBtrfsCLI110610.vsp</Path>
+    </Report>
+    <Report>
+      <Path>C:\Users\jgottula\Documents\Visual Studio 2010\Projects\WinBtrfs\WinBtrfsCLI110610(1).vsp</Path>
+    </Report>
+    <Report>
+      <Path>C:\Users\jgottula\Documents\Visual Studio 2010\Projects\WinBtrfs\WinBtrfsCLI110613.vsp</Path>
+    </Report>
+    <Report>
+      <Path>C:\Users\jgottula\Documents\Visual Studio 2010\Projects\WinBtrfs\WinBtrfsCLI110613(1).vsp</Path>
     </Report>
   </Reports>
   <Launches>
