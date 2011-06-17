@@ -129,14 +129,3 @@ int getPathID(const char *path, BtrfsObjID *output)
 
 	return 0;
 }
-
-void convertTime(BtrfsTime *bTime, PFILETIME wTime)
-{
-	LONGLONG s64 = 116444736000000000; // 1601-to-1970 correction factor
-
-	s64 += endian64(bTime->secSince1970) * 10000000;
-	s64 += endian32(bTime->nanoseconds) / 100;
-
-	wTime->dwHighDateTime = (DWORD)(s64 >> 32);
-	wTime->dwLowDateTime = (DWORD)s64;
-}

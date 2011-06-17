@@ -20,6 +20,7 @@
 #include "constants.h"
 #include "structures.h"
 #include "endian.h"
+#include "util.h"
 #include "btrfs_system.h"
 #include "btrfs_operations.h"
 

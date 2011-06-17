@@ -1,5 +1,5 @@
-/* btrfs_operations.h
- * high-level filesystem operations
+/* util.h
+ * utility functions
  *
  * WinBtrfs
  *
@@ -11,6 +11,7 @@
  * any later version.
  */
 
-void validatePath(const char *input, char *output);
-int componentizePath(const char *path, char ***output);
-int getPathID(const char *path, BtrfsObjID *output);
+#include <Windows.h>
+#include "structures.h"
+
+void convertTime(BtrfsTime *bTime, PFILETIME wTime);

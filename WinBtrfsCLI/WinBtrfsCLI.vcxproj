@@ -106,6 +106,7 @@
     <ClCompile Include="crc32c.cpp" />
     <ClCompile Include="endian.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="util.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="block_reader.h" />
@@ -116,6 +117,7 @@
     <ClInclude Include="crc32c.h" />
     <ClInclude Include="endian.h" />
     <ClInclude Include="structures.h" />
+    <ClInclude Include="util.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="WinBtrfsCLI.psess" />
