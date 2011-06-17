@@ -204,7 +204,7 @@ void parseChunkTreeRec(unsigned __int64 addr)
 
 				memcpy(&itemP.item, item, sizeof(BtrfsItem));
 				itemP.data = malloc(sizeof(BtrfsDevItem));
-				memcpy(itemP.data, nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset), sizeof(BtrfsDevItem));
+				memcpy(itemP.data, nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset), endian32(item->size));
 
 				chunkTree.push_back(itemP);
 				break;
@@ -214,10 +214,12 @@ void parseChunkTreeRec(unsigned __int64 addr)
 
 				temp = (unsigned short *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset) + 0x2c);
 
+				/* check the ACTUAL size now that we have it */
+				assert(endian32(item->size) == sizeof(BtrfsChunkItem) + (*temp * sizeof(BtrfsChunkItemStripe)));
+
 				memcpy(&itemP.item, item, sizeof(BtrfsItem));
 				itemP.data = malloc(sizeof(BtrfsChunkItem) + (*temp * sizeof(BtrfsChunkItemStripe)));
-				memcpy(itemP.data, nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset),
-					sizeof(BtrfsChunkItem) + (*temp * sizeof(BtrfsChunkItemStripe)));
+				memcpy(itemP.data, nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset), endian32(item->size));
 
 				chunkTree.push_back(itemP);
 				break;
@@ -280,7 +282,7 @@ void parseRootTreeRec(unsigned __int64 addr)
 
 				memcpy(&itemP.item, item, sizeof(BtrfsItem));
 				itemP.data = malloc(sizeof(BtrfsRootItem));
-				memcpy(itemP.data, nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset), sizeof(BtrfsRootItem));
+				memcpy(itemP.data, nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset), endian32(item->size));
 
 				rootTree.push_back(itemP);
 				break;
