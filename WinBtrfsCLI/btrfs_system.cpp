@@ -326,7 +326,7 @@ void parseFSTreeRec(unsigned __int64 addr, FSOperation operation, void *input1, 
 	nodePtr = nodeBlock + sizeof(BtrfsHeader);
 
 	if (operation == FSOP_DUMP_TREE)
-		printf("[Node] tree = 0x%I64x addr = 0x%I64x level = 0x%02x nrItems = 0x%08x\n\n", endian64(header->tree),
+		printf("\n[Node] tree = 0x%I64x addr = 0x%I64x level = 0x%02x nrItems = 0x%08x\n", endian64(header->tree),
 			addr, header->level, header->nrItems);
 
 	if (header->level == 0) // leaf node
@@ -381,7 +381,7 @@ void parseFSTreeRec(unsigned __int64 addr, FSOperation operation, void *input1, 
 				switch (item->key.type)
 				{
 				case TYPE_INODE_ITEM:
-					printf("[%02x] INODE_ITEM 0x%I64x\n", i, endian64(item->key.objectID));
+					printf("  [%02x] INODE_ITEM 0x%I64x\n", i, endian64(item->key.objectID));
 					break;
 				case TYPE_INODE_REF:
 				{
@@ -392,7 +392,7 @@ void parseFSTreeRec(unsigned __int64 addr, FSOperation operation, void *input1, 
 					memcpy(name, inodeRef->name, len);
 					name[len] = 0;
 
-					printf("[%02x] INODE_REF 0x%I64x -> '%s' parent: 0x%I64x\n", i, endian64(item->key.objectID), name,
+					printf("  [%02x] INODE_REF 0x%I64x -> '%s' parent: 0x%I64x\n", i, endian64(item->key.objectID), name,
 						endian64(item->key.offset));
 
 					delete[] name;
@@ -407,28 +407,28 @@ void parseFSTreeRec(unsigned __int64 addr, FSOperation operation, void *input1, 
 					memcpy(name, (char *)dirItem + 0x1e, len);
 					name[len] = 0;
 
-					printf("[%02x] DIR_ITEM parent: 0x%I64x child: 0x%I64x -> '%s'\n", i, endian64(item->key.objectID),
+					printf("  [%02x] DIR_ITEM parent: 0x%I64x child: 0x%I64x -> '%s'\n", i, endian64(item->key.objectID),
 						endian64(dirItem->child.objectID), name);
 					
 					delete[] name;
 					break;
 				}
 				case TYPE_DIR_INDEX:
-					printf("[%02x] DIR_INDEX 0x%I64x = idx 0x%I64x\n", i, endian64(item->key.objectID),
+					printf("  [%02x] DIR_INDEX 0x%I64x = idx 0x%I64x\n", i, endian64(item->key.objectID),
 						endian64(item->key.offset));
 					break;
 				case TYPE_EXTENT_DATA:
 				{
 					BtrfsExtentData *extentData = (BtrfsExtentData *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset));
 
-					printf("[%02x] EXTENT_DATA 0x%I64x offset: 0x%I64x size: 0x%I64x type: %s\n", i,
+					printf("  [%02x] EXTENT_DATA 0x%I64x offset: 0x%I64x size: 0x%I64x type: %s\n", i,
 						endian64(item->key.objectID), endian64(item->key.offset), endian64(extentData->n),
 						(extentData->type == 0 ? "inline" : (extentData->type == 1 ? "regular" : "prealloc")));
 					
 					break;
 				}
 				default:
-					printf("[%02x] unknown {%I64x|%I64x}\n", i, item->key.objectID, item->key.offset);
+					printf("  [%02x] unknown {%I64x|%I64x}\n", i, item->key.objectID, item->key.offset);
 					break;
 				}
 			}
@@ -589,9 +589,6 @@ void parseFSTreeRec(unsigned __int64 addr, FSOperation operation, void *input1, 
 
 			nodePtr += sizeof(BtrfsItem);
 		}
-
-		if (operation == FSOP_DUMP_TREE)
-			printf("\n");
 	}
 	else // non-leaf node
 	{
@@ -601,12 +598,10 @@ void parseFSTreeRec(unsigned __int64 addr, FSOperation operation, void *input1, 
 			{
 				BtrfsKeyPtr *keyPtr = (BtrfsKeyPtr *)(nodePtr + (sizeof(BtrfsKeyPtr) * i));
 
-				printf("[%02x] {%I64x|%I64x} KeyPtr: block 0x%016I64x generation 0x%016I64x\n",
+				printf("  [%02x] {%I64x|%I64x} KeyPtr: block 0x%016I64x generation 0x%016I64x\n",
 					i, endian64(keyPtr->key.objectID), endian64(keyPtr->key.offset),
 					endian64(keyPtr->blockNum), endian64(keyPtr->generation));
 			}
-
-			printf("\n");
 		}
 
 		for (int i = 0; i < endian32(header->nrItems); i++)
@@ -650,9 +645,7 @@ int parseFSTree(FSOperation operation, void *input1, void *input2, void *input3,
 	}
 	
 	/* pre tasks */
-	if (operation == FSOP_DUMP_TREE)
-		printf("parseFSTree: operation is FSOP_DUMP_TREE, preparing to take a dump...\n\n");
-	else if (operation == FSOP_GET_FILE_PKG)
+	if (operation == FSOP_GET_FILE_PKG)
 	{
 		const BtrfsObjID *objectID = (const BtrfsObjID *)input1;
 		FilePkg *filePkg = (FilePkg *)output1;
