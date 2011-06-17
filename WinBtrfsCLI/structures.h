@@ -123,6 +123,7 @@ struct BtrfsExtentData
 	unsigned char			encryption;
 	unsigned short			otherEncoding;
 	unsigned char			type;
+	unsigned char			inlineData			[0x0];
 };
 
 struct BtrfsExtentDataNonInline
