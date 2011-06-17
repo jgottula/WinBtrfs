@@ -236,7 +236,26 @@ void parseChunkTreeRec(unsigned __int64 addr, CTOperation operation)
 			}
 			else if (operation == RTOP_DUMP_TREE)
 			{
-				printf("parseChunkTreeRec: FIXME!!\n");
+				switch (item->key.type)
+				{
+				case TYPE_DEV_ITEM:
+				{
+					BtrfsDevItem *devItem = (BtrfsDevItem *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset));
+
+					printf("  [%02x] DEV_ITEM devID: 0x%I64x uuid: %.16s devGroup: 0x%lx\n"
+						"                offset: 0x%I64x size: 0x%I64x\n", i,
+						endian64(item->key.offset), devItem->devUUID, endian32(devItem->devGroup),
+						endian64(devItem->startOffset), endian64(devItem->numBytes));
+					
+					break;
+				}
+				case TYPE_CHUNK_ITEM:
+					printf("  [%02x] CHUNK_ITEM (todo)\n", i);
+					break;
+				default:
+					printf("  [%02x] unknown {%I64x|%I64x}\n", i, item->key.objectID, item->key.offset);
+					break;
+				}
 			}
 			else
 				printf("parseChunkTreeRec: unknown operation (0x%02x)!\n", operation);
