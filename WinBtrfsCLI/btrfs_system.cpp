@@ -352,7 +352,61 @@ void parseRootTreeRec(unsigned __int64 addr, RTOperation operation)
 			}
 			else if (operation == RTOP_DUMP_TREE)
 			{
-				printf("parseRootTreeRec: FIXME!!\n");
+				switch (item->key.type)
+				{
+				case TYPE_INODE_ITEM:
+					printf("  [%02x] INODE_ITEM 0x%I64x\n", i, endian64(item->key.objectID));
+					break;
+				case TYPE_INODE_REF:
+				{
+					BtrfsInodeRef *inodeRef = (BtrfsInodeRef *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset));
+					size_t len = endian16(inodeRef->nameLen);
+					char *name = new char[len + 1];
+
+					memcpy(name, inodeRef->name, len);
+					name[len] = 0;
+
+					printf("  [%02x] INODE_REF 0x%I64x -> '%s' parent: 0x%I64x\n", i, endian64(item->key.objectID), name,
+						endian64(item->key.offset));
+
+					delete[] name;
+					break;
+				}
+				case TYPE_DIR_ITEM:
+				{
+					BtrfsDirItem *dirItem = (BtrfsDirItem *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset));
+					size_t len = endian16(dirItem->n);
+					char *name = new char[len + 1];
+
+					memcpy(name, (char *)dirItem + 0x1e, len);
+					name[len] = 0;
+
+					printf("  [%02x] DIR_ITEM parent: 0x%I64x child: 0x%I64x -> '%s'\n", i, endian64(item->key.objectID),
+						endian64(dirItem->child.objectID), name);
+					
+					delete[] name;
+					break;
+				}
+				case TYPE_ROOT_ITEM:
+				{
+					BtrfsRootItem *rootItem = (BtrfsRootItem *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset));
+
+					printf("  [%02x] ROOT_ITEM 0x%I64x -> 0x%I64x\n", i, endian64(item->key.objectID),
+						endian64(rootItem->rootNodeBlockNum));
+					break;
+				}
+				case TYPE_ROOT_BACKREF:
+					printf("  [%02x] ROOT_BACKREF subtree: 0x%I64x tree: 0x%I64x\n", i, endian64(item->key.objectID),
+						endian64(item->key.offset));
+					break;
+				case TYPE_ROOT_REF:
+					printf("  [%02x] ROOT_REF tree: 0x%I64x subtree: 0x%I64x\n", i, endian64(item->key.objectID),
+						endian64(item->key.offset));
+					break;
+				default:
+					printf("  [%02x] unknown {%I64x|%I64x}\n", i, item->key.objectID, item->key.offset);
+					break;
+				}
 			}
 			else
 				printf("parseRootTreeRec: unknown operation (0x%02x)!\n", operation);
