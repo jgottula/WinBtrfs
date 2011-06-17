@@ -1,4 +1,4 @@
-/* endian.c
+/* endian.cpp
  * functions to deal with disk/CPU endianness differences
  *
  * WinBtrfs
