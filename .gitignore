@@ -2,3 +2,5 @@ Debug/
 WinBtrfsCLI/Debug/
 *.suo
 *.sln.docstates
+*.vcxproj.user
+*.psess
