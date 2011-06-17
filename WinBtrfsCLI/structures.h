@@ -149,6 +149,16 @@ struct BtrfsRootItem
 	unsigned char			rootLevel;
 };
 
+struct BtrfsRootRef
+{
+	BtrfsObjID				directoryID;
+	unsigned __int64		sequence;
+	unsigned short			n;
+	char					name				[0x0];
+};
+
+typedef BtrfsRootRef BtrfsRootBackref;
+
 /*struct BtrfsExtentItem
 {
 	unsigned __int64		refCount;
