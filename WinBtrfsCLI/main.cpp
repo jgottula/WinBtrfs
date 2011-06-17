@@ -101,8 +101,11 @@ void firstTasks()
 	if ((secSB = findSecondarySBs()) != 1)
 		printf("Found a newer secondary superblock (#%d).\n", secSB);
 
-	parseChunkTree();
-	parseRootTree();
+	parseChunkTree(CTOP_LOAD);
+	parseRootTree(RTOP_LOAD);
+	
+	parseChunkTree(CTOP_DUMP_TREE);
+	parseRootTree(RTOP_DUMP_TREE);
 	parseFSTree(FSOP_DUMP_TREE, NULL, NULL, NULL, NULL, NULL);
 }
 

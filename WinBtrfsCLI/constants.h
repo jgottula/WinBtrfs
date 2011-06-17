@@ -66,6 +66,21 @@ enum AddrType
 	ADDR_LOGICAL
 };
 
+/* chunk tree operations */
+enum CTOperation
+{
+	CTOP_LOAD,
+	CTOP_DUMP_TREE
+};
+
+/* root tree operations */
+enum RTOperation
+{
+	RTOP_LOAD,
+	RTOP_DUMP_TREE
+};
+
+/* FS tree operations */
 enum FSOperation
 {
 	FSOP_NAME_TO_ID,

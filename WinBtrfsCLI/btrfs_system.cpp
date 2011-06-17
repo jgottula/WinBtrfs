@@ -175,7 +175,7 @@ boost::shared_array<unsigned char> *loadNode(unsigned __int64 blockAddr, int add
 	return sharedBlock;
 }
 
-void parseChunkTreeRec(unsigned __int64 addr)
+void parseChunkTreeRec(unsigned __int64 addr, CTOperation operation)
 {
 	unsigned char *nodeBlock, *nodePtr;
 	BtrfsHeader *header;
@@ -190,55 +190,80 @@ void parseChunkTreeRec(unsigned __int64 addr)
 	nodeBlock = sharedBlock->get();
 	nodePtr = nodeBlock + sizeof(BtrfsHeader);
 
+	if (operation == CTOP_DUMP_TREE)
+		printf("\n[Node] tree = 0x%I64x addr = 0x%I64x level = 0x%02x nrItems = 0x%08x\n", endian64(header->tree),
+			addr, header->level, header->nrItems);
+
 	if (header->level == 0) // leaf node
 	{
 		for (int i = 0; i < endian32(header->nrItems); i++)
 		{
 			item = (BtrfsItem *)nodePtr;
 
-			switch (item->key.type)
+			if (operation == CTOP_LOAD)
 			{
-			case TYPE_DEV_ITEM:
-				assert(endian32(item->size) == sizeof(BtrfsDevItem)); // ensure proper size
-				assert(sizeof(BtrfsHeader) + endian32(item->offset) + endian32(item->size) <= endian32(super.nodeSize)); // ensure we're within bounds
+				switch (item->key.type)
+				{
+				case TYPE_DEV_ITEM:
+					assert(endian32(item->size) == sizeof(BtrfsDevItem)); // ensure proper size
+					assert(sizeof(BtrfsHeader) + endian32(item->offset) + endian32(item->size) <= endian32(super.nodeSize)); // ensure we're within bounds
 
-				memcpy(&itemP.item, item, sizeof(BtrfsItem));
-				itemP.data = malloc(sizeof(BtrfsDevItem));
-				memcpy(itemP.data, nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset), endian32(item->size));
+					memcpy(&itemP.item, item, sizeof(BtrfsItem));
+					itemP.data = malloc(sizeof(BtrfsDevItem));
+					memcpy(itemP.data, nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset), endian32(item->size));
 
-				chunkTree.push_back(itemP);
-				break;
-			case TYPE_CHUNK_ITEM:
-				assert((endian32(item->size) - sizeof(BtrfsChunkItem)) % sizeof(BtrfsChunkItemStripe) == 0); // ensure proper 30+20n size
-				assert(sizeof(BtrfsHeader) + endian32(item->offset) + endian32(item->size) <= endian32(super.nodeSize)); // ensure we're within bounds
+					chunkTree.push_back(itemP);
+					break;
+				case TYPE_CHUNK_ITEM:
+					assert((endian32(item->size) - sizeof(BtrfsChunkItem)) % sizeof(BtrfsChunkItemStripe) == 0); // ensure proper 30+20n size
+					assert(sizeof(BtrfsHeader) + endian32(item->offset) + endian32(item->size) <= endian32(super.nodeSize)); // ensure we're within bounds
 
-				temp = (unsigned short *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset) + 0x2c);
+					temp = (unsigned short *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset) + 0x2c);
 
-				/* check the ACTUAL size now that we have it */
-				assert(endian32(item->size) == sizeof(BtrfsChunkItem) + (*temp * sizeof(BtrfsChunkItemStripe)));
+					/* check the ACTUAL size now that we have it */
+					assert(endian32(item->size) == sizeof(BtrfsChunkItem) + (*temp * sizeof(BtrfsChunkItemStripe)));
 
-				memcpy(&itemP.item, item, sizeof(BtrfsItem));
-				itemP.data = malloc(sizeof(BtrfsChunkItem) + (*temp * sizeof(BtrfsChunkItemStripe)));
-				memcpy(itemP.data, nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset), endian32(item->size));
+					memcpy(&itemP.item, item, sizeof(BtrfsItem));
+					itemP.data = malloc(sizeof(BtrfsChunkItem) + (*temp * sizeof(BtrfsChunkItemStripe)));
+					memcpy(itemP.data, nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset), endian32(item->size));
 
-				chunkTree.push_back(itemP);
-				break;
-			default:
-				printf("parseChunkTreeRec: found an item of unexpected type [0x%02x] in the tree!\n", item->key.type);
-				break;
+					chunkTree.push_back(itemP);
+					break;
+				default:
+					printf("parseChunkTreeRec: don't know how to load item of type 0x%02x!\n", item->key.type);
+					break;
+				}
 			}
+			else if (operation == RTOP_DUMP_TREE)
+			{
+				printf("parseChunkTreeRec: FIXME!!\n");
+			}
+			else
+				printf("parseChunkTreeRec: unknown operation (0x%02x)!\n", operation);
 
 			nodePtr += sizeof(BtrfsItem);
 		}
 	}
 	else // non-leaf node
 	{
+		if (operation == CTOP_DUMP_TREE)
+		{
+			for (int i = 0; i < endian32(header->nrItems); i++)
+			{
+				BtrfsKeyPtr *keyPtr = (BtrfsKeyPtr *)(nodePtr + (sizeof(BtrfsKeyPtr) * i));
+
+				printf("  [%02x] {%I64x|%I64x} KeyPtr: block 0x%016I64x generation 0x%016I64x\n",
+					i, endian64(keyPtr->key.objectID), endian64(keyPtr->key.offset),
+					endian64(keyPtr->blockNum), endian64(keyPtr->generation));
+			}
+		}
+
 		for (int i = 0; i < endian32(header->nrItems); i++)
 		{
 			BtrfsKeyPtr *keyPtr = (BtrfsKeyPtr *)nodePtr;
 
 			/* recurse down one level of the tree */
-			parseChunkTreeRec(endian64(keyPtr->blockNum));
+			parseChunkTreeRec(endian64(keyPtr->blockNum), operation);
 
 			nodePtr += sizeof(BtrfsKeyPtr);
 		}
@@ -247,14 +272,16 @@ void parseChunkTreeRec(unsigned __int64 addr)
 	delete sharedBlock;
 }
 
-void parseChunkTree()
+void parseChunkTree(CTOperation operation)
 {
-	loadSBChunks();
+	/* load SB chunks if we haven't already */
+	if (sbChunks.size() == 0)
+		loadSBChunks();
 	
-	parseChunkTreeRec(endian64(super.chunkTreeLAddr));
+	parseChunkTreeRec(endian64(super.chunkTreeLAddr), operation);
 }
 
-void parseRootTreeRec(unsigned __int64 addr)
+void parseRootTreeRec(unsigned __int64 addr, RTOperation operation)
 {
 	unsigned char *nodeBlock, *nodePtr;
 	BtrfsHeader *header;
@@ -268,40 +295,65 @@ void parseRootTreeRec(unsigned __int64 addr)
 	nodeBlock = sharedBlock->get();
 	nodePtr = nodeBlock + sizeof(BtrfsHeader);
 
+	if (operation == RTOP_DUMP_TREE)
+		printf("\n[Node] tree = 0x%I64x addr = 0x%I64x level = 0x%02x nrItems = 0x%08x\n", endian64(header->tree),
+			addr, header->level, header->nrItems);
+
 	if (header->level == 0) // leaf node
 	{
 		for (int i = 0; i < endian32(header->nrItems); i++)
 		{
 			item = (BtrfsItem *)nodePtr;
 
-			switch (item->key.type)
+			if (operation == RTOP_LOAD)
 			{
-			case TYPE_ROOT_ITEM:
-				assert(endian32(item->size) == sizeof(BtrfsRootItem)); // ensure proper size
-				assert(sizeof(BtrfsHeader) + endian32(item->offset) + endian32(item->size) <= endian32(super.nodeSize)); // ensure we're within bounds
+				switch (item->key.type)
+				{
+				case TYPE_ROOT_ITEM:
+					assert(endian32(item->size) == sizeof(BtrfsRootItem)); // ensure proper size
+					assert(sizeof(BtrfsHeader) + endian32(item->offset) + endian32(item->size) <= endian32(super.nodeSize)); // ensure we're within bounds
 
-				memcpy(&itemP.item, item, sizeof(BtrfsItem));
-				itemP.data = malloc(sizeof(BtrfsRootItem));
-				memcpy(itemP.data, nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset), endian32(item->size));
+					memcpy(&itemP.item, item, sizeof(BtrfsItem));
+					itemP.data = malloc(sizeof(BtrfsRootItem));
+					memcpy(itemP.data, nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset), endian32(item->size));
 
-				rootTree.push_back(itemP);
-				break;
-			default:
-				printf("parseRootTreeRec: found an item of unexpected type [0x%02x] in the tree!\n", item->key.type);
-				break;
+					rootTree.push_back(itemP);
+					break;
+				default:
+					printf("parseRootTreeRec: don't know how to load item of type 0x%02x!\n", item->key.type);
+					break;
+				}
 			}
+			else if (operation == RTOP_DUMP_TREE)
+			{
+				printf("parseRootTreeRec: FIXME!!\n");
+			}
+			else
+				printf("parseRootTreeRec: unknown operation (0x%02x)!\n", operation);
 
 			nodePtr += sizeof(BtrfsItem);
 		}
 	}
 	else // non-leaf node
 	{
+		if (operation == RTOP_DUMP_TREE)
+		{
+			for (int i = 0; i < endian32(header->nrItems); i++)
+			{
+				BtrfsKeyPtr *keyPtr = (BtrfsKeyPtr *)(nodePtr + (sizeof(BtrfsKeyPtr) * i));
+
+				printf("  [%02x] {%I64x|%I64x} KeyPtr: block 0x%016I64x generation 0x%016I64x\n",
+					i, endian64(keyPtr->key.objectID), endian64(keyPtr->key.offset),
+					endian64(keyPtr->blockNum), endian64(keyPtr->generation));
+			}
+		}
+
 		for (int i = 0; i < endian32(header->nrItems); i++)
 		{
 			BtrfsKeyPtr *keyPtr = (BtrfsKeyPtr *)nodePtr;
 
 			/* recurse down one level of the tree */
-			parseRootTreeRec(endian64(keyPtr->blockNum));
+			parseRootTreeRec(endian64(keyPtr->blockNum), operation);
 
 			nodePtr += sizeof(BtrfsKeyPtr);
 		}
@@ -310,9 +362,9 @@ void parseRootTreeRec(unsigned __int64 addr)
 	delete sharedBlock;
 }
 
-void parseRootTree()
+void parseRootTree(RTOperation operation)
 {
-	parseRootTreeRec(endian64(super.rootTreeLAddr));
+	parseRootTreeRec(endian64(super.rootTreeLAddr), operation);
 }
 
 void parseFSTreeRec(unsigned __int64 addr, FSOperation operation, void *input1, void *input2, void *input3,
