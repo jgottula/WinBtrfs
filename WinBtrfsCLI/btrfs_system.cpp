@@ -401,7 +401,7 @@ void parseRootTreeRec(unsigned __int64 addr, RTOperation operation)
 					size_t len = endian16(dirItem->n);
 					char *name = new char[len + 1];
 
-					memcpy(name, (char *)dirItem + 0x1e, len);
+					memcpy(name, dirItem->namePlusData, len);
 					name[len] = 0;
 
 					printf("  [%02x] DIR_ITEM parent: 0x%I64x child: 0x%I64x -> '%s'\n", i, endian64(item->key.objectID),
@@ -512,7 +512,7 @@ void parseFSTreeRec(unsigned __int64 addr, FSOperation operation, void *input1, 
 							(unsigned char *)dirItem + sizeof(BtrfsDirItem) + endian16(dirItem->m) + endian16(dirItem->n) <=
 							(unsigned char *)nodeBlock + endian32(super.nodeSize));
 					
-						if (endian16(dirItem->n) == strlen(name) && memcmp((char *)dirItem + sizeof(BtrfsDirItem), name, endian16(dirItem->n)) == 0)
+						if (endian16(dirItem->n) == strlen(name) && memcmp(dirItem->namePlusData, name, endian16(dirItem->n)) == 0)
 						{
 							/* found a match */
 							*childID = dirItem->child.objectID;
@@ -569,7 +569,7 @@ void parseFSTreeRec(unsigned __int64 addr, FSOperation operation, void *input1, 
 					size_t len = endian16(dirItem->n);
 					char *name = new char[len + 1];
 
-					memcpy(name, (char *)dirItem + 0x1e, len);
+					memcpy(name, dirItem->namePlusData, len);
 					name[len] = 0;
 
 					printf("  [%02x] DIR_ITEM parent: 0x%I64x child: 0x%I64x -> '%s'\n", i, endian64(item->key.objectID),
@@ -628,7 +628,7 @@ void parseFSTreeRec(unsigned __int64 addr, FSOperation operation, void *input1, 
 						
 						if (endian64(dirItem->child.objectID) == *objectID) // parent info
 						{
-							memcpy(filePkg->name, (char *)dirItem + sizeof(BtrfsDirItem),
+							memcpy(filePkg->name, dirItem->namePlusData,
 								(endian16(dirItem->n) <= 255 ? endian16(dirItem->n) : 255)); // limit to 255
 							filePkg->name[endian16(dirItem->n)] = 0;
 
@@ -701,7 +701,7 @@ void parseFSTreeRec(unsigned __int64 addr, FSOperation operation, void *input1, 
 							dirList->entries[dirList->numEntries].objectID = (BtrfsObjID)endian64(dirItem->child.objectID);
 							dirList->entries[dirList->numEntries].parentID = (BtrfsObjID)endian64(item->key.objectID);
 
-							memcpy(dirList->entries[dirList->numEntries].name, (char *)dirItem + sizeof(BtrfsDirItem),
+							memcpy(dirList->entries[dirList->numEntries].name, dirItem->namePlusData,
 								(endian16(dirItem->n) <= 255 ? endian16(dirItem->n) : 255)); // limit to 255
 							dirList->entries[dirList->numEntries].name[endian16(dirItem->n)] = 0;
 
