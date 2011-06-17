@@ -273,8 +273,9 @@ struct Root
 struct FilePkg
 {
 	BtrfsObjID				objectID;
-	BtrfsObjID				parentID;
+	BtrfsObjID				parentID; // not assigned by dir list
 	BtrfsInodeItem			inode;
+	BtrfsExtentData			*extentData; // not assigned by dir list
 	char					name[256];
 	bool					hidden;
 };

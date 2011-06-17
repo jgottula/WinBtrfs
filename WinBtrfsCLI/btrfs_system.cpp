@@ -681,6 +681,9 @@ void parseFSTreeRec(unsigned __int64 addr, FSOperation operation, void *input1, 
 					
 					*returnCode &= ~0x1; // clear bit 0
 
+					if (inodeItem->stMode & S_IFDIR)
+						*returnCode &= ~0x4; // clear bit 2; we don't need extent info for dirs
+
 					if (*returnCode == 0)
 						*shortCircuit = true;
 				}
@@ -718,6 +721,22 @@ void parseFSTreeRec(unsigned __int64 addr, FSOperation operation, void *input1, 
 						else
 							break;
 					}
+				}
+				else if (item->key.type == TYPE_EXTENT_DATA && item->key.objectID == *objectID) // extent information
+				{
+					BtrfsExtentData *extentData = (BtrfsExtentData *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset));
+
+					/* ensure that the item fits entirely in the node block */
+					assert((unsigned char *)extentData + sizeof(BtrfsInodeItem) <=
+						(unsigned char *)nodeBlock + endian32(super.nodeSize));
+
+					filePkg->extentData = (BtrfsExtentData *)malloc(endian32(item->size));
+					memcpy(filePkg->extentData, extentData, endian32(item->size));
+					
+					*returnCode &= ~0x4; // clear bit 2
+
+					if (*returnCode == 0)
+						*shortCircuit = true;
 				}
 			}
 			else if (operation == FSOP_DIR_LIST)
@@ -869,7 +888,7 @@ int parseFSTree(FSOperation operation, void *input1, void *input2, void *input3,
 		returnCode = 0;
 		break;
 	case FSOP_GET_FILE_PKG:
-		returnCode = 0x1; // always need the inode
+		returnCode = 0x1 + 0x4; // always need the inode and the extent
 		if (*((BtrfsObjID *)input1) != OBJID_ROOT_DIR)
 			returnCode |= 0x2; // need parent & name for all except the root dir
 		break;
@@ -884,6 +903,7 @@ int parseFSTree(FSOperation operation, void *input1, void *input2, void *input3,
 		FilePkg *filePkg = (FilePkg *)output1;
 
 		filePkg->objectID = *objectID;
+		filePkg->extentData = NULL; // prevent problems if this is freed after never being allocated
 
 		/* for the special case of the root dir, this stuff wouldn't get filled in by any other means */
 		if (*objectID == OBJID_ROOT_DIR)
