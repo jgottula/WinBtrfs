@@ -246,12 +246,19 @@ void parseChunkTreeRec(unsigned __int64 addr, CTOperation operation)
 						"                offset: 0x%I64x size: 0x%I64x\n", i,
 						endian64(item->key.offset), devItem->devUUID, endian32(devItem->devGroup),
 						endian64(devItem->startOffset), endian64(devItem->numBytes));
-					
 					break;
 				}
 				case TYPE_CHUNK_ITEM:
-					printf("  [%02x] CHUNK_ITEM (todo)\n", i);
+				{
+					BtrfsChunkItem *chunkItem = (BtrfsChunkItem *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset));
+					
+					printf("  [%02x] CHUNK_ITEM size: 0x%I64x logi: 0x%I64x\n", i, endian64(item->key.offset),
+						endian64(chunkItem->chunkSize));
+					for (int j = 0; j < chunkItem->numStripes; j++)
+						printf("         + STRIPE devID: 0x%I64x offset: 0x%I64x\n", endian64(chunkItem->stripes[j].devID),
+							endian64(chunkItem->stripes[j].offset));
 					break;
+				}
 				default:
 					printf("  [%02x] unknown {%I64x|%I64x}\n", i, item->key.objectID, item->key.offset);
 					break;
@@ -497,7 +504,6 @@ void parseFSTreeRec(unsigned __int64 addr, FSOperation operation, void *input1, 
 					printf("  [%02x] EXTENT_DATA 0x%I64x offset: 0x%I64x size: 0x%I64x type: %s\n", i,
 						endian64(item->key.objectID), endian64(item->key.offset), endian64(extentData->n),
 						(extentData->type == 0 ? "inline" : (extentData->type == 1 ? "regular" : "prealloc")));
-					
 					break;
 				}
 				default:
