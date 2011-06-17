@@ -35,7 +35,7 @@ BlockReader::~BlockReader()
 }
 
 /* consolidate cachedRead and directRead in the future */
-DWORD BlockReader::cachedRead(unsigned __int64 addr, int addrType, unsigned __int64 len,
+DWORD BlockReader::cachedRead(unsigned __int64 addr, AddrType type, unsigned __int64 len,
 	boost::shared_array<unsigned char> *out)
 {
 	std::list<CacheNode>::iterator it, end = nodeArr.end();
@@ -43,7 +43,7 @@ DWORD BlockReader::cachedRead(unsigned __int64 addr, int addrType, unsigned __in
 	LARGE_INTEGER li;
 	DWORD bytesRead;
 
-	if (addrType == ADDR_LOGICAL)
+	if (type == ADDR_LOGICAL)
 		addr = logiToPhys(addr, len);
 
 	for (it = nodeArr.begin(); it != end; ++it)
@@ -140,12 +140,12 @@ DWORD BlockReader::cachedRead(unsigned __int64 addr, int addrType, unsigned __in
 	}
 }
 
-DWORD BlockReader::directRead(unsigned __int64 addr, int addrType, unsigned __int64 len, unsigned char *dest)
+DWORD BlockReader::directRead(unsigned __int64 addr, AddrType type, unsigned __int64 len, unsigned char *dest)
 {
 	LARGE_INTEGER li;
 	DWORD bytesRead;
 
-	if (addrType == ADDR_LOGICAL)
+	if (type == ADDR_LOGICAL)
 		addr = logiToPhys(addr, len);
 
 	/* because Win32 uses a signed (??) 64-bit value for the address from which to read,

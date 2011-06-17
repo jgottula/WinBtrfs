@@ -29,8 +29,8 @@ public:
 	BlockReader();
 	~BlockReader();
 
-	DWORD cachedRead(unsigned __int64 addr, int addrType, unsigned __int64 len, boost::shared_array<unsigned char> *out);
-	DWORD directRead(unsigned __int64 addr, int addrType, unsigned __int64 len, unsigned char *dest);
+	DWORD cachedRead(unsigned __int64 addr, AddrType type, unsigned __int64 len, boost::shared_array<unsigned char> *out);
+	DWORD directRead(unsigned __int64 addr, AddrType type, unsigned __int64 len, unsigned char *dest);
 	void dump();
 
 private:

@@ -171,13 +171,13 @@ void loadSBChunks(bool dump)
 	}
 }
 
-boost::shared_array<unsigned char> *loadNode(unsigned __int64 blockAddr, int addrType, BtrfsHeader **header)
+boost::shared_array<unsigned char> *loadNode(unsigned __int64 blockAddr, AddrType type, BtrfsHeader **header)
 {
 	boost::shared_array<unsigned char> *sharedBlock = new boost::shared_array<unsigned char>();
 	unsigned int blockSize = endian32(super.nodeSize);
 
 	/* this might not always be fatal, so in the future an assertion may be inappropriate */
-	assert(blockReader->cachedRead(blockAddr, addrType, blockSize, sharedBlock) == 0);
+	assert(blockReader->cachedRead(blockAddr, type, blockSize, sharedBlock) == 0);
 
 	*header = (BtrfsHeader *)(sharedBlock->get());
 
