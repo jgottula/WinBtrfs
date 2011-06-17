@@ -98,12 +98,13 @@ void firstTasks()
 	}
 
 	findSecondarySBs();
-
-	parseChunkTree(CTOP_LOAD);
-	parseRootTree(RTOP_LOAD);
 	
 	parseChunkTree(CTOP_DUMP_TREE);
+	parseChunkTree(CTOP_LOAD);
+	
 	parseRootTree(RTOP_DUMP_TREE);
+	parseRootTree(RTOP_LOAD);
+	
 	parseFSTree(FSOP_DUMP_TREE, NULL, NULL, NULL, NULL, NULL);
 }
 
