@@ -59,21 +59,21 @@ int DOKAN_CALLBACK btrfsCreateFile(LPCWSTR fileName, DWORD desiredAccess, DWORD 
 	
 	if (WaitForSingleObject(hBigDokanLock, 10000) != WAIT_OBJECT_0)
 	{
-		wprintf(L"btrfsCreateFile: couldn't get ownership of the Big Dokan Lock! [%s]\n", fileName);
+		printf("btrfsCreateFile: couldn't get ownership of the Big Dokan Lock! [%S]\n", fileName);
 		return -ERROR_SEM_TIMEOUT; // error code looks sketchy
 	}
 
 	if (getPathID(fileNameB, &objectID) != 0)
 	{
 		ReleaseMutex(hBigDokanLock);
-		wprintf(L"btrfsCreateFile: getPathID failed! [%s]\n", fileName);
+		printf("btrfsCreateFile: getPathID failed! [%S]\n", fileName);
 		return -ERROR_FILE_NOT_FOUND;
 	}
 
 	if (parseFSTree(FSOP_GET_FILE_PKG, &objectID, NULL, NULL, &filePkg, NULL) != 0)
 	{
 		ReleaseMutex(hBigDokanLock);
-		wprintf(L"btrfsCreateFile: parseFSTree with FSOP_GET_FILE_PKG failed! [%s]\n", fileName);
+		printf("btrfsCreateFile: parseFSTree with FSOP_GET_FILE_PKG failed! [%S]\n", fileName);
 		return -ERROR_FILE_NOT_FOUND;
 	}
 	
@@ -101,7 +101,7 @@ int DOKAN_CALLBACK btrfsCreateFile(LPCWSTR fileName, DWORD desiredAccess, DWORD 
 
 	/* TODO: respect the desiredAccess parameter and lock the file based on shareMode */
 	
-	wprintf(L"btrfsCreateFile: OK [%s]\n", fileName);
+	printf("btrfsCreateFile: OK [%S]\n", fileName);
 	return ERROR_SUCCESS;
 }
 
@@ -119,21 +119,21 @@ int DOKAN_CALLBACK btrfsOpenDirectory(LPCWSTR fileName, PDOKAN_FILE_INFO info)
 	
 	if (WaitForSingleObject(hBigDokanLock, 10000) != WAIT_OBJECT_0)
 	{
-		wprintf(L"btrfsOpenDirectory: couldn't get ownership of the Big Dokan Lock! [%s]\n", fileName);
+		printf("btrfsOpenDirectory: couldn't get ownership of the Big Dokan Lock! [%S]\n", fileName);
 		return -ERROR_SEM_TIMEOUT; // error code looks sketchy
 	}
 
 	if (getPathID(fileNameB, &objectID) != 0)
 	{
 		ReleaseMutex(hBigDokanLock);
-		wprintf(L"btrfsOpenDirectory: getPathID failed! [%s]\n", fileName);
+		printf("btrfsOpenDirectory: getPathID failed! [%S]\n", fileName);
 		return -ERROR_FILE_NOT_FOUND;
 	}
 
 	if (parseFSTree(FSOP_GET_FILE_PKG, &objectID, NULL, NULL, &filePkg, NULL) != 0)
 	{
 		ReleaseMutex(hBigDokanLock);
-		wprintf(L"btrfsOpenDirectory: parseFSTree with FSOP_GET_FILE_PKG failed! [%s]\n", fileName);
+		printf("btrfsOpenDirectory: parseFSTree with FSOP_GET_FILE_PKG failed! [%S]\n", fileName);
 		return -ERROR_FILE_NOT_FOUND;
 	}
 	
@@ -159,7 +159,7 @@ int DOKAN_CALLBACK btrfsOpenDirectory(LPCWSTR fileName, PDOKAN_FILE_INFO info)
 	if (!info->IsDirectory && (filePkg.inode.stMode & S_IFDIR))
 		info->IsDirectory = TRUE;
 	
-	wprintf(L"btrfsOpenDirectory: OK [%s]\n", fileName);
+	printf("btrfsOpenDirectory: OK [%S]\n", fileName);
 	return ERROR_SUCCESS;
 }
 
@@ -261,7 +261,7 @@ int DOKAN_CALLBACK btrfsGetFileInformation(LPCWSTR fileName, LPBY_HANDLE_FILE_IN
 	buffer->nFileIndexHigh = (DWORD)(endian64(it->objectID) << 32);
 	buffer->nFileIndexLow = (DWORD)endian64(it->objectID);
 	
-	wprintf(L"btrfsGetFileInformation: OK [%s]\n", fileName);
+	printf("btrfsGetFileInformation: OK [%S]\n", fileName);
 	return ERROR_SUCCESS;
 }
 
@@ -281,21 +281,21 @@ int DOKAN_CALLBACK btrfsFindFiles(LPCWSTR pathName, PFillFindData pFillFindData,
 		/* return ERROR_DIRECTORY (267) if attempting to dirlist a file; this is what NTFS does */
 		if (it->objectID == objectID && !(it->inode.stMode & S_IFDIR))
 		{
-			wprintf(L"btrfsFindFiles: expected a dir but was given a file! [%s]\n", pathName);
+			printf("btrfsFindFiles: expected a dir but was given a file! [%S]\n", pathName);
 			return -ERROR_DIRECTORY; // for some reason, ERROR_FILE_NOT_FOUND is reported to FindFirstFile
 		}
 	}
 
 	if (WaitForSingleObject(hBigDokanLock, 10000) != WAIT_OBJECT_0)
 	{
-		wprintf(L"btrfsFindFiles: couldn't get ownership of the Big Dokan Lock! [%s]\n", pathName);
+		printf("btrfsFindFiles: couldn't get ownership of the Big Dokan Lock! [%S]\n", pathName);
 		return -ERROR_SEM_TIMEOUT; // error code looks sketchy
 	}
 
 	if (parseFSTree(FSOP_DIR_LIST, &objectID, NULL, NULL, &dirList, NULL) != 0)
 	{
 		ReleaseMutex(hBigDokanLock);
-		wprintf(L"btrfsFindFiles: parseFSTree with FSOP_DIR_LIST failed! [%s]\n", pathName);
+		printf("btrfsFindFiles: parseFSTree with FSOP_DIR_LIST failed! [%S]\n", pathName);
 		return -ERROR_PATH_NOT_FOUND; // probably not an adequate error code
 	}
 	
@@ -335,7 +335,7 @@ int DOKAN_CALLBACK btrfsFindFiles(LPCWSTR pathName, PFillFindData pFillFindData,
 	
 	free(dirList.entries);
 	
-	wprintf(L"btrfsFindFiles: OK [%s]\n", pathName);
+	printf("btrfsFindFiles: OK [%S]\n", pathName);
 	return ERROR_SUCCESS;
 }
 
@@ -433,7 +433,7 @@ int DOKAN_CALLBACK btrfsGetDiskFreeSpace(PULONGLONG freeBytesAvailable, PULONGLO
 	*totalNumberOfBytes = total;
 	*totalNumberOfFreeBytes = free;
 	
-	wprintf(L"btrfsGetDiskFreeSpace: OK\n");
+	printf("btrfsGetDiskFreeSpace: OK\n");
 	return ERROR_SUCCESS;
 }
 
@@ -462,7 +462,7 @@ int DOKAN_CALLBACK btrfsGetVolumeInformation(LPWSTR volumeNameBuffer, DWORD volu
 	/* TODO: switch to wcscpy_s */
 	wcscpy(fileSystemNameBuffer, L"Btrfs");
 	
-	wprintf(L"btrfsGetVolumeInformation: OK\n");
+	printf("btrfsGetVolumeInformation: OK\n");
 	return ERROR_SUCCESS;
 }
 
