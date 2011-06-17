@@ -8,6 +8,7 @@ Esoteric Btrfs stuff (add a README faq for "which Btrfs features are supported")
 - Subvolumes
 - Multi-drive volumes
 - Converted ext4 fs
+Concurrent callback support (threadsafety)
 GUI (C#: which .NET version?)
 Installer (NSIS)
 MinGW/Cygwin[/Mono] build support
