@@ -404,8 +404,8 @@ void parseRootTreeRec(unsigned __int64 addr, RTOperation operation)
 					memcpy(name, dirItem->namePlusData, len);
 					name[len] = 0;
 
-					printf("  [%02x] DIR_ITEM parent: 0x%I64x child: 0x%I64x -> '%s'\n", i, endian64(item->key.objectID),
-						endian64(dirItem->child.objectID), name);
+					printf("  [%02x] DIR_ITEM parent: 0x%I64x hash: 0x%08I64x child: 0x%I64x -> '%s'\n", i,
+						endian64(item->key.objectID), endian64(item->key.offset), endian64(dirItem->child.objectID), name);
 					
 					delete[] name;
 					break;
@@ -572,8 +572,8 @@ void parseFSTreeRec(unsigned __int64 addr, FSOperation operation, void *input1, 
 					memcpy(name, dirItem->namePlusData, len);
 					name[len] = 0;
 
-					printf("  [%02x] DIR_ITEM parent: 0x%I64x child: 0x%I64x -> '%s'\n", i, endian64(item->key.objectID),
-						endian64(dirItem->child.objectID), name);
+					printf("  [%02x] DIR_ITEM parent: 0x%I64x hash: 0x%08I64x child: 0x%I64x -> '%s'\n", i,
+						endian64(item->key.objectID), endian64(item->key.offset), endian64(dirItem->child.objectID), name);
 					
 					delete[] name;
 					break;
