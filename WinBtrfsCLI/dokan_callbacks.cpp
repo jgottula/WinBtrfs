@@ -219,12 +219,20 @@ int DOKAN_CALLBACK btrfsReadFile(LPCWSTR fileName, LPVOID buffer, DWORD numberOf
 
 	if (extentData->type == FILEDATA_INLINE)
 	{
+		size_t readLen;
+		
 		if (offset + numberOfBytesToRead <= extentData->n)
-			*numberOfBytesRead = numberOfBytesToRead; // the read fits the data
+			/* the read fits the data */
+			readLen = numberOfBytesToRead;
 		else
-			*numberOfBytesRead = extentData->n - offset; // doesn't fit, so MAKE IT FIT!
+		{
+			/* doesn't fit, so fill in the rest with zeroes */
+			readLen = extentData->n - offset;
+			memset((unsigned char *)buffer + readLen, 0, numberOfBytesToRead - readLen);
+		}
 
-		memcpy(buffer, extentData->inlineData + offset, *numberOfBytesRead);
+		memcpy(buffer, extentData->inlineData + offset, readLen);
+		*numberOfBytesRead = numberOfBytesToRead;
 
 		printf("btrfsReadFile: OK [%s]\n", fileName);
 		return ERROR_SUCCESS;
