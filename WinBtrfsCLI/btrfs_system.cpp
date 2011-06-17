@@ -908,7 +908,7 @@ int parseFSTree(FSOperation operation, void *input1, void *input2, void *input3,
 	if (operation == FSOP_DUMP_TREE && input1 != NULL)
 		addr = *((unsigned __int64 *)input1);
 	else
-		addr = getFSRootBlockNum();
+		addr = getTreeRootAddr(OBJID_FS_TREE);
 	
 	parseFSTreeRec(addr, operation, input1, input2, input3, output1, output2,
 		(operation == FSOP_DIR_LIST ? &inode : NULL), &returnCode, &shortCircuit);
@@ -948,9 +948,9 @@ int parseFSTree(FSOperation operation, void *input1, void *input2, void *input3,
 	return returnCode;
 }
 
-unsigned __int64 getFSRootBlockNum()
+unsigned __int64 getTreeRootAddr(BtrfsObjID tree)
 {
-	/* no way we can find the FS root node without the root tree */
+	/* the root tree MUST be loaded */
 	assert(rootTree.size() > 0);
 	
 	size_t size = rootTree.size();
@@ -958,7 +958,7 @@ unsigned __int64 getFSRootBlockNum()
 	{
 		ItemPlus& itemP = rootTree.at(i);
 
-		if (itemP.item.key.type == TYPE_ROOT_ITEM && endian64(itemP.item.key.objectID) == OBJID_FS_TREE)
+		if (itemP.item.key.type == TYPE_ROOT_ITEM && endian64(itemP.item.key.objectID) == tree)
 		{
 			BtrfsRootItem *rootItem = (BtrfsRootItem *)itemP.data;
 
