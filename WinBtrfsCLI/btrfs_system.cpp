@@ -370,8 +370,16 @@ void parseRootTreeRec(unsigned __int64 addr, RTOperation operation)
 				switch (item->key.type)
 				{
 				case TYPE_INODE_ITEM:
-					printf("  [%02x] INODE_ITEM 0x%I64x\n", i, endian64(item->key.objectID));
+				{
+					BtrfsInodeItem *inodeItem = (BtrfsInodeItem *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset));
+					char mode[11];
+					
+					stModeToStr(inodeItem->stMode, mode);
+					printf("  [%02x] INODE_ITEM 0x%I64x uid: %d gid: %d mode: %s size: 0x%I64x\n", i,
+						endian64(item->key.objectID), endian32(inodeItem->stUID), endian32(inodeItem->stGID), mode,
+						endian64(inodeItem->stSize));
 					break;
+				}
 				case TYPE_INODE_REF:
 				{
 					BtrfsInodeRef *inodeRef = (BtrfsInodeRef *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset));
@@ -530,8 +538,16 @@ void parseFSTreeRec(unsigned __int64 addr, FSOperation operation, void *input1, 
 				switch (item->key.type)
 				{
 				case TYPE_INODE_ITEM:
-					printf("  [%02x] INODE_ITEM 0x%I64x\n", i, endian64(item->key.objectID));
+				{
+					BtrfsInodeItem *inodeItem = (BtrfsInodeItem *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset));
+					char mode[11];
+					
+					stModeToStr(inodeItem->stMode, mode);
+					printf("  [%02x] INODE_ITEM 0x%I64x uid: %d gid: %d mode: %s size: 0x%I64x\n", i,
+						endian64(item->key.objectID), endian32(inodeItem->stUID), endian32(inodeItem->stGID), mode,
+						endian64(inodeItem->stSize));
 					break;
+				}
 				case TYPE_INODE_REF:
 				{
 					BtrfsInodeRef *inodeRef = (BtrfsInodeRef *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset));
