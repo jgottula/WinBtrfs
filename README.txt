@@ -1,32 +1,32 @@
 WinBtrfs — Readme/FAQ
 
-Last updated 2011.06.15
+Last updated 2011.06.16
 
 
-NOTE: WinBtrfs is NOT EVEN CLOSE to a finished product, and is not yet ready for use by most users. See the project status question below for more details.
+NOTE: WinBtrfs is in NO WAY a finished product and is NOT ready for general use. At this time, it should only really be used by people interested in testing, experimentation, or development. See [03] below for details.
 
 
-What is WinBtrfs?
+[00] What is WinBtrfs?
 
 WinBtrfs is a Windows driver for the Btrfs filesystem. Specifically, it is a read-only filesystem implementation in userspace.
 
 
-What is Btrfs?
+[01] What is Btrfs?
 
-Btrfs is a new Linux filesystem developed by Chris Mason and Oracle Corporation since 2007. Licensed under the GNU General Public License (GPL), it is poised to become Linux's primary filesystem in the near future, providing such modern features as copy-on-write snapshots, subvolumes, RAID-like mirroring and striping, and many others. In many respects it is similar to ZFS, another nascent filesystem.
-
-
-Why WinBtrfs?
-
-I began development on WinBtrfs in early 2011, when I observed that although Btrfs had been in the Linux kernel for a decent amount of the time and the on-disk format was finalized, there was no way to mount a Btrfs volume in Windows. Taking after the example of several Windows ext2 and ext3 drivers, I decided to write my own read-only userspace implementation of the Btrfs filesystem so that I, as well as others, could make use of our new Btrfs volumes from Windows.
+Btrfs is a new Linux filesystem designed by Chris Mason that has been under development by Oracle and the Linux development community since 2007. Licensed under the GNU General Public License (GPL), it appears poised to become Linux's primary filesystem in the near future, providing such modern features as copy-on-write snapshots, subvolumes, RAID-like mirroring and striping, incredible scaling, and more. Btrfs is often compared to ZFS, another recent filesystem developed by Oracle, and in many respects they are similar, including their copy-on-write and multi-device capabilities.
 
 
-What can WinBtrfs do right now?
+[02] Why WinBtrfs?
 
-As of 2011.06.15, WinBtrfs will load a Btrfs filesystem (from the command line), display information such as the drive label and free space in the Drive Properties dialog, perform directory listings, and report file information (such as file size and attributes) for individual files. There is no installer or GUI at this time and files' contents cannot be read. WinBtrfs is known to be buggy with large Btrfs volumes at this time, but small test-case filesystems work properly.
+Justin Gottula began development on WinBtrfs in May 2011 as a result of the observation that, despite Btrfs having been in the Linux kernel for a long time and the on-disk format having been similarly finalized for a decent amount of time, there was no way to mount a Btrfs volume in Windows, read-only or otherwise. This is especially disadvantageous for Linux users who want to dual-boot Windows and still access their Linux data from the Windows side. So, the WinBtrfs project was born out of the desire to reduce the cost of adopting Btrfs for individuals with the need to access their Linux filesystems from Windows.
 
 
-What dependencies are required for WinBtrfs?
+[03] In its current version, what can WinBtrfs do? What can't it do?
+
+As of 2011.06.16, WinBtrfs can load a Btrfs filesystem (from the command line), display information such as the drive label and free space in the Drive Properties dialog, perform directory listings, and report file information (such as file size and attributes) for individual files. There is no installer or GUI at this time and files' contents cannot be read. WinBtrfs is known to fail miserably on Btrfs filesystems that contain subvolumes because development on the handling of subvolumes is still a ways down the line. Multi-drive volumes will not work at this time. Brtfs volumes that were converted from ext4 have not yet been tested, so they most likely do not work with WinBtrfs.
+
+
+[04] What dependencies are required for WinBtrfs?
 
 Building WinBtrfs requires:
 — Microsoft Visual Studio (for greatest ease)
@@ -37,41 +37,53 @@ Running WinBtrfs requires:
 — Dokan 0.6.0 or later [http://dokan-dev.net/en/]
 
 
-How do I build WinBtrfs?
+[05] How do I build WinBtrfs?
 
-See the question above for information on the software and libraries required to build WinBtrfs. If you are using Visual Studio, load up the solution file and hit Build. Provided you have fulfilled the dependencies, it should build successfully. You will probably need to adjust the WinBtrfsCLI project settings so that the include directories and linker inputs are pointed toward Dokan's and Boost's headers and libs.
-If you are using a non-Microsoft compiler to build WinBtrfs, you are pretty much on your own at this point, until I find time to try out other compilers myself. I don't have a Makefile prepared, but no atypical compiler options should be necessary at this time.
+See [04] for information on the software and libraries required to build WinBtrfs. If you are using Visual Studio, load up the solution file and hit Build. Provided you have fulfilled the dependencies, it should build successfully. You will probably need to adjust the WinBtrfsCLI project settings so that the include directories and linker inputs are pointed toward Dokan's and Boost's headers and libs.
+If you are using a non-Microsoft compiler to build WinBtrfs, you are pretty much on your own at this point, until the developer finds the time to try out other compilers himself. There isn't a Makefile prepared, but no atypical compiler options should be necessary at this time. You will probably have to fix several instances where the developer has relied on Microsoft-specific language extensions.
 
 
-How do I use WinBtrfs?
+[06] How do I use WinBtrfs?
 
 Run WinBtrfsCLI.exe without any options to see usage information. Essentially, run the command in this manner:
 
 WinBtrfsCLI.exe <device> <mount point>
 
-where <device> is either an image file, or a physical partition in the format \\.\HarddiskAPartitionB, where A is the hard drive (numbered from zero) and B is the partition within that drive (numbered from one); and where <mount point> is either a drive letter (e.g. "C:") or an empty directory on an NTFS drive. To get a handle on physical disk and partition numbers, open the Disk Management console in Windows and take a look at how the disks are numbered. For Linux users, it may be useful to note that /dev/sda1 is equivalent to \\.\Harddisk0Partition1; /dev/sdb2 is equivalent to \\.\Harddisk1Partition2; and so forth. Identifying the proper volume and specifying a mount point will become much easier in the future, once more development time is spent on the user interface aspect of WinBtrfs.
+where <device> is either the path to an image file, or a physical partition in the format \\.\HarddiskAPartitionB, where A is the hard drive (numbered from zero) and B is the partition within that drive (numbered from one); and where <mount point> is either a drive letter (e.g. "C:") or an empty directory on an NTFS drive. To figure out what the physical disk and partition numbers are for your system, open the Disk Management console in Windows and take a look at how the disks and their partitions are numbered; use these numbers when invoking WinBtrfsCLI. For Linux users, it may be helpful to know that /dev/sda1 is equivalent to \\.\Harddisk0Partition1; /dev/sdb2 is equivalent to \\.\Harddisk1Partition2; and so forth. These steps will become much easier in the future, once a GUI is implemented.
 
 
-What is the status of the project, and what does the roadmap look like?
+[07] What does the project roadmap look like?
 
-WinBtrfs has been in development since May 25, 2011, and many important features have not yet been completed. At the time of this writing, WinBtrfs implements the Dokan callbacks required to display the Drive Properties dialog (that is, the drive label, the FS type, the total size, and the free space) and do basic directory listings (in Windows Explorer or the command prompt). On the other side of the chasm, I have been implementing the low-level functionality required to process the internal structures that make up a Btrfs filesystem. Fortunately, I am quickly approaching the point when the gap between these low-level filesystem operations and the functionality users expect (directory listings, file information, reading files) will be fully bridged. WinBtrfs can currently perform the tasks required to reach the filesystem tree, so it can get basic file and directory information. The next step will be accessing file data, which will entail another leap on the backend (primarly involving being able to read the extent tree). After these steps have been completed, the next priority will be to ensure that the more esoteric aspects of Btrfs filesystems (multi-drive filesystems, compression, subvolumes, ext4-converted volumes, etc.) work properly. Once all of that works properly, it will be time for a proper GUI so that mounting volumes isn't so damn difficult for the average user. And after all that, a proper Windows installer (almost certainly NSIS) will be made available so that Windows noobs won't get confused at what to do to install the thing.
+The following items will be developed in approximately this order:
+— Enable reading file data
+— Subvolume handling
+— Snapshot handling
+— Data compression support
+— Multi-drive volume support
+— Converted ext4 volume support
+— GUI
+— Installer
+— Multithreading
+— Official support for alternate compilers (MinGW, Cygwin)
+— UI Translations
+— Old OS support
 
 
-Is read-write support coming in a future version?
+[08] Is read-write support coming in a future version?
 
-The short answer is: no, probably not. This is for several reasons. The most significant reason is that developing a read-write implementation of Btrfs would require considerably more work than a mere read-only one; for analogy, compare merely reading the works of Shakespeare with being able to come up with them and write them yourself. Perhaps that's a bit over the top, but a full write-enabled driver would certainly require porting the _entire_ Btrfs driver from the Linux kernel to Windows, which would additionally require duplicating the parts of the Linux kernel upon which the driver depends. More than this, it would require significantly more support and if problems did develop, a read-write filesystem driver has the potential to destroy the _entire_ volume and all the data contained within. So, in summary, it is both far more feasible to write a read-only driver; it means significantly less support/bug load on the developer; and there is far less potential for problems to result in the partial or total corruption of all of your data.
+The short answer is: no, probably not. This is for several reasons. The most significant reason is that developing a read-write implementation of Btrfs would require orders of magnitude more work than a mere read-only one; it is simply much, much easier to read the data structures from a partition that the official Btrfs driver has created than to incorporate the logic required to create, manage, AND read them in the same manner as the official driver. Essentially then, a full write-enabled driver would require porting the _entire_ Btrfs driver from the Linux kernel to Windows, which would require duplicating/reimplementing the parts of the Linux kernel upon which the driver developers built. More than this, it would require significantly more support than a read-only driver and if problems did crop up, a read-write filesystem driver has the potential to destroy the _entire_ volume and all the data contained within. So, in summary, it is both far more feasible to write a read-only driver; it means significantly less support/bug load on the developer; and there is far less potential for problems to result in the partial or total corruption of all of your data. If you are really want a read-write implementation, write one yourself—or better yet, fork WinBtrfs to get a head start.
 
 
-Under what licensing terms is WinBtrfs distributed?
+[09] Under what licensing terms is WinBtrfs distributed?
 
 WinBtrfs is licensed under the GNU General Public License version 2 (GPLv2), which permits you to redistribute and modify the software as you see fit, so long as you conform to the terms of the GPL. For more information, see http://www.gnu.org/licenses/gpl-2.0.html.
 
 
-Can I contribute to WinBtrfs?
+[0A] Can I contribute to WinBtrfs?
 
-Absolutely. WinBtrfs is an open source project, which means that submitting bug reports, contributing patches, helping out with development, breaking open the source code to see how it works, and even forking the project to start your own derivative work are all permitted and even encouraged. See the question on obtaining the source code below for information on how to get involved.
+Absolutely. WinBtrfs is an open source project, which means that submitting bug reports, contributing patches, helping out with development, breaking open the source code to see how it works, and even forking the project to start your own derivative work are all permitted and even encouraged. See [0B] for information on how to get involved.
 
 
-Where can I obtain the latest source code?
+[0B] Where can I obtain the latest source code?
 
 WinBtrfs is an open source project hosted on GitHub at https://github.com/jgottula/WinBtrfs. This project's page on GitHub will always have the latest source code and releases, as well as the facilities for contributing back to the project.
