@@ -58,3 +58,4 @@ Remove type punning (casting void pointers back and forth) from parseFSTree; ins
 Add optimizations for FS tree parsing: use the rules of sorting within the tree to skip over parts entirely to get to the relevant item(s)
 	This is likely to be more feasible with smaller FSOPs, the likes of FSOP_NAME_TO_ID; although, for FSOP_DIR_LIST, it may be
 	highly effective to skip right to the INODE_ITEM for the parent directory and then resume parsing like usual
+Find out how Btrfs does striping (i.e. RAID0-like drives) and how that affects chunk stripes and the code that uses them
