@@ -644,10 +644,20 @@ void parseFSTreeRec(unsigned __int64 addr, FSOperation operation, void *input1, 
 				case TYPE_EXTENT_DATA:
 				{
 					BtrfsExtentData *extentData = (BtrfsExtentData *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset));
+					static const char fdTypeStrs[4][9] = { "inline", "regular", "prealloc", "unknown" };
 
 					printf("  [%02x] EXTENT_DATA 0x%I64x offset: 0x%I64x size: 0x%I64x type: %s\n", i,
 						endian64(item->key.objectID), endian64(item->key.offset), endian64(extentData->n),
-						(extentData->type == 0 ? "inline" : (extentData->type == 1 ? "regular" : "prealloc")));
+						fdTypeStrs[extentData->type]);
+					if (extentData->type != FILEDATA_INLINE)
+					{
+						BtrfsExtentDataNonInline *nonInlinePart =(BtrfsExtentDataNonInline *)(nodeBlock +
+							sizeof(BtrfsHeader) + endian32(item->offset) + sizeof(BtrfsExtentData));
+
+						printf("                   addr: 0x%I64x size: 0x%I64x offset: 0x%I64x\n",
+							endian64(nonInlinePart->extAddr), endian64(nonInlinePart->extSize),
+							endian64(nonInlinePart->offset));
+					}
 					break;
 				}
 				default:

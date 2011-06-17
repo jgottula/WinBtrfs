@@ -60,6 +60,13 @@ enum BtrfsItemType : unsigned char
 	TYPE_STRING_ITEM = 0xfd
 };
 
+enum FileDataType : unsigned char
+{
+	FILEDATA_INLINE = 0,
+	FILEDATA_REGULAR = 1,
+	FILEDATA_PREALLOC = 2
+};
+
 enum AddrType
 {
 	ADDR_PHYSICAL,
