@@ -105,8 +105,9 @@ struct BtrfsDirItem
 	unsigned short			m;
 	unsigned short			n;
 	unsigned char			childType;
+	char					namePlusData		[0x0];
 
-	/* the following two items are of variable size */
+	/* namePlusData encompasses the following two variable-size items: */
 	// char					name[n];
 	// unsigned char		data[m];
 };
