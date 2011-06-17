@@ -109,7 +109,7 @@ int getPathID(const char *path, BtrfsObjID *output)
 {
 	char vPath[MAX_PATH], **components;
 	BtrfsObjID parentID = OBJID_ROOT_DIR, childID;
-	unsigned __int64 hash;
+	unsigned int hash;
 	int numComponents = -1;
 
 	validatePath(path, vPath);
@@ -117,8 +117,8 @@ int getPathID(const char *path, BtrfsObjID *output)
 
 	for (int i = 0; i < numComponents; i++)
 	{
-		hash = crc32c(0, (const unsigned char *)(components[i]), strlen(components[i]));
-
+		hash = crc32c((unsigned int)~1, (const unsigned char *)(components[i]), strlen(components[i]));
+		
 		if (parseFSTree(FSOP_NAME_TO_ID, &parentID, &hash, components[i], &childID, NULL) != 0)
 			return 1;
 

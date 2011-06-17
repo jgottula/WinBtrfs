@@ -6,7 +6,7 @@ FS ops
 FSOP_NAME_TO_ID: Finds the object ID for a named file or dir
 Inputs:
 [1] const BtrfsObjID *			ptr to parent's object ID
-[2] const unsigned __int64 *	ptr to hash of the child file/dir's name
+[2] const unsigned int *		ptr to hash of the child file/dir's name
 [3] const char *				child file/dir's name
 Outputs:
 [1] BtrfsObjID *				child's object ID

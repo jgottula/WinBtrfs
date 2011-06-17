@@ -96,7 +96,7 @@ int validateSB(BtrfsSuperblock *s)
 		return 1;
 
 	/* checksum */
-	if (crc32c(0, (const unsigned char *)s + sizeof(BtrfsChecksum),
+	if (~crc32c((unsigned int)~0, (const unsigned char *)s + sizeof(BtrfsChecksum),
 		sizeof(BtrfsSuperblock) - sizeof(BtrfsChecksum)) != endian32(s->csum.crc32c))
 		return 2;
 
@@ -182,8 +182,8 @@ boost::shared_array<unsigned char> *loadNode(unsigned __int64 blockAddr, int add
 	*header = (BtrfsHeader *)(sharedBlock->get());
 
 	/* also possibly nonfatal */
-	assert(crc32c(0, sharedBlock->get() + sizeof(BtrfsChecksum), blockSize - sizeof(BtrfsChecksum)) ==
-		endian32((*header)->csum.crc32c));
+	assert(~crc32c((unsigned int)~0, sharedBlock->get() + sizeof(BtrfsChecksum),
+		blockSize - sizeof(BtrfsChecksum)) == endian32((*header)->csum.crc32c));
 
 	return sharedBlock;
 }
@@ -348,6 +348,8 @@ void parseRootTreeRec(unsigned __int64 addr, RTOperation operation)
 
 			if (operation == RTOP_LOAD)
 			{
+				/* note to me later: remember to be careful with DIR_ITEM because of variable length */
+				
 				switch (item->key.type)
 				{
 				case TYPE_ROOT_ITEM:
@@ -495,13 +497,12 @@ void parseFSTreeRec(unsigned __int64 addr, FSOperation operation, void *input1, 
 			if (operation == FSOP_NAME_TO_ID)
 			{
 				const BtrfsObjID *parentID = (const BtrfsObjID *)input1;
-				const unsigned __int64 *hash = (const unsigned __int64 *)input2;
+				const unsigned int *hash = (const unsigned int *)input2;
 				const char *name = (const char *)input3;
 				BtrfsObjID *childID = (BtrfsObjID *)output1;
 				
-				/* TODO: fix hash matching */
-				if (item->key.type == TYPE_DIR_ITEM && endian64(item->key.objectID) == *parentID/* &&
-					endian64(item->key.offset) == *hash*/)
+				if (item->key.type == TYPE_DIR_ITEM && endian64(item->key.objectID) == *parentID &&
+					(unsigned int)(endian64(item->key.offset)) == *hash)
 				{
 					BtrfsDirItem *dirItem = (BtrfsDirItem *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset));
 
