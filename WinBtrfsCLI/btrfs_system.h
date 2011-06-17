@@ -21,7 +21,7 @@ unsigned __int64 logiToPhys(unsigned __int64 logiAddr, unsigned __int64 len);
 DWORD readPrimarySB();
 int validateSB(BtrfsSuperblock *s);
 int findSecondarySBs();
-void loadSBChunks();
+void loadSBChunks(bool dump);
 boost::shared_array<unsigned char> *loadNode(unsigned __int64 blockAddr, int addrType, BtrfsHeader **header);
 void parseChunkTree(CTOperation operation);
 void parseRootTree(RTOperation operation);

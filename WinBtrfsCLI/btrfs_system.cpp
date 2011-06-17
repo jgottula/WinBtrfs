@@ -133,12 +133,15 @@ int findSecondarySBs()
 	return best;
 }
 
-void loadSBChunks()
+void loadSBChunks(bool dump)
 {
 	unsigned char *sbPtr = super.chunkData, *sbMax = super.chunkData + endian32(super.n);
 	BtrfsDiskKey *key;
 	BtrfsSBChunk *sbChunk;
 	unsigned short *numStripes;
+
+	if (dump)
+		printf("[SBChunks] n = 0x%03lx\n", endian32(super.n));
 
 	while (sbPtr < sbMax)
 	{
@@ -156,6 +159,15 @@ void loadSBChunks()
 		sbPtr += sizeof(BtrfsSBChunk) + (*numStripes * sizeof(BtrfsChunkItemStripe));
 
 		sbChunks.push_back(sbChunk);
+
+		if (dump)
+		{
+			printf("  CHUNK_ITEM size: 0x%I64x logi: 0x%I64x\n", endian64(sbChunk->key.offset),
+				endian64(sbChunk->chunkItem.chunkSize));
+			for (int i = 0; i < sbChunk->chunkItem.numStripes; i++)
+				printf("    + STRIPE devID: 0x%I64x offset: 0x%I64x\n", endian64(sbChunk->chunkItem.stripes[i].devID),
+					endian64(sbChunk->chunkItem.stripes[i].offset));
+		}
 	}
 }
 
@@ -305,7 +317,7 @@ void parseChunkTree(CTOperation operation)
 {
 	/* load SB chunks if we haven't already */
 	if (sbChunks.size() == 0)
-		loadSBChunks();
+		loadSBChunks(true);
 	
 	parseChunkTreeRec(endian64(super.chunkTreeLAddr), operation);
 }
