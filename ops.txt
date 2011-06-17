@@ -1,7 +1,16 @@
 Operations
 
+Chunk tree ops
 
-FS ops
+CTOP_LOAD: Loads items from the chunk tree into the chunkTree vector
+CTOP_DUMP_TREE: Dumps the entire chunk tree to stdout
+
+Root tree ops
+
+RTOP_LOAD: Loads items from the root tree into the rootTree vector
+RTOP_DUMP_TREE: Dumps the entire root tree to stdout
+
+FS tree ops
 
 FSOP_NAME_TO_ID: Finds the object ID for a named file or dir
 Inputs:
