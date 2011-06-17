@@ -15,3 +15,4 @@
 #include "structures.h"
 
 void convertTime(BtrfsTime *bTime, PFILETIME wTime);
+void uuidToStr(const unsigned char *uuid, char *dest);

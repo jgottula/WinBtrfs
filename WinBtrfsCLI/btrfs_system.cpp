@@ -17,6 +17,7 @@
 #include <Windows.h>
 #include "structures.h"
 #include "constants.h"
+#include "util.h"
 #include "endian.h"
 #include "crc32c.h"
 #include "btrfs_system.h"
@@ -241,10 +242,12 @@ void parseChunkTreeRec(unsigned __int64 addr, CTOperation operation)
 				case TYPE_DEV_ITEM:
 				{
 					BtrfsDevItem *devItem = (BtrfsDevItem *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset));
+					char uuid[1024];
 
-					printf("  [%02x] DEV_ITEM devID: 0x%I64x uuid: %.16s devGroup: 0x%lx\n"
-						"                offset: 0x%I64x size: 0x%I64x\n", i,
-						endian64(item->key.offset), devItem->devUUID, endian32(devItem->devGroup),
+					uuidToStr(devItem->devUUID, uuid);
+					printf("  [%02x] DEV_ITEM devID: 0x%I64x uuid: %s\n"
+						"                devGroup: 0x%lx offset: 0x%I64x size: 0x%I64x\n", i,
+						endian64(item->key.offset), uuid, endian32(devItem->devGroup),
 						endian64(devItem->startOffset), endian64(devItem->numBytes));
 					break;
 				}

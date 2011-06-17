@@ -11,6 +11,7 @@
  * any later version.
  */
 
+#include <stdio.h>
 #include <Windows.h>
 #include "structures.h"
 #include "endian.h"
@@ -24,4 +25,22 @@ void convertTime(BtrfsTime *bTime, PFILETIME wTime)
 
 	wTime->dwHighDateTime = (DWORD)(s64 >> 32);
 	wTime->dwLowDateTime = (DWORD)s64;
+}
+
+void uuidToStr(const unsigned char *uuid, char *dest)
+{
+	char temp[1024];
+
+	strcpy(dest, "{");
+
+	for (int i = 0; i < 16; i++)
+	{
+		if (i == 4 || i == 6 || i == 8 || i == 10)
+			strcat(dest, "-");
+		
+		sprintf(temp, "%02x", uuid[i]);
+		strcat(dest, temp);
+	}
+
+	strcat(dest, "}");
 }
