@@ -13,6 +13,7 @@
 
 #include <stdio.h>
 #include <assert.h>
+#include <vector>
 #include <Windows.h>
 #include <dokan.h>
 #include "constants.h"
@@ -49,6 +50,8 @@ DOKAN_OPERATIONS btrfsOperations = {
 	&btrfsGetFileSecurity,
 	&btrfsSetFileSecurity
 };
+
+extern std::vector<ItemPlus> rootTree;
 
 void firstTasks()
 {
@@ -106,6 +109,20 @@ void firstTasks()
 	parseRootTree(RTOP_LOAD);
 	
 	parseFSTree(FSOP_DUMP_TREE, NULL, NULL, NULL, NULL, NULL);
+
+	/* dump FS subtrees */
+	size_t size = rootTree.size();
+	for (size_t i = 0; i < size; i++)
+	{
+		ItemPlus& itemP = rootTree.at(i);
+
+		if (itemP.item.key.type == TYPE_ROOT_REF && endian64(itemP.item.key.objectID) == OBJID_FS_TREE)
+		{
+			unsigned __int64 addr = getTreeRootAddr((BtrfsObjID)endian64(itemP.item.key.offset));
+			
+			parseFSTree(FSOP_DUMP_TREE, &addr, NULL, NULL, NULL, NULL);
+		}
+	}
 }
 
 void dokanError(int dokanResult)
