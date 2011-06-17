@@ -222,7 +222,7 @@ void parseChunkTreeRec(unsigned __int64 addr, CTOperation operation)
 					assert(sizeof(BtrfsHeader) + endian32(item->offset) + endian32(item->size) <= endian32(super.nodeSize)); // ensure we're within bounds
 
 					memcpy(&itemP.item, item, sizeof(BtrfsItem));
-					itemP.data = malloc(sizeof(BtrfsDevItem));
+					itemP.data = malloc(endian32(item->size));
 					memcpy(itemP.data, nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset), endian32(item->size));
 
 					chunkTree.push_back(itemP);
@@ -237,7 +237,7 @@ void parseChunkTreeRec(unsigned __int64 addr, CTOperation operation)
 					assert(endian32(item->size) == sizeof(BtrfsChunkItem) + (*temp * sizeof(BtrfsChunkItemStripe)));
 
 					memcpy(&itemP.item, item, sizeof(BtrfsItem));
-					itemP.data = malloc(sizeof(BtrfsChunkItem) + (*temp * sizeof(BtrfsChunkItemStripe)));
+					itemP.data = malloc(endian32(item->size));
 					memcpy(itemP.data, nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset), endian32(item->size));
 
 					chunkTree.push_back(itemP);
@@ -357,7 +357,7 @@ void parseRootTreeRec(unsigned __int64 addr, RTOperation operation)
 					assert(sizeof(BtrfsHeader) + endian32(item->offset) + endian32(item->size) <= endian32(super.nodeSize)); // ensure we're within bounds
 
 					memcpy(&itemP.item, item, sizeof(BtrfsItem));
-					itemP.data = malloc(sizeof(BtrfsRootItem));
+					itemP.data = malloc(endian32(item->size));
 					memcpy(itemP.data, nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset), endian32(item->size));
 
 					rootTree.push_back(itemP);
