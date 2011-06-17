@@ -352,9 +352,67 @@ void parseRootTreeRec(unsigned __int64 addr, RTOperation operation)
 				
 				switch (item->key.type)
 				{
+				case TYPE_INODE_ITEM:
+					assert(endian32(item->size) == sizeof(BtrfsInodeItem)); // ensure proper size
+					assert(sizeof(BtrfsHeader) + endian32(item->offset) + endian32(item->size)
+						<= endian32(super.nodeSize)); // ensure we're within bounds
+
+					memcpy(&itemP.item, item, sizeof(BtrfsItem));
+					itemP.data = malloc(endian32(item->size));
+					memcpy(itemP.data, nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset), endian32(item->size));
+
+					rootTree.push_back(itemP);
+					break;
+				case TYPE_INODE_REF:
+					assert(endian32(item->size) >= sizeof(BtrfsInodeRef)); // ensure proper size range
+					assert(sizeof(BtrfsHeader) + endian32(item->offset) + endian32(item->size)
+						<= endian32(super.nodeSize)); // ensure we're within bounds
+
+					memcpy(&itemP.item, item, sizeof(BtrfsItem));
+					itemP.data = malloc(endian32(item->size));
+					memcpy(itemP.data, nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset), endian32(item->size));
+
+					rootTree.push_back(itemP);
+					break;
+				case TYPE_DIR_ITEM:
+				{
+					assert(endian32(item->size) >= sizeof(BtrfsDirItem)); // ensure proper size range
+					assert(sizeof(BtrfsHeader) + endian32(item->offset) + endian32(item->size)
+						<= endian32(super.nodeSize)); // ensure we're within bounds
+
+					memcpy(&itemP.item, item, sizeof(BtrfsItem));
+					itemP.data = malloc(endian32(item->size));
+					memcpy(itemP.data, nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset), endian32(item->size));
+
+					rootTree.push_back(itemP);
+					break;
+				}
 				case TYPE_ROOT_ITEM:
 					assert(endian32(item->size) == sizeof(BtrfsRootItem)); // ensure proper size
-					assert(sizeof(BtrfsHeader) + endian32(item->offset) + endian32(item->size) <= endian32(super.nodeSize)); // ensure we're within bounds
+					assert(sizeof(BtrfsHeader) + endian32(item->offset) + endian32(item->size)
+						<= endian32(super.nodeSize)); // ensure we're within bounds
+
+					memcpy(&itemP.item, item, sizeof(BtrfsItem));
+					itemP.data = malloc(endian32(item->size));
+					memcpy(itemP.data, nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset), endian32(item->size));
+
+					rootTree.push_back(itemP);
+					break;
+				case TYPE_ROOT_BACKREF:
+					assert(endian32(item->size) >= sizeof(BtrfsRootBackref)); // ensure proper size range
+					assert(sizeof(BtrfsHeader) + endian32(item->offset) + endian32(item->size)
+						<= endian32(super.nodeSize)); // ensure we're within bounds
+
+					memcpy(&itemP.item, item, sizeof(BtrfsItem));
+					itemP.data = malloc(endian32(item->size));
+					memcpy(itemP.data, nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset), endian32(item->size));
+
+					rootTree.push_back(itemP);
+					break;
+				case TYPE_ROOT_REF:
+					assert(endian32(item->size) >= sizeof(BtrfsRootRef)); // ensure proper size range
+					assert(sizeof(BtrfsHeader) + endian32(item->offset) + endian32(item->size)
+						<= endian32(super.nodeSize)); // ensure we're within bounds
 
 					memcpy(&itemP.item, item, sizeof(BtrfsItem));
 					itemP.data = malloc(endian32(item->size));
