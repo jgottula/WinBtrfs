@@ -53,7 +53,6 @@ DOKAN_OPERATIONS btrfsOperations = {
 void firstTasks()
 {
 	DWORD errorCode;
-	int secSB;
 
 	endianDetect();
 
@@ -98,8 +97,7 @@ void firstTasks()
 		exit(1);
 	}
 
-	if ((secSB = findSecondarySBs()) != 1)
-		printf("Found a newer secondary superblock (#%d).\n", secSB);
+	findSecondarySBs();
 
 	parseChunkTree(CTOP_LOAD);
 	parseRootTree(RTOP_LOAD);
