@@ -20,7 +20,6 @@ Code stuff:
 Check for memleaks with valgrind
 Rectify inconsistent struct member names: num/nr, csum/cSum/crc32c/etc, generation/gen, objectID/objID, len/length
 Rectify inconsistent function arg names: len/length, addr/lAddr/logicalAddr/physAddr/etc, super/SB/superblock
-Cache frequently used blocks in memory, especially FS tree nodes and other trees that are references multiple times (extent tree?)
 Multithread support for everything: make block reading threadsafe, and ensure that calls to btrfs_operations.cpp functions
 	from different threads do not use any shared state
 Check all malloc/realloc calls and end fatally upon malloc failure (return win32 equivalent of -ENOMEM)
@@ -36,14 +35,8 @@ Try to hit all the outward-facing filesystem interfaces (especially btrfs_operat
 Optimize situations where I used realloc to pound the memory allocator at least a little less
 Test FSes with: weird node/sector/leafsizes; tons of small files; deep directory structures
 Clean up headers, they are currently too messy and work by different conventions
-Replace #define with enums and consts
-Find all places where enums are used and change the type to the enum name
-Fix the memory overwrite issue in the new caching algo
 Refactor out the endianness conversions (perhaps make separate structs or classes for on-disk vs. in-memory structs and have
 	the constructor do all the conversions)
-Replace fake bools with real C++ bools
-Eliminate memcpy from cachedRead and directRead and make callers just receive a pointer from which they read (no call to free required)
-Move i, j, etc. into for-loop definitions if they are scope-limited like they should be
 Reimplement the block cache system so it works on recentness rather than number of reads: sort by most-recent to least-recent (easy splicing)
 	and remove oldest nodes. have a static int increment on each cached read and store that number in the node struct on each read.
 Retool the FS tree return code system so it returns Windows error codes that are descriptive and can be passed back to the OS
