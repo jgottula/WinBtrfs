@@ -174,7 +174,7 @@ struct BtrfsBlockGroupItem
 {
 	unsigned __int64		usedAmount;
 	BtrfsObjID				chunkTreeID;
-	unsigned __int64		flags;
+	BlockGroupFlags			flags;
 };
 
 struct BtrfsDevItem
@@ -207,7 +207,7 @@ struct BtrfsChunkItem
 	unsigned __int64		chunkSize;
 	BtrfsObjID				rootObjIDref;
 	unsigned __int64		stripeLen;
-	unsigned __int64		type;
+	BlockGroupFlags			type;
 	unsigned int			bestIOAlign;
 	unsigned int			bestIOWidth;
 	unsigned int			minIOSize;

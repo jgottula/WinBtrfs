@@ -60,6 +60,17 @@ enum BtrfsItemType : unsigned char
 	TYPE_STRING_ITEM = 0xfd
 };
 
+enum BlockGroupFlags : unsigned __int64
+{
+	BGFLAG_DATA = 0x1,
+	BGFLAG_SYSTEM = 0x2,
+	BGFLAG_METADATA = 0x4,
+	BGFLAG_RAID0 = 0x8,
+	BGFLAG_RAID1 = 0x10,
+	BGFLAG_DUPLICATE = 0x20,
+	BGFLAG_RAID10 = 0x40
+};
+
 enum FileDataType : unsigned char
 {
 	FILEDATA_INLINE = 0,
