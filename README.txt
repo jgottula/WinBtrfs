@@ -1,6 +1,6 @@
 WinBtrfs — Readme/FAQ
 
-Last updated 2011.06.16
+Last updated 2011.06.18
 
 
 NOTE: WinBtrfs is in NO WAY a finished product and is NOT ready for general use. At this time, it should only really be used by people interested in testing, experimentation, or development. See [03] below for details.
@@ -23,7 +23,7 @@ Justin Gottula began development on WinBtrfs in May 2011 as a result of the obse
 
 [03] In its current version, what can WinBtrfs do? What can't it do?
 
-As of 2011.06.16, WinBtrfs can load a Btrfs filesystem (from the command line), display information such as the drive label and free space in the Drive Properties dialog, perform directory listings, and report file information (such as file size and attributes) for individual files. There is no installer or GUI at this time and files' contents cannot be read. WinBtrfs is known to fail miserably on Btrfs filesystems that contain subvolumes because development on the handling of subvolumes is still a ways down the line. Multi-drive volumes will not work at this time. Brtfs volumes that were converted from ext4 have not yet been tested, so they most likely do not work with WinBtrfs.
+As of 2011.06.18, WinBtrfs can load a Btrfs filesystem (from the command line), display information such as the drive label and free space in the Drive Properties dialog, perform directory listings, report file information (such as file size and attributes), and read files. There is no installer or GUI at this time. WinBtrfs is known to fail miserably on Btrfs filesystems that contain subvolumes because development on the handling of subvolumes is still a ways down the line. Multi-drive volumes will not work at this time. Compression won't work. Brtfs volumes that were converted from ext4 have not yet been tested, so they most likely do not work with WinBtrfs. The things that have been implemented most recently (file reading currently) are most likely to be buggy.
 
 
 [04] What dependencies are required for WinBtrfs?
@@ -55,7 +55,6 @@ where <device> is either the path to an image file, or a physical partition in t
 [07] What does the project roadmap look like?
 
 The following items will be developed in approximately this order:
-— Enable reading file data
 — Subvolume handling
 — Snapshot handling
 — Data compression support
