@@ -629,6 +629,21 @@ void parseFSTreeRec(unsigned __int64 addr, FSOperation operation, void *input1, 
 					delete[] name;
 					break;
 				}
+				case TYPE_XATTR_ITEM:
+				{
+					BtrfsDirItem *dirItem = (BtrfsDirItem *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset));
+					size_t len = endian16(dirItem->n);
+					char *name = new char[len + 1];
+
+					memcpy(name, dirItem->namePlusData, len);
+					name[len] = 0;
+
+					printf("  [%02x] XATTR_ITEM 0x%I64x hash: 0x%08I64x name: '%s'\n", i, endian64(item->key.objectID),
+						endian64(item->key.offset), name);
+					
+					delete[] name;
+					break;
+				}
 				case TYPE_DIR_ITEM:
 				{
 					BtrfsDirItem *dirItem = (BtrfsDirItem *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset));
