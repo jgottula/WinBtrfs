@@ -162,8 +162,8 @@ void loadSBChunks(bool dump)
 
 		if (dump)
 		{
-			printf("  CHUNK_ITEM size: 0x%I64x logi: 0x%I64x\n", endian64(sbChunk->key.offset),
-				endian64(sbChunk->chunkItem.chunkSize));
+			printf("  CHUNK_ITEM size: 0x%I64x logi: 0x%I64x\n", endian64(sbChunk->chunkItem.chunkSize),
+				endian64(sbChunk->key.offset));
 			for (int i = 0; i < sbChunk->chunkItem.numStripes; i++)
 				printf("    + STRIPE devID: 0x%I64x offset: 0x%I64x\n", endian64(sbChunk->chunkItem.stripes[i].devID),
 					endian64(sbChunk->chunkItem.stripes[i].offset));
@@ -267,8 +267,8 @@ void parseChunkTreeRec(unsigned __int64 addr, CTOperation operation)
 				{
 					BtrfsChunkItem *chunkItem = (BtrfsChunkItem *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset));
 					
-					printf("  [%02x] CHUNK_ITEM size: 0x%I64x logi: 0x%I64x\n", i, endian64(item->key.offset),
-						endian64(chunkItem->chunkSize));
+					printf("  [%02x] CHUNK_ITEM size: 0x%I64x logi: 0x%I64x\n", i, endian64(chunkItem->chunkSize),
+						endian64(item->key.offset));
 					for (int j = 0; j < chunkItem->numStripes; j++)
 						printf("         + STRIPE devID: 0x%I64x offset: 0x%I64x\n", endian64(chunkItem->stripes[j].devID),
 							endian64(chunkItem->stripes[j].offset));
