@@ -1,5 +1,7 @@
 Debug/
-WinBtrfsCLI/Debug/
+Release/
+*/Debug/
+*/Release/
 *.suo
 *.sln.docstates
 *.vcxproj.user
