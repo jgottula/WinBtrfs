@@ -280,7 +280,8 @@ void parseChunkTreeRec(unsigned __int64 addr, CTOperation operation)
 					break;
 				}
 				default:
-					printf("  [%02x] unknown {%I64x|%I64x}\n", i, item->key.objectID, item->key.offset);
+					printf("  [%02x] unknown {0x%I64x|0x%02x|0x%I64x}\n", i, endian64(item->key.objectID),
+						item->key.type, endian64(item->key.offset));
 					break;
 				}
 			}
@@ -492,7 +493,8 @@ void parseRootTreeRec(unsigned __int64 addr, RTOperation operation)
 						endian64(item->key.offset));
 					break;
 				default:
-					printf("  [%02x] unknown {%I64x|%I64x}\n", i, item->key.objectID, item->key.offset);
+					printf("  [%02x] unknown {0x%I64x|0x%02x|0x%I64x}\n", i, endian64(item->key.objectID),
+						item->key.type, endian64(item->key.offset));
 					break;
 				}
 			}
@@ -666,7 +668,8 @@ void parseFSTreeRec(unsigned __int64 addr, FSOperation operation, void *input1, 
 					break;
 				}
 				default:
-					printf("  [%02x] unknown {%I64x|%I64x}\n", i, item->key.objectID, item->key.offset);
+					printf("  [%02x] unknown {0x%I64x|0x%02x|0x%I64x}\n", i, endian64(item->key.objectID),
+						item->key.type, endian64(item->key.offset));
 					break;
 				}
 			}
