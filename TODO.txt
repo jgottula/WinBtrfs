@@ -1,7 +1,10 @@
 TODO list
 
 Roadmap:
-File locking and unlocking
+Symlinks, hardlinks
+File locking and unlocking callbacks
+File security callback
+XATTRs
 Remove Dokan callbacks that should never be called
 Esoteric Btrfs stuff (add a README faq for "which Btrfs features are supported")
 — Compression (zlib)
