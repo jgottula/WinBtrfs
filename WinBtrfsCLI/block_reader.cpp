@@ -190,7 +190,7 @@ void BlockReader::dump()
 
 void BlockReader::purge()
 {
-	while (cacheSize > MAX_CACHE_SIZE)
+	while (nodeArr.size() > 0 && cacheSize > MAX_CACHE_SIZE)
 	{
 		/* this function assumes that (a) elements are sorted from most reads to least, and that
 			(b) when elements have equal numbers of reads, they are sorted from most recent to least */
