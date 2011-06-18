@@ -55,7 +55,8 @@ int DOKAN_CALLBACK btrfsCreateFile(LPCWSTR fileName, DWORD desiredAccess, DWORD 
 	FilePkg filePkg;
 
 	assert(creationDisposition != CREATE_ALWAYS && creationDisposition != OPEN_ALWAYS);
-	assert(wcstombs(fileNameB, fileName, MAX_PATH) == wcslen(fileName));
+	size_t result = wcstombs(fileNameB, fileName, MAX_PATH);
+	assert(result == wcslen(fileName));
 
 	/* just in case */
 	info->Context = 0x0;
@@ -115,7 +116,8 @@ int DOKAN_CALLBACK btrfsOpenDirectory(LPCWSTR fileName, PDOKAN_FILE_INFO info)
 	BtrfsObjID objectID;
 	FilePkg filePkg;
 	
-	assert(wcstombs(fileNameB, fileName, MAX_PATH) == wcslen(fileName));
+	size_t result = wcstombs(fileNameB, fileName, MAX_PATH);
+	assert(result == wcslen(fileName));
 
 	/* just in case */
 	info->Context = 0x0;
@@ -270,8 +272,9 @@ int DOKAN_CALLBACK btrfsReadFile(LPCWSTR fileName, LPVOID buffer, DWORD numberOf
 					else
 					{
 						data = (unsigned char *)malloc(endian64(nonInlinePart->extSize));
-						assert(blockReader->directRead(endian64(nonInlinePart->extAddr), ADDR_LOGICAL,
-							endian64(nonInlinePart->extSize), data) == 0);
+						DWORD result = blockReader->directRead(endian64(nonInlinePart->extAddr), ADDR_LOGICAL,
+							endian64(nonInlinePart->extSize), data);
+						assert(result == 0);
 					}
 				}
 
@@ -387,7 +390,8 @@ int DOKAN_CALLBACK btrfsFindFiles(LPCWSTR pathName, PFillFindData pFillFindData,
 	DirList dirList;
 	WIN32_FIND_DATAW findData;
 
-	assert(wcstombs(pathNameB, pathName, MAX_PATH) == wcslen(pathName));
+	size_t result = wcstombs(pathNameB, pathName, MAX_PATH);
+	assert (result == wcslen(pathName));
 
 	std::list<FilePkg>::iterator it = openFiles.begin(), end = openFiles.end();
 	for ( ; it != end; ++it)
@@ -436,7 +440,8 @@ int DOKAN_CALLBACK btrfsFindFiles(LPCWSTR pathName, PFillFindData pFillFindData,
 		findData.nFileSizeHigh = (DWORD)(endian64(dirList.entries[i].inode.stSize) >> 32);
 		findData.nFileSizeLow = (DWORD)endian64(dirList.entries[i].inode.stSize);
 
-		assert(mbstowcs(nameW, dirList.entries[i].name, MAX_PATH) == strlen(dirList.entries[i].name));
+		size_t result = mbstowcs(nameW, dirList.entries[i].name, MAX_PATH);
+		assert(result == strlen(dirList.entries[i].name));
 
 		wcscpy(findData.cFileName, nameW);
 		findData.cAlternateFileName[0] = 0; // no 8.3 name

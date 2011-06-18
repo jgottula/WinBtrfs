@@ -180,7 +180,8 @@ boost::shared_array<unsigned char> *loadNode(unsigned __int64 blockAddr, AddrTyp
 	unsigned int blockSize = endian32(super.nodeSize);
 
 	/* this might not always be fatal, so in the future an assertion may be inappropriate */
-	assert(blockReader->cachedRead(blockAddr, type, blockSize, sharedBlock) == 0);
+	DWORD result = blockReader->cachedRead(blockAddr, type, blockSize, sharedBlock);
+	assert(result == 0);
 
 	*header = (BtrfsHeader *)(sharedBlock->get());
 
