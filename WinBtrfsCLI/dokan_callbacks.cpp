@@ -244,12 +244,12 @@ int DOKAN_CALLBACK btrfsReadFile(LPCWSTR fileName, LPVOID buffer, DWORD numberOf
 		/* does the requested range end inside this extent? */
 		bool last = a && !b;
 		/* does the requested range take up the entirety of this extent? */
-		bool middle = a && b;
+		bool span = a && b;
 		/* does the requested range fit entirely within this extent? */
-		bool only = (offset >= endian64(extents[i].item.key.offset) &&
+		bool within = (offset >= endian64(extents[i].item.key.offset) &&
 			offset + numberOfBytesToRead <= endian64(extents[i].item.key.offset) + endian64(extentData->n));
 
-		if (first || last || middle || only)
+		if (first || last || span || within)
 		{
 			if (extentData->compression == 0)
 			{
@@ -268,12 +268,12 @@ int DOKAN_CALLBACK btrfsReadFile(LPCWSTR fileName, LPVOID buffer, DWORD numberOf
 					data = sharedData.get();
 				}
 
-				if (middle)
+				if (span)
 				{
 					from = 0;
 					len = extentData->n;
 				}
-				else if (only)
+				else if (within)
 				{
 					from = offset - endian64(extents[i].item.key.offset);
 					len = numberOfBytesToRead;
@@ -296,7 +296,7 @@ int DOKAN_CALLBACK btrfsReadFile(LPCWSTR fileName, LPVOID buffer, DWORD numberOf
 				offset += len;
 
 				/* that was the last extent (this assumes correct ordering of extents by offset) */
-				if (last || only)
+				if (last || within)
 					break;
 			}
 			else
