@@ -275,7 +275,8 @@ struct FilePkg
 	BtrfsObjID				objectID;
 	BtrfsObjID				parentID; // not assigned by dir list
 	BtrfsInodeItem			inode;
-	BtrfsExtentData			*extentData; // not assigned by dir list
+	int						numExtents; // not assigned by dir list
+	BtrfsExtentData			**extents; // not assigned by dir list
 	char					name[256];
 	bool					hidden;
 };

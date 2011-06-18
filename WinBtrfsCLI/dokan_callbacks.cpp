@@ -189,7 +189,12 @@ int DOKAN_CALLBACK btrfsCloseFile(LPCWSTR fileName, PDOKAN_FILE_INFO info)
 	/* we should always be able to find an entry in openFiles */
 	assert(it != end);
 
-	free(it->extentData);
+	/* free this stuff on the heap */
+	int numExtents = it->numExtents;
+	for (int i = 0; i < numExtents; i++)
+		free(it->extents[i]);
+	free(it->extents);
+
 	openFiles.erase(it);
 	
 	printf("btrfsCloseFile: OK [%s]\n", fileName);
@@ -212,9 +217,7 @@ int DOKAN_CALLBACK btrfsReadFile(LPCWSTR fileName, LPVOID buffer, DWORD numberOf
 	/* failing to find the element is NOT an option */
 	assert(it != end);
 
-	/* this really, really should not happen */
-	assert(it->extentData != NULL);
-
+#if 0
 	BtrfsExtentData *extentData = it->extentData;
 
 	if (extentData->type == FILEDATA_INLINE)
@@ -237,13 +240,24 @@ int DOKAN_CALLBACK btrfsReadFile(LPCWSTR fileName, LPVOID buffer, DWORD numberOf
 		printf("btrfsReadFile: OK [%s]\n", fileName);
 		return ERROR_SUCCESS;
 	}
-	else
+	else if (extentData->type == FILEDATA_REGULAR)
 	{
 		*numberOfBytesRead = 0;
 		
-		printf("btrfsReadFile: can't handle non-inline file data yet!\n");
+		printf("btrfsReadFile: FILEDATA_REGULAR is not complete yet!\n");
 		return ERROR_SUCCESS;
 	}
+	else if (extentData->type == FILEDATA_PREALLOC)
+	{
+		*numberOfBytesRead = 0;
+		
+		printf("btrfsReadFile: can't handle preallocated file data yet!\n");
+		return ERROR_SUCCESS;
+	}
+#endif
+	*numberOfBytesRead = 0;
+	printf("brtfsReadFile: come back to this!\n");
+	return ERROR_SUCCESS;
 }
 
 int DOKAN_CALLBACK btrfsWriteFile(LPCWSTR fileName, LPCVOID buffer, DWORD numberOfBytesToWrite, LPDWORD numberOfBytesWritten,
