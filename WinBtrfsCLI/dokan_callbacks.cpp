@@ -254,7 +254,6 @@ int DOKAN_CALLBACK btrfsReadFile(LPCWSTR fileName, LPVOID buffer, DWORD numberOf
 			if (extentData->compression == 0)
 			{
 				BtrfsExtentDataNonInline *nonInlinePart = NULL;
-				boost::shared_array<unsigned char> sharedData;
 				unsigned char *data;
 				size_t from, len;
 				bool skipCopy = false;
@@ -270,9 +269,9 @@ int DOKAN_CALLBACK btrfsReadFile(LPCWSTR fileName, LPVOID buffer, DWORD numberOf
 						skipCopy = true;
 					else
 					{
-						assert(blockReader->cachedRead(endian64(nonInlinePart->extAddr), ADDR_LOGICAL,
-							endian64(nonInlinePart->extSize), &sharedData) == 0);
-						data = sharedData.get();
+						data = (unsigned char *)malloc(endian64(nonInlinePart->extSize));
+						assert(blockReader->directRead(endian64(nonInlinePart->extAddr), ADDR_LOGICAL,
+							endian64(nonInlinePart->extSize), data) == 0);
 					}
 				}
 
@@ -298,7 +297,12 @@ int DOKAN_CALLBACK btrfsReadFile(LPCWSTR fileName, LPVOID buffer, DWORD numberOf
 				}
 
 				if (!skipCopy)
+				{
 					memcpy((char *)buffer + *numberOfBytesRead, data + from, len);
+
+					if (extentData->type != FILEDATA_INLINE)
+						free(data);
+				}
 				
 				numberOfBytesToRead -= len;
 				*numberOfBytesRead += len;
