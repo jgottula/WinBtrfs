@@ -257,15 +257,23 @@ int DOKAN_CALLBACK btrfsReadFile(LPCWSTR fileName, LPVOID buffer, DWORD numberOf
 				boost::shared_array<unsigned char> sharedData;
 				unsigned char *data;
 				size_t from, len;
+				bool skipCopy = false;
 
 				if (extentData->type == FILEDATA_INLINE)
 					data = extentData->inlineData;
 				else
 				{
 					nonInlinePart = (BtrfsExtentDataNonInline *)extentData->inlineData;
-					assert(blockReader->cachedRead(endian64(nonInlinePart->extAddr), ADDR_LOGICAL,
-						endian64(nonInlinePart->extSize), &sharedData) == 0);
-					data = sharedData.get();
+
+					/* an address of zero indicates a sparse extent (i.e. all zeroes) */
+					if (endian64(nonInlinePart->extAddr) == 0)
+						skipCopy = true;
+					else
+					{
+						assert(blockReader->cachedRead(endian64(nonInlinePart->extAddr), ADDR_LOGICAL,
+							endian64(nonInlinePart->extSize), &sharedData) == 0);
+						data = sharedData.get();
+					}
 				}
 
 				if (span)
@@ -289,8 +297,9 @@ int DOKAN_CALLBACK btrfsReadFile(LPCWSTR fileName, LPVOID buffer, DWORD numberOf
 					len = (offset + numberOfBytesToRead) - endian64(extents[i].item.key.offset);
 				}
 
-				memcpy((char *)buffer + *numberOfBytesRead, data + from, len);
-
+				if (!skipCopy)
+					memcpy((char *)buffer + *numberOfBytesRead, data + from, len);
+				
 				numberOfBytesToRead -= len;
 				*numberOfBytesRead += len;
 				offset += len;
