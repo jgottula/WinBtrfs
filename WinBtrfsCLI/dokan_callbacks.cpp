@@ -23,7 +23,9 @@
 #include "util.h"
 #include "btrfs_system.h"
 #include "btrfs_operations.h"
+#include "block_reader.h"
 
+extern BlockReader *blockReader;
 extern BtrfsSuperblock super;
 
 std::list<FilePkg> openFiles;
@@ -192,7 +194,7 @@ int DOKAN_CALLBACK btrfsCloseFile(LPCWSTR fileName, PDOKAN_FILE_INFO info)
 	/* free this stuff on the heap */
 	int numExtents = it->numExtents;
 	for (int i = 0; i < numExtents; i++)
-		free(it->extents[i]);
+		free(it->extents[i].data);
 	free(it->extents);
 
 	openFiles.erase(it);
@@ -217,46 +219,92 @@ int DOKAN_CALLBACK btrfsReadFile(LPCWSTR fileName, LPVOID buffer, DWORD numberOf
 	/* failing to find the element is NOT an option */
 	assert(it != end);
 
-#if 0
-	BtrfsExtentData *extentData = it->extentData;
+	int numExtents = it->numExtents;
+	ItemPlus *extents = it->extents;
 
-	if (extentData->type == FILEDATA_INLINE)
-	{
-		size_t readLen;
-		
-		if (offset + numberOfBytesToRead <= extentData->n)
-			/* the read fits the data */
-			readLen = numberOfBytesToRead;
-		else
-		{
-			/* doesn't fit, so fill in the rest with zeroes */
-			readLen = extentData->n - offset;
-			memset((unsigned char *)buffer + readLen, 0, numberOfBytesToRead - readLen);
-		}
+	/* zero out the areas that don't get read in */
+	memset(buffer, 0, numberOfBytesToRead);
 
-		memcpy(buffer, extentData->inlineData + offset, readLen);
-		*numberOfBytesRead = numberOfBytesToRead;
-
-		printf("btrfsReadFile: OK [%s]\n", fileName);
-		return ERROR_SUCCESS;
-	}
-	else if (extentData->type == FILEDATA_REGULAR)
-	{
-		*numberOfBytesRead = 0;
-		
-		printf("btrfsReadFile: FILEDATA_REGULAR is not complete yet!\n");
-		return ERROR_SUCCESS;
-	}
-	else if (extentData->type == FILEDATA_PREALLOC)
-	{
-		*numberOfBytesRead = 0;
-		
-		printf("btrfsReadFile: can't handle preallocated file data yet!\n");
-		return ERROR_SUCCESS;
-	}
-#endif
+	/* we'll read from this, so to be safe we'll set it first */
 	*numberOfBytesRead = 0;
-	printf("brtfsReadFile: come back to this!\n");
+
+	for (int i = 0; i < numExtents; i++)
+	{
+		BtrfsExtentData *extentData = (BtrfsExtentData *)extents[i].data;
+
+		/* does the requested range include the first byte of this extent? */
+		bool a = (endian64(extents[i].item.key.offset) >= offset &&
+			endian64(extents[i].item.key.offset) < offset + numberOfBytesToRead);
+		/* does the requested range include the last byte of this extent? */
+		bool b = (endian64(extents[i].item.key.offset) + endian64(extentData->n) - 1 >= offset &&
+			endian64(extents[i].item.key.offset) + endian64(extentData->n) - 1 < offset + numberOfBytesToRead);
+		
+		/* does the requested range start inside this extent? */
+		bool first = !a && b;
+		/* does the requested range end inside this extent? */
+		bool last = a && !b;
+		/* does the requested range take up the entirety of this extent? */
+		bool middle = a && b;
+		/* does the requested range fit entirely within this extent? */
+		bool only = (offset >= endian64(extents[i].item.key.offset) &&
+			offset + numberOfBytesToRead <= endian64(extents[i].item.key.offset) + endian64(extentData->n));
+
+		if (first || last || middle || only)
+		{
+			if (extentData->compression == 0)
+			{
+				BtrfsExtentDataNonInline *nonInlinePart = NULL;
+				boost::shared_array<unsigned char> sharedData;
+				unsigned char *data;
+				size_t from, len;
+
+				if (extentData->type == FILEDATA_INLINE)
+					data = extentData->inlineData;
+				else
+				{
+					nonInlinePart = (BtrfsExtentDataNonInline *)extentData->inlineData;
+					assert(blockReader->cachedRead(endian64(nonInlinePart->extAddr), ADDR_LOGICAL,
+						endian64(nonInlinePart->extSize), &sharedData) == 0);
+					data = sharedData.get();
+				}
+
+				if (middle)
+				{
+					from = 0;
+					len = extentData->n;
+				}
+				else if (only)
+				{
+					from = offset - endian64(extents[i].item.key.offset);
+					len = numberOfBytesToRead;
+				}
+				else if (first)
+				{
+					from = offset - endian64(extents[i].item.key.offset);
+					len = extentData->n - (offset - endian64(extents[i].item.key.offset));
+				}
+				else if (last)
+				{
+					from = 0;
+					len = (offset + numberOfBytesToRead) - endian64(extents[i].item.key.offset);
+				}
+
+				memcpy((char *)buffer + *numberOfBytesRead, data + from, len);
+
+				numberOfBytesToRead -= len;
+				*numberOfBytesRead += len;
+				offset += len;
+
+				/* that was the last extent (this assumes correct ordering of extents by offset) */
+				if (last || only)
+					break;
+			}
+			else
+				printf("btrfsReadFile: can't read compressed data!\n");
+		}
+	}
+
+	printf("btrfsReadFile: OK [%s]\n", fileName);
 	return ERROR_SUCCESS;
 }
 

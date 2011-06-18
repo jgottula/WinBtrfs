@@ -736,11 +736,13 @@ void parseFSTreeRec(unsigned __int64 addr, FSOperation operation, void *input1, 
 					assert((unsigned char *)extentData + sizeof(BtrfsInodeItem) <=
 						(unsigned char *)nodeBlock + endian32(super.nodeSize));
 
-					filePkg->extents = (BtrfsExtentData **)realloc(filePkg->extents,
-						(filePkg->numExtents + 1) * sizeof(BtrfsExtentData *));
-					filePkg->extents[filePkg->numExtents] = (BtrfsExtentData *)malloc(endian32(item->size));
+					filePkg->extents = (ItemPlus *)realloc(filePkg->extents,
+						(filePkg->numExtents + 1) * sizeof(ItemPlus));
+					filePkg->extents[filePkg->numExtents].data = (BtrfsExtentData *)malloc(endian32(item->size));
 
-					memcpy(filePkg->extents[filePkg->numExtents], extentData, endian32(item->size));
+					memcpy(&(filePkg->extents[filePkg->numExtents].item), item, sizeof(BtrfsItem));
+					memcpy(filePkg->extents[filePkg->numExtents].data, extentData, endian32(item->size));
+
 					filePkg->numExtents++;
 				}
 			}
@@ -910,7 +912,7 @@ int parseFSTree(FSOperation operation, void *input1, void *input2, void *input3,
 		filePkg->objectID = *objectID;
 
 		filePkg->numExtents = 0;
-		filePkg->extents = (BtrfsExtentData **)malloc(0);
+		filePkg->extents = (ItemPlus *)malloc(0);
 
 		/* for the special case of the root dir, this stuff wouldn't get filled in by any other means */
 		if (*objectID == OBJID_ROOT_DIR)
