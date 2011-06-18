@@ -12,6 +12,7 @@
  */
 
 #include <stdio.h>
+#include <assert.h>
 #include <Windows.h>
 #include "structures.h"
 #include "endian.h"
@@ -89,4 +90,30 @@ void stModeToStr(unsigned int mode, char *dest)
 		dest[9] = (mode & S_IXUSR) ? 'x' : '-';
 
 	dest[10] = 0;
+}
+
+void bgFlagsToStr(BlockGroupFlags flags, char *dest)
+{
+	/* must be DATA, SYSTEM, or METADATA; nothing else! */
+	assert((flags & BGFLAG_DATA) || (flags & BGFLAG_SYSTEM) || (flags & BGFLAG_METADATA));
+
+	if (flags & BGFLAG_DATA)
+		strcpy(dest, "DATA");
+	else if (flags & BGFLAG_SYSTEM)
+		strcpy(dest, "SYSTEM");
+	else if (flags & BGFLAG_METADATA)
+		strcpy(dest, "METADATA");
+
+	strcat(dest, " ");
+
+	if (flags & BGFLAG_RAID0)
+		strcat(dest, "RAID0");
+	else if (flags & BGFLAG_RAID1)
+		strcat(dest, "RAID1");
+	else if (flags & BGFLAG_DUPLICATE)
+		strcat(dest, "duplicate");
+	else if (flags & BGFLAG_RAID10)
+		strcat(dest, "RAID10");
+	else
+		strcat(dest, "single");
 }
