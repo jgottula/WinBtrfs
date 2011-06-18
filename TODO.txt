@@ -1,14 +1,15 @@
 TODO list
 
 Roadmap:
-Get file data working (extents)
-— Remove Dokan callbacks that should never be called
+File locking and unlocking
+Remove Dokan callbacks that should never be called
 Esoteric Btrfs stuff (add a README faq for "which Btrfs features are supported")
 — Compression (zlib)
 — Subvolumes
 — Multi-drive volumes
 — Converted ext4 fs
 — Extended attributes?
+— Preallocated files (torrents maybe)
 Concurrent callback support (threadsafety)
 GUI (C#: which .NET version?)
 Installer (NSIS)
