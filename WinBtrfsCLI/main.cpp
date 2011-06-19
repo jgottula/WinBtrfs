@@ -53,6 +53,8 @@ DOKAN_OPERATIONS btrfsOperations = {
 
 extern std::vector<ItemPlus> rootTree;
 
+bool noDump = false;
+
 void firstTasks()
 {
 	DWORD errorCode;
@@ -102,25 +104,30 @@ void firstTasks()
 
 	findSecondarySBs();
 	
-	parseChunkTree(CTOP_DUMP_TREE);
+	loadSBChunks(!noDump);
+
+	if (!noDump) parseChunkTree(CTOP_DUMP_TREE);
 	parseChunkTree(CTOP_LOAD);
 	
-	parseRootTree(RTOP_DUMP_TREE);
+	if (!noDump) parseRootTree(RTOP_DUMP_TREE);
 	parseRootTree(RTOP_LOAD);
 	
-	parseFSTree(FSOP_DUMP_TREE, NULL, NULL, NULL, NULL, NULL);
-
-	/* dump FS subtrees */
-	size_t size = rootTree.size();
-	for (size_t i = 0; i < size; i++)
+	if (!noDump)
 	{
-		ItemPlus& itemP = rootTree.at(i);
+		parseFSTree(FSOP_DUMP_TREE, NULL, NULL, NULL, NULL, NULL);
 
-		if (itemP.item.key.type == TYPE_ROOT_REF && endian64(itemP.item.key.objectID) == OBJID_FS_TREE)
+		/* dump FS subtrees */
+		size_t size = rootTree.size();
+		for (size_t i = 0; i < size; i++)
 		{
-			unsigned __int64 addr = getTreeRootAddr((BtrfsObjID)endian64(itemP.item.key.offset));
+			ItemPlus& itemP = rootTree.at(i);
+
+			if (itemP.item.key.type == TYPE_ROOT_REF && endian64(itemP.item.key.objectID) == OBJID_FS_TREE)
+			{
+				unsigned __int64 addr = getTreeRootAddr((BtrfsObjID)endian64(itemP.item.key.offset));
 			
-			parseFSTree(FSOP_DUMP_TREE, &addr, NULL, NULL, NULL, NULL);
+				parseFSTree(FSOP_DUMP_TREE, &addr, NULL, NULL, NULL, NULL);
+			}
 		}
 	}
 }
@@ -158,12 +165,14 @@ void dokanError(int dokanResult)
 
 void usage()
 {
-	printf("Usage: WinBtrfsCLI.exe <device> <mount point>\n\n"
+	printf("Usage: WinBtrfsCLI.exe <device> <mount point> [options]\n\n"
 		"For the device argument, try something like \\Device\\HarddiskX\\PartitionY.\n"
 		"Disks are indexed from zero; partitions are indexed from one.\n"
 		"Example: /dev/sda1 = \\\\.\\Harddisk0Partition1\n\n"
 		"You can also specify an image file to mount.\n\n"
-		"The mount point can be a drive letter or an empty NTFS directory.\n");
+		"The mount point can be a drive letter or an empty NTFS directory.\n\n"
+		"Options:\n"
+		"--no-dump       don't dump trees at startup\n");
 
 	exit(1);
 }
@@ -204,13 +213,24 @@ int main(int argc, char **argv)
 
 	unitTests();
 
-	if (argc != 3)
+	if (argc < 3)
 		usage();
 
 	/* Need argument validity checking, MAX_PATH checking for buffer overruns */
 	
 	mbstowcs_s(NULL, devicePath, MAX_PATH, argv[1], strlen(argv[1]));
 	mbstowcs_s(NULL, mountPoint, MAX_PATH, argv[2], strlen(argv[2]));
+
+	for (int i = 3; i < argc; i++)
+	{
+		if (strcmp(argv[i], "--no-dump") == 0)
+			noDump = true;
+		else
+		{
+			printf("'%s' is not a recognized command-line option!\n\n", argv[i]);
+			usage();
+		}
+	}
 
 	dokanOptions = (PDOKAN_OPTIONS)malloc(sizeof(DOKAN_OPTIONS));
 	dokanOptions->Version = 600;

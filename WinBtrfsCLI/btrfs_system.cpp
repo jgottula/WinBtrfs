@@ -322,10 +322,6 @@ void parseChunkTreeRec(unsigned __int64 addr, CTOperation operation)
 
 void parseChunkTree(CTOperation operation)
 {
-	/* load SB chunks if we haven't already */
-	if (sbChunks.size() == 0)
-		loadSBChunks(true);
-	
 	parseChunkTreeRec(endian64(super.chunkTreeLAddr), operation);
 }
 
