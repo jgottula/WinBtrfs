@@ -22,7 +22,7 @@ DWORD readPrimarySB();
 int validateSB(BtrfsSuperblock *s);
 int findSecondarySBs();
 void loadSBChunks(bool dump);
-boost::shared_array<unsigned char> *loadNode(unsigned __int64 blockAddr, AddrType type, BtrfsHeader **header);
+unsigned char *loadNode(unsigned __int64 blockAddr, AddrType type);
 void parseChunkTree(CTOperation operation);
 void parseRootTree(RTOperation operation);
 int parseFSTree(FSOperation operation, void *input1, void *input2, void *input3, void *output1, void *output2);

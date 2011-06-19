@@ -174,22 +174,22 @@ void loadSBChunks(bool dump)
 	}
 }
 
-boost::shared_array<unsigned char> *loadNode(unsigned __int64 blockAddr, AddrType type, BtrfsHeader **header)
+unsigned char *loadNode(unsigned __int64 blockAddr, AddrType type, BtrfsHeader **header)
 {
-	boost::shared_array<unsigned char> *sharedBlock = new boost::shared_array<unsigned char>();
 	unsigned int blockSize = endian32(super.nodeSize);
+	unsigned char *nodeBlock = (unsigned char *)malloc(blockSize);
 
 	/* this might not always be fatal, so in the future an assertion may be inappropriate */
-	DWORD result = blockReader->cachedRead(blockAddr, type, blockSize, sharedBlock);
+	DWORD result = blockReader->directRead(blockAddr, type, blockSize, nodeBlock);
 	assert(result == 0);
 
-	*header = (BtrfsHeader *)(sharedBlock->get());
+	*header = (BtrfsHeader *)nodeBlock;
 
 	/* also possibly nonfatal */
-	assert(~crc32c((unsigned int)~0, sharedBlock->get() + sizeof(BtrfsChecksum),
+	assert(~crc32c((unsigned int)~0, nodeBlock + sizeof(BtrfsChecksum),
 		blockSize - sizeof(BtrfsChecksum)) == endian32((*header)->csum.crc32c));
 
-	return sharedBlock;
+	return nodeBlock;
 }
 
 void parseChunkTreeRec(unsigned __int64 addr, CTOperation operation)
@@ -200,11 +200,10 @@ void parseChunkTreeRec(unsigned __int64 addr, CTOperation operation)
 	ItemPlus itemP;
 	unsigned short *temp;
 	
-	boost::shared_array<unsigned char> *sharedBlock = loadNode(addr, ADDR_LOGICAL, &header);
+	nodeBlock = loadNode(addr, ADDR_LOGICAL, &header);
 
 	assert(header->tree == OBJID_CHUNK_TREE);
 	
-	nodeBlock = sharedBlock->get();
 	nodePtr = nodeBlock + sizeof(BtrfsHeader);
 
 	if (operation == CTOP_DUMP_TREE)
@@ -317,7 +316,7 @@ void parseChunkTreeRec(unsigned __int64 addr, CTOperation operation)
 		}
 	}
 
-	delete sharedBlock;
+	free(nodeBlock);
 }
 
 void parseChunkTree(CTOperation operation)
@@ -332,11 +331,10 @@ void parseRootTreeRec(unsigned __int64 addr, RTOperation operation)
 	BtrfsItem *item;
 	ItemPlus itemP;
 
-	boost::shared_array<unsigned char> *sharedBlock = loadNode(addr, ADDR_LOGICAL, &header);
+	nodeBlock = loadNode(addr, ADDR_LOGICAL, &header);
 
 	assert(header->tree == OBJID_ROOT_TREE);
 	
-	nodeBlock = sharedBlock->get();
 	nodePtr = nodeBlock + sizeof(BtrfsHeader);
 
 	if (operation == RTOP_DUMP_TREE)
@@ -526,7 +524,7 @@ void parseRootTreeRec(unsigned __int64 addr, RTOperation operation)
 		}
 	}
 
-	delete sharedBlock;
+	free(nodeBlock);
 }
 
 void parseRootTree(RTOperation operation)
@@ -541,9 +539,8 @@ void parseFSTreeRec(unsigned __int64 addr, FSOperation operation, void *input1, 
 	BtrfsHeader *header;
 	BtrfsItem *item;
 
-	boost::shared_array<unsigned char> *sharedBlock = loadNode(addr, ADDR_LOGICAL, &header);
+	nodeBlock = loadNode(addr, ADDR_LOGICAL, &header);
 	
-	nodeBlock = sharedBlock->get();
 	nodePtr = nodeBlock + sizeof(BtrfsHeader);
 
 	if (operation == FSOP_DUMP_TREE)
@@ -785,6 +782,7 @@ void parseFSTreeRec(unsigned __int64 addr, FSOperation operation, void *input1, 
 						{
 							memcpy(&(dirList->entries[j].inode), inodeItem, sizeof(BtrfsInodeItem));
 
+							printf("0x%I64x: found inode\n", endian64(item->key.objectID));
 							(*returnCode)--;
 							break;
 						}
@@ -816,7 +814,8 @@ void parseFSTreeRec(unsigned __int64 addr, FSOperation operation, void *input1, 
 							dirList->entries[dirList->numEntries].name[endian16(dirItem->n)] = 0;
 
 							dirList->numEntries++;
-
+							
+							printf("0x%I64x: allocated\n", endian64(dirItem->child.objectID));
 							(*returnCode)++;
 						}
 						
@@ -893,7 +892,7 @@ void parseFSTreeRec(unsigned __int64 addr, FSOperation operation, void *input1, 
 		}
 	}
 
-	delete sharedBlock;
+	free(nodeBlock);
 }
 
 int parseFSTree(FSOperation operation, void *input1, void *input2, void *input3, void *output1, void *output2)
