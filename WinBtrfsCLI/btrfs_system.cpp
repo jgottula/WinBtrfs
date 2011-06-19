@@ -782,9 +782,10 @@ void parseFSTreeRec(unsigned __int64 addr, FSOperation operation, void *input1, 
 						{
 							memcpy(&(dirList->entries[j].inode), inodeItem, sizeof(BtrfsInodeItem));
 
-							printf("0x%I64x: found inode\n", endian64(item->key.objectID));
 							(*returnCode)--;
-							break;
+							
+							/* don't break out of the loop: there may be multiple entries that need
+								the same inode loaded in (hard links, for example) */
 						}
 					}
 				}
@@ -815,7 +816,6 @@ void parseFSTreeRec(unsigned __int64 addr, FSOperation operation, void *input1, 
 
 							dirList->numEntries++;
 							
-							printf("0x%I64x: allocated\n", endian64(dirItem->child.objectID));
 							(*returnCode)++;
 						}
 						
