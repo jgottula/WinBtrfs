@@ -24,7 +24,9 @@
 #include "btrfs_system.h"
 #include "btrfs_operations.h"
 #include "block_reader.h"
-#include "btrfs_trees.h"
+#include "chunktree_parser.h"
+#include "roottree_parser.h"
+#include "fstree_parser.h"
 
 extern BlockReader *blockReader;
 extern BtrfsSuperblock super;

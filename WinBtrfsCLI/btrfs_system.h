@@ -22,3 +22,4 @@ int validateSB(BtrfsSuperblock *s);
 int findSecondarySBs();
 void loadSBChunks(bool dump);
 unsigned char *loadNode(unsigned __int64 blockAddr, AddrType type, BtrfsHeader **header);
+unsigned __int64 getTreeRootAddr(BtrfsObjID tree);

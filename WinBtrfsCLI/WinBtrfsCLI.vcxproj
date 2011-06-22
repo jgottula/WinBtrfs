@@ -100,9 +100,11 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="block_reader.cpp" />
+    <ClCompile Include="chunktree_parser.cpp" />
+    <ClCompile Include="fstree_parser.cpp" />
     <ClCompile Include="btrfs_operations.cpp" />
+    <ClCompile Include="roottree_parser.cpp" />
     <ClCompile Include="btrfs_system.cpp" />
-    <ClCompile Include="btrfs_trees.cpp" />
     <ClCompile Include="dokan_callbacks.cpp" />
     <ClCompile Include="crc32c.cpp" />
     <ClCompile Include="endian.cpp" />
@@ -113,11 +115,13 @@
     <ClInclude Include="block_reader.h" />
     <ClInclude Include="btrfs_operations.h" />
     <ClInclude Include="btrfs_system.h" />
-    <ClInclude Include="btrfs_trees.h" />
+    <ClInclude Include="chunktree_parser.h" />
     <ClInclude Include="dokan_callbacks.h" />
     <ClInclude Include="constants.h" />
     <ClInclude Include="crc32c.h" />
     <ClInclude Include="endian.h" />
+    <ClInclude Include="fstree_parser.h" />
+    <ClInclude Include="roottree_parser.h" />
     <ClInclude Include="structures.h" />
     <ClInclude Include="util.h" />
   </ItemGroup>

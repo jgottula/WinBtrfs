@@ -18,7 +18,9 @@
 #include "crc32c.h"
 #include "endian.h"
 #include "btrfs_system.h"
-#include "btrfs_trees.h"
+#include "chunktree_parser.h"
+#include "roottree_parser.h"
+#include "fstree_parser.h"
 
 extern BtrfsObjID defaultSubvol;
 

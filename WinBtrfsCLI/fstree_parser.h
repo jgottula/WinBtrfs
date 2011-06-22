@@ -1,5 +1,5 @@
-/* btrfs_trees.h
- * tree parsers
+/* fstree_parser.h
+ * fs tree parser
  *
  * WinBtrfs
  *
@@ -13,8 +13,5 @@
 
 #include "structures.h"
 
-void parseChunkTree(CTOperation operation);
-void parseRootTree(RTOperation operation);
 int parseFSTree(BtrfsObjID tree, FSOperation operation, void *input1, void *input2, void *input3,
 	void *output1, void *output2);
-unsigned __int64 getTreeRootAddr(BtrfsObjID tree);
