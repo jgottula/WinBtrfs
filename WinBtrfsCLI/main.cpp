@@ -49,9 +49,11 @@ DOKAN_OPERATIONS btrfsOperations = {
 	&btrfsSetFileSecurity
 };
 
-extern BtrfsObjID defaultSubvol;
+extern BtrfsObjID mountedSubvol;
 extern std::vector<KeyedItem> rootTree;
 
+BtrfsObjID subvolID = (BtrfsObjID)0;
+char *subvolName = NULL;
 bool noDump = false;
 
 void firstTasks()
@@ -108,11 +110,31 @@ void firstTasks()
 	if (!noDump) parseChunkTree(CTOP_DUMP_TREE);
 	parseChunkTree(CTOP_LOAD);
 	
-	if (!noDump) parseRootTree(RTOP_DUMP_TREE);
-	parseRootTree(RTOP_LOAD);
+	if (!noDump) parseRootTree(RTOP_DUMP_TREE, NULL, NULL);
+	parseRootTree(RTOP_LOAD, NULL, NULL);
 
-	if (defaultSubvol != (BtrfsObjID)0)
-		parseRootTree(RTOP_DEFAULT_SUBVOL);
+	if (subvolID == (BtrfsObjID)0 && subvolName == NULL)
+	{
+		int result;
+		if ((result = parseRootTree(RTOP_DEFAULT_SUBVOL, NULL, NULL)) != 0)
+		{
+			printf("firstTasks: could not find the default subvolume!\n");
+			cleanUp();
+			exit(1);
+		}
+	}
+	else if (subvolName != NULL)
+	{
+		int result;
+		if ((result = parseRootTree(RTOP_GET_SUBVOL_ID, subvolName, &mountedSubvol)) != 0)
+		{
+			printf("firstTasks: could not find the requested subvolume to mount!\n");
+			cleanUp();
+			exit(1);
+		}
+	}
+	else
+		mountedSubvol = subvolID;
 	
 	if (!noDump)
 	{
@@ -171,8 +193,9 @@ void usage()
 		"You can also specify an image file to mount.\n\n"
 		"The mount point can be a drive letter or an empty NTFS directory.\n\n"
 		"Options:\n"
-		"--no-dump       don't dump trees at startup\n"
-		"--subvol=n      mount the subvolume with the given object ID\n");
+		"--no-dump               don't dump trees at startup\n"
+		"--subvol=<subvol name>  mount the subvolume with the given name\n"
+		"--subvol-id=<object ID> mount the subvolume with the given object ID\n");
 
 	exit(1);
 }
@@ -225,13 +248,39 @@ int main(int argc, char **argv)
 	{
 		if (strcmp(argv[i], "--no-dump") == 0)
 			noDump = true;
-		else if (strncmp(argv[i], "--subvol", 8) == 0)
+		else if (strncmp(argv[i], "--subvol=", 9) == 0)
 		{
-			if (argv[i][8] == '=' && strlen(argv[i]) > 9)
-				defaultSubvol = (BtrfsObjID)atoi(argv[i] + 9);
+			if (strlen(argv[i]) > 9)
+			{
+				if (subvolID == (BtrfsObjID)0 && subvolName == NULL)
+					subvolName = argv[i] + 9;
+				else
+				{
+					printf("You already chose a subvolume to mount!\n\n");
+					usage();
+				}
+			}
 			else
 			{
-				printf("You used --subvol incorrectly!\n\n");
+				printf("You didn't specify a subvolume name!\n\n");
+				usage();
+			}
+		}
+		else if (strncmp(argv[i], "--subvol-id=", 12) == 0)
+		{
+			if (strlen(argv[i]) > 12)
+			{
+				if (subvolID == (BtrfsObjID)0 && subvolName == NULL)
+					subvolID = (BtrfsObjID)atoi(argv[i] + 12);
+				else
+				{
+					printf("You already chose a subvolume to mount!\n\n");
+					usage();
+				}
+			}
+			else
+			{
+				printf("You didn't specify a subvolume object ID!\n\n");
 				usage();
 			}
 		}

@@ -23,7 +23,7 @@ extern std::vector<KeyedItem> chunkTree, rootTree;
 BlockReader *blockReader;
 BtrfsSuperblock super;
 std::vector<BtrfsSBChunk *> sbChunks; // using an array of ptrs because BtrfsSBChunk is variably sized
-BtrfsObjID defaultSubvol = (BtrfsObjID)0;
+BtrfsObjID mountedSubvol = (BtrfsObjID)0;
 
 DWORD init()
 {

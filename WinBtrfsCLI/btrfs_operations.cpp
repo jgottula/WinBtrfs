@@ -16,7 +16,7 @@
 #include "crc32c.h"
 #include "fstree_parser.h"
 
-extern BtrfsObjID defaultSubvol;
+extern BtrfsObjID mountedSubvol;
 
 void validatePath(const char *input, char *output)
 {
@@ -118,7 +118,7 @@ int getPathID(const char *path, BtrfsObjID *output)
 	{
 		hash = crc32c((unsigned int)~1, (const unsigned char *)(components[i]), strlen(components[i]));
 		
-		if (parseFSTree(defaultSubvol, FSOP_NAME_TO_ID, &parentID, &hash, components[i],
+		if (parseFSTree(mountedSubvol, FSOP_NAME_TO_ID, &parentID, &hash, components[i],
 			&childID, NULL) != 0)
 			return 1;
 

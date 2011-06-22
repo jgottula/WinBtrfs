@@ -22,7 +22,7 @@
 
 extern BlockReader *blockReader;
 extern BtrfsSuperblock super;
-extern BtrfsObjID defaultSubvol;
+extern BtrfsObjID mountedSubvol;
 
 std::list<FilePkg> openFiles;
 HANDLE hBigDokanLock = INVALID_HANDLE_VALUE;
@@ -71,7 +71,7 @@ int DOKAN_CALLBACK btrfsCreateFile(LPCWSTR fileName, DWORD desiredAccess, DWORD 
 	}
 
 	int result2;
-	if ((result2 = parseFSTree(defaultSubvol, FSOP_GET_FILE_PKG, &objectID, NULL, NULL, &filePkg, NULL)) != 0)
+	if ((result2 = parseFSTree(mountedSubvol, FSOP_GET_FILE_PKG, &objectID, NULL, NULL, &filePkg, NULL)) != 0)
 	{
 		ReleaseMutex(hBigDokanLock);
 		printf("btrfsCreateFile: parseFSTree with FSOP_GET_FILE_PKG returned %d! [%S]\n", result2, fileName);
@@ -133,7 +133,7 @@ int DOKAN_CALLBACK btrfsOpenDirectory(LPCWSTR fileName, PDOKAN_FILE_INFO info)
 	}
 
 	int result2;
-	if ((result2 = parseFSTree(defaultSubvol, FSOP_GET_FILE_PKG, &objectID, NULL, NULL, &filePkg, NULL)) != 0)
+	if ((result2 = parseFSTree(mountedSubvol, FSOP_GET_FILE_PKG, &objectID, NULL, NULL, &filePkg, NULL)) != 0)
 	{
 		ReleaseMutex(hBigDokanLock);
 		printf("btrfsOpenDirectory: parseFSTree with FSOP_GET_FILE_PKG returned %d! [%S]\n", result2, fileName);
@@ -410,7 +410,7 @@ int DOKAN_CALLBACK btrfsFindFiles(LPCWSTR pathName, PFillFindData pFillFindData,
 	}
 
 	int result2;
-	if ((result2 = parseFSTree(defaultSubvol, FSOP_DIR_LIST, &objectID, NULL, NULL, &dirList, NULL)) != 0)
+	if ((result2 = parseFSTree(mountedSubvol, FSOP_DIR_LIST, &objectID, NULL, NULL, &dirList, NULL)) != 0)
 	{
 		ReleaseMutex(hBigDokanLock);
 		printf("btrfsFindFiles: parseFSTree with FSOP_DIR_LIST returned %d! [%S]\n", result2, pathName);

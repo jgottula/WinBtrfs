@@ -19,11 +19,12 @@
 #include "util.h"
 
 extern BtrfsSuperblock super;
-extern BtrfsObjID defaultSubvol;
+extern BtrfsObjID mountedSubvol;
 
 std::vector<KeyedItem> rootTree;
 
-void parseRootTreeRec(unsigned __int64 addr, RTOperation operation)
+void parseRootTreeRec(unsigned __int64 addr, RTOperation operation, void *input1, void *output1,
+	int *returnCode, bool *shortCircuit)
 {
 	unsigned char *nodeBlock, *nodePtr;
 	BtrfsHeader *header;
@@ -222,13 +223,35 @@ void parseRootTreeRec(unsigned __int64 addr, RTOperation operation)
 				{
 					BtrfsDirItem *dirItem = (BtrfsDirItem *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset));
 					
-					defaultSubvol = (BtrfsObjID)endian64(dirItem->child.objectID);
+					mountedSubvol = (BtrfsObjID)endian64(dirItem->child.objectID);
 
-					return;
+					*returnCode = 0;
+					*shortCircuit = true;
+				}
+			}
+			else if (operation == RTOP_GET_SUBVOL_ID)
+			{
+				const char *name = (const char *)input1;
+				BtrfsObjID *subvolID = (BtrfsObjID *)output1;
+				
+				if (item->key.type == TYPE_ROOT_REF && endian64(item->key.objectID) == OBJID_FS_TREE)
+				{
+					BtrfsRootRef *rootRef = (BtrfsRootRef *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset));
+					
+					if (strncmp(name, rootRef->name, endian16(rootRef->n)) == 0)
+					{
+						*subvolID = (BtrfsObjID)endian64(item->key.offset);
+
+						*returnCode = 0;
+						*shortCircuit = true;
+					}
 				}
 			}
 			else
 				printf("parseRootTreeRec: unknown operation (0x%02x)!\n", operation);
+
+			if (*shortCircuit)
+				break;
 
 			nodePtr += sizeof(BtrfsItem);
 		}
@@ -252,7 +275,11 @@ void parseRootTreeRec(unsigned __int64 addr, RTOperation operation)
 			BtrfsKeyPtr *keyPtr = (BtrfsKeyPtr *)nodePtr;
 
 			/* recurse down one level of the tree */
-			parseRootTreeRec(endian64(keyPtr->blockNum), operation);
+			parseRootTreeRec(endian64(keyPtr->blockNum), operation, input1, output1,
+				returnCode, shortCircuit);
+
+			if (*shortCircuit)
+				break;
 
 			nodePtr += sizeof(BtrfsKeyPtr);
 		}
@@ -261,7 +288,23 @@ void parseRootTreeRec(unsigned __int64 addr, RTOperation operation)
 	free(nodeBlock);
 }
 
-void parseRootTree(RTOperation operation)
+int parseRootTree(RTOperation operation, void *input1, void *output1)
 {
-	parseRootTreeRec(endian64(super.rootTreeLAddr), operation);
+	int returnCode;
+	bool shortCircuit = false;
+	
+	switch (operation)
+	{
+	case RTOP_LOAD:			// always succeeds
+	case RTOP_DUMP_TREE:	// always succeeds
+		returnCode = 0;
+		break;
+	default:
+		returnCode = 0x1;	// 1 bit = 1 part MUST be fulfilled
+	}
+	
+	parseRootTreeRec(endian64(super.rootTreeLAddr), operation, input1, output1,
+		&returnCode, &shortCircuit);
+
+	return returnCode;
 }

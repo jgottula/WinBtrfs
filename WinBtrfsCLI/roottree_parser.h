@@ -13,4 +13,4 @@
 
 #include "structures.h"
 
-void parseRootTree(RTOperation operation);
+int parseRootTree(RTOperation operation, void *input1, void *output1);
