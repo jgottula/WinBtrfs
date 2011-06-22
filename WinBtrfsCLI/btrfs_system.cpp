@@ -480,13 +480,35 @@ void parseRootTreeRec(unsigned __int64 addr, RTOperation operation)
 					break;
 				}
 				case TYPE_ROOT_BACKREF:
-					printf("  [%02x] ROOT_BACKREF subtree: 0x%I64x tree: 0x%I64x\n", i, endian64(item->key.objectID),
-						endian64(item->key.offset));
+				{
+					BtrfsRootBackref *rootBackref = (BtrfsRootBackref *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset));
+					size_t len = endian16(rootBackref->n);
+					char *name = new char[len + 1];
+
+					memcpy(name, rootBackref->name, len);
+					name[len] = 0;
+					
+					printf("  [%02x] ROOT_BACKREF subtree: 0x%I64x -> '%s' tree: 0x%I64x\n", i,
+						endian64(item->key.objectID), name, endian64(item->key.offset));
+
+					delete[] name;
 					break;
+				}
 				case TYPE_ROOT_REF:
-					printf("  [%02x] ROOT_REF tree: 0x%I64x subtree: 0x%I64x\n", i, endian64(item->key.objectID),
-						endian64(item->key.offset));
+				{
+					BtrfsRootRef *rootRef = (BtrfsRootRef *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset));
+					size_t len = endian16(rootRef->n);
+					char *name = new char[len + 1];
+
+					memcpy(name, rootRef->name, len);
+					name[len] = 0;
+					
+					printf("  [%02x] ROOT_REF tree: 0x%I64x subtree: 0x%I64x -> '%s'\n", i,
+						endian64(item->key.objectID), endian64(item->key.offset), name);
+
+					delete[] name;
 					break;
+				}
 				default:
 					printf("  [%02x] unknown {0x%I64x|0x%02x|0x%I64x}\n", i, endian64(item->key.objectID),
 						item->key.type, endian64(item->key.offset));
