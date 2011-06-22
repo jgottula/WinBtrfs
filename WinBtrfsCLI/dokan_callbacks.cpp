@@ -70,10 +70,11 @@ int DOKAN_CALLBACK btrfsCreateFile(LPCWSTR fileName, DWORD desiredAccess, DWORD 
 		return -ERROR_FILE_NOT_FOUND;
 	}
 
-	if (parseFSTree(defaultSubvol, FSOP_GET_FILE_PKG, &objectID, NULL, NULL, &filePkg, NULL) != 0)
+	int result2;
+	if ((result2 = parseFSTree(defaultSubvol, FSOP_GET_FILE_PKG, &objectID, NULL, NULL, &filePkg, NULL)) != 0)
 	{
 		ReleaseMutex(hBigDokanLock);
-		printf("btrfsCreateFile: parseFSTree with FSOP_GET_FILE_PKG failed! [%S]\n", fileName);
+		printf("btrfsCreateFile: parseFSTree with FSOP_GET_FILE_PKG returned %d! [%S]\n", result2, fileName);
 		return -ERROR_FILE_NOT_FOUND;
 	}
 	
@@ -131,10 +132,11 @@ int DOKAN_CALLBACK btrfsOpenDirectory(LPCWSTR fileName, PDOKAN_FILE_INFO info)
 		return -ERROR_FILE_NOT_FOUND;
 	}
 
-	if (parseFSTree(defaultSubvol, FSOP_GET_FILE_PKG, &objectID, NULL, NULL, &filePkg, NULL) != 0)
+	int result2;
+	if ((result2 = parseFSTree(defaultSubvol, FSOP_GET_FILE_PKG, &objectID, NULL, NULL, &filePkg, NULL)) != 0)
 	{
 		ReleaseMutex(hBigDokanLock);
-		printf("btrfsOpenDirectory: parseFSTree with FSOP_GET_FILE_PKG failed! [%S]\n", fileName);
+		printf("btrfsOpenDirectory: parseFSTree with FSOP_GET_FILE_PKG returned %d! [%S]\n", result2, fileName);
 		return -ERROR_FILE_NOT_FOUND;
 	}
 	
@@ -407,10 +409,11 @@ int DOKAN_CALLBACK btrfsFindFiles(LPCWSTR pathName, PFillFindData pFillFindData,
 		return -ERROR_SEM_TIMEOUT; // error code looks sketchy
 	}
 
-	if (parseFSTree(defaultSubvol, FSOP_DIR_LIST, &objectID, NULL, NULL, &dirList, NULL) != 0)
+	int result2;
+	if ((result2 = parseFSTree(defaultSubvol, FSOP_DIR_LIST, &objectID, NULL, NULL, &dirList, NULL)) != 0)
 	{
 		ReleaseMutex(hBigDokanLock);
-		printf("btrfsFindFiles: parseFSTree with FSOP_DIR_LIST failed! [%S]\n", pathName);
+		printf("btrfsFindFiles: parseFSTree with FSOP_DIR_LIST returned %d! [%S]\n", result2, pathName);
 		return -ERROR_PATH_NOT_FOUND; // probably not an adequate error code
 	}
 	
