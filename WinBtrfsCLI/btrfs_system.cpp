@@ -1010,7 +1010,7 @@ int parseFSTree(FSOperation operation, void *input1, void *input2, void *input3,
 	if (operation == FSOP_DUMP_TREE && input1 != NULL)
 		addr = *((unsigned __int64 *)input1);
 	else
-		addr = getTreeRootAddr(OBJID_FS_TREE);
+		addr = getTreeRootAddr(defaultSubvol);
 	
 	parseFSTreeRec(addr, operation, input1, input2, input3, output1, output2,
 		(operation == FSOP_DIR_LIST ? &inode : NULL), &returnCode, &shortCircuit);

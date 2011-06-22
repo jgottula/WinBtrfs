@@ -111,6 +111,7 @@ void firstTasks()
 	
 	if (!noDump) parseRootTree(RTOP_DUMP_TREE);
 	parseRootTree(RTOP_LOAD);
+	parseRootTree(RTOP_DEFAULT_SUBVOL);
 	
 	if (!noDump)
 	{
