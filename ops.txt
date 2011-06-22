@@ -9,7 +9,13 @@ Root tree ops
 
 RTOP_LOAD: Loads items from the root tree into the rootTree vector
 RTOP_DUMP_TREE: Dumps the entire root tree to stdout
-RTOP_DEFAULT_SUBVOL: Finds the default subvolume
+RTOP_DEFAULT_SUBVOL: Finds and mounts the default subvolume
+
+RTOP_GET_SUBVOL_ID: Returns the object ID for a given subvolume name
+Inputs:
+[1] const char *				subvolume name
+Outputs:
+[1] BtrfsObjID *				ptr to subvol's object ID
 
 FS tree ops
 
@@ -19,7 +25,7 @@ Inputs:
 [2] const unsigned int *		ptr to hash of the child file/dir's name
 [3] const char *				child file/dir's name
 Outputs:
-[1] BtrfsObjID *				child's object ID
+[1] BtrfsObjID *				ptr to child's object ID
 
 FSOP_DUMP_TREE: Dumps the entire FS tree to stdout
 
