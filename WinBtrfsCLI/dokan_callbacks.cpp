@@ -357,6 +357,7 @@ int DOKAN_CALLBACK btrfsGetFileInformation(LPCWSTR fileName, LPBY_HANDLE_FILE_IN
 	buffer->dwFileAttributes = 0;
 	if (endian32(it->inode.stMode) & S_IFBLK) buffer->dwFileAttributes |= FILE_ATTRIBUTE_DEVICE; // is this right?
 	if (endian32(it->inode.stMode) & S_IFDIR) buffer->dwFileAttributes |= FILE_ATTRIBUTE_DIRECTORY;
+	if (!(endian32(it->inode.stMode) & S_IWUSR)) buffer->dwFileAttributes |= FILE_ATTRIBUTE_READONLY; // using owner perms
 	if (it->hidden) buffer->dwFileAttributes |= FILE_ATTRIBUTE_HIDDEN;
 
 	/* not sure if this is necessary, but it seems to be what you're supposed to do */
