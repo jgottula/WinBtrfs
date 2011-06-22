@@ -10,7 +10,6 @@ Esoteric Btrfs stuff (add a README faq for "which Btrfs features are supported")
 — Compression (zlib)
 — Subvolumes
 — Multi-drive volumes
-— Converted ext4 fs
 — Extended attributes?
 — Preallocated files (torrents maybe)
 Concurrent callback support (threadsafety)

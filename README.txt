@@ -23,7 +23,7 @@ Justin Gottula began development on WinBtrfs in May 2011 as a result of the obse
 
 [03] In its current version, what can WinBtrfs do? What can't it do?
 
-As of 2011.06.22, WinBtrfs can load a single-device Btrfs volume (from the command line), display information such as the drive label and free space in the Drive Properties dialog, perform both command-line and GUI directory listings, report file information (such as file size and attributes), and read file contents. WinBtrfs will also automatically detect which subvolume is the default one and mount it as the root directory. However, if subvolumes are mounted below the root directory, directory listings are known to fail, as development concerning subvolumes is ongoing. There is no installer or GUI at this time. Multi-drive volumes currently will not work. Compression won't work either. Brtfs volumes that were converted from ext4 have not yet been tested, so they most likely do not work with WinBtrfs. Any and all features of WinBtrfs may be buggy, especially those most recently implemented. Also, the more unusual your particular situation, the more likely you will encounter a bug that the developer has not run across.
+As of 2011.06.22, WinBtrfs can load a single-device Btrfs volume (from the command line), display information such as the drive label and free space in the Drive Properties dialog, perform both command-line and GUI directory listings, report file information (such as file size and attributes), and read file contents. WinBtrfs will also automatically detect which subvolume is the default one and mount it as the root directory. However, if subvolumes are mounted below the root directory, directory listings are known to fail, as development concerning subvolumes is ongoing. There is no installer or GUI at this time. Multi-drive volumes currently will not work. Compression won't work either. Brtfs volumes that were converted from ext4 will work as soon as subvolumes are fully supported. Any and all features of WinBtrfs may be buggy, especially those most recently implemented. Also, the more unusual your particular situation, the more likely you will encounter a bug that the developer has not run across.
 
 
 [04] What dependencies are required for WinBtrfs?
@@ -59,7 +59,6 @@ The following items will be developed in approximately this order:
 — Snapshot handling
 — Data compression support
 — Multi-drive volume support
-— Converted ext4 volume support
 — GUI
 — Installer
 — Multithreading
