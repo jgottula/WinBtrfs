@@ -18,9 +18,6 @@
 #include "endian.h"
 #include "util.h"
 
-extern BtrfsSuperblock super;
-extern BtrfsObjID defaultSubvol;
-
 void parseFSTreeRec(unsigned __int64 addr, FSOperation operation, void *input1, void *input2, void *input3,
 	void *output1, void *output2, void *temp, int *returnCode, bool *shortCircuit)
 {

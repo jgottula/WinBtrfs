@@ -19,7 +19,6 @@
 #include "util.h"
 
 extern BtrfsSuperblock super;
-extern BtrfsObjID defaultSubvol;
 
 std::vector<KeyedItem> chunkTree;
 
