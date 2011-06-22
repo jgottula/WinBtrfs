@@ -564,7 +564,7 @@ void parseFSTreeRec(unsigned __int64 addr, FSOperation operation, void *input1, 
 						}
 						
 						/* advance to the next DIR_ITEM if there are more */
-						if (endian32(item->size) > (dirItem - firstDirItem) + sizeof(BtrfsDirItem) +
+						if (endian32(item->size) > ((char *)dirItem - (char *)firstDirItem) + sizeof(BtrfsDirItem) +
 							endian16(dirItem->m) + endian16(dirItem->n))
 						{
 							dirItem = (BtrfsDirItem *)((unsigned char *)dirItem + sizeof(BtrfsDirItem) +
@@ -708,7 +708,7 @@ void parseFSTreeRec(unsigned __int64 addr, FSOperation operation, void *input1, 
 						}
 						
 						/* advance to the next DIR_ITEM if there are more */
-						if (endian32(item->size) > (dirItem - firstDirItem) + sizeof(BtrfsDirItem) +
+						if (endian32(item->size) > ((char *)dirItem - (char *)firstDirItem) + sizeof(BtrfsDirItem) +
 							endian16(dirItem->m) + endian16(dirItem->n))
 						{
 							dirItem = (BtrfsDirItem *)((unsigned char *)dirItem + sizeof(BtrfsDirItem) +
@@ -811,7 +811,7 @@ void parseFSTreeRec(unsigned __int64 addr, FSOperation operation, void *input1, 
 						}
 						
 						/* advance to the next DIR_ITEM if there are more */
-						if (endian32(item->size) > (dirItem - firstDirItem) + sizeof(BtrfsDirItem) +
+						if (endian32(item->size) > ((char *)dirItem - (char *)firstDirItem) + sizeof(BtrfsDirItem) +
 							endian16(dirItem->m) + endian16(dirItem->n))
 						{
 							dirItem = (BtrfsDirItem *)((unsigned char *)dirItem + sizeof(BtrfsDirItem) +
