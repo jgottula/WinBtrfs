@@ -117,7 +117,13 @@ DWORD BlockReader::cachedRead(unsigned __int64 addr, AddrType type, unsigned __i
 		CacheNode& cNode = *it;
 
 		cNode.numReads++;
-
+		
+		/* ideally, the number of reads (the value by which these nodes are sorted) would be
+			a sliding window of the past "n" reads (for some good value of n) rather than an
+			infinitely incrementing value. in its current state, if a ton of reads come from
+			one place and hog up the cache, and later, reads are all coming from elsewhere,
+			the earlier reads will crowd out the later ones */
+		/* sort the array */
 		for (std::list<CacheNode>::iterator itS = nodeArr.begin(); itS != it; ++itS)
 		{
 			if (itS->numReads < cNode.numReads) // this node needs to be moved up
