@@ -12,7 +12,6 @@
  */
 
 #include <Windows.h>
-#include "constants.h"
 #include "structures.h"
 
 void convertTime(BtrfsTime *bTime, PFILETIME wTime);

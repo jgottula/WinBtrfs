@@ -11,6 +11,9 @@
  * any later version.
  */
 
+#include <Windows.h>
+#include <dokan.h>
+
 DWORD setupBigDokanLock();
 int DOKAN_CALLBACK btrfsCreateFile(LPCWSTR fileName, DWORD desiredAccess, DWORD shareMode, DWORD creationDisposition,
 	DWORD flagsAndAttributes, PDOKAN_FILE_INFO info);
