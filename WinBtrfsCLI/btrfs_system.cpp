@@ -27,6 +27,7 @@ BlockReader *blockReader;
 BtrfsSuperblock super;
 std::vector<BtrfsSBChunk *> sbChunks; // using an array of ptrs because BtrfsSBChunk is variably sized
 std::vector<KeyedItem> chunkTree, rootTree;
+BtrfsObjID defaultSubvol = (BtrfsObjID)0;
 
 DWORD init()
 {
@@ -513,6 +514,17 @@ void parseRootTreeRec(unsigned __int64 addr, RTOperation operation)
 					printf("  [%02x] unknown {0x%I64x|0x%02x|0x%I64x}\n", i, endian64(item->key.objectID),
 						item->key.type, endian64(item->key.offset));
 					break;
+				}
+			}
+			else if (operation == RTOP_DEFAULT_SUBVOL)
+			{
+				if (item->key.type == TYPE_DIR_ITEM && endian64(item->key.objectID) == OBJID_ROOT_TREE_DIR)
+				{
+					BtrfsDirItem *dirItem = (BtrfsDirItem *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset));
+					
+					defaultSubvol = (BtrfsObjID)endian64(dirItem->child.objectID);
+
+					return;
 				}
 			}
 			else

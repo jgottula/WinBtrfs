@@ -95,7 +95,8 @@ enum CTOperation
 enum RTOperation
 {
 	RTOP_LOAD,
-	RTOP_DUMP_TREE
+	RTOP_DUMP_TREE,
+	RTOP_DEFAULT_SUBVOL
 };
 
 /* FS tree operations */

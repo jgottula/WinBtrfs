@@ -9,6 +9,7 @@ Root tree ops
 
 RTOP_LOAD: Loads items from the root tree into the rootTree vector
 RTOP_DUMP_TREE: Dumps the entire root tree to stdout
+RTOP_DEFAULT_SUBVOL: Finds the default subvolume
 
 FS tree ops
 
