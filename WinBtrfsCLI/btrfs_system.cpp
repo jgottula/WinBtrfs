@@ -11,10 +11,7 @@
  * any later version.
  */
 
-#include <cstdio>
-#include <cassert>
 #include <vector>
-#include "constants.h"
 #include "util.h"
 #include "endian.h"
 #include "crc32c.h"

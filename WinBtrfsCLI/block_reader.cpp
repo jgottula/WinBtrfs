@@ -11,8 +11,6 @@
  * any later version.
  */
 
-#include <cassert>
-#include "constants.h"
 #include "btrfs_system.h"
 #include "block_reader.h"
 

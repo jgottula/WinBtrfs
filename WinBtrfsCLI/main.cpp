@@ -11,13 +11,8 @@
  * any later version.
  */
 
-#include <cstdio>
 #include <cassert>
 #include <vector>
-#include <Windows.h>
-#include <dokan.h>
-#include "constants.h"
-#include "structures.h"
 #include "endian.h"
 #include "btrfs_system.h"
 #include "chunktree_parser.h"

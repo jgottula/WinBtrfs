@@ -13,7 +13,6 @@
 
 #include <cstdio>
 #include <cassert>
-#include <vector>
 #include "endian.h"
 #include "util.h"
 #include "btrfs_system.h"

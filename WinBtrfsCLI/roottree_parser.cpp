@@ -11,7 +11,6 @@
  * any later version.
  */
 
-#include <cstdio>
 #include <cassert>
 #include <vector>
 #include "endian.h"
