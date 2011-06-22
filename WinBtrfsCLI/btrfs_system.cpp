@@ -222,7 +222,6 @@ void parseChunkTreeRec(unsigned __int64 addr, CTOperation operation)
 				{
 				case TYPE_DEV_ITEM:
 					assert(endian32(item->size) == sizeof(BtrfsDevItem)); // ensure proper size
-					assert(sizeof(BtrfsHeader) + endian32(item->offset) + endian32(item->size) <= endian32(super.nodeSize)); // ensure we're within bounds
 
 					memcpy(&itemP.item, item, sizeof(BtrfsItem));
 					itemP.data = malloc(endian32(item->size));
@@ -232,7 +231,6 @@ void parseChunkTreeRec(unsigned __int64 addr, CTOperation operation)
 					break;
 				case TYPE_CHUNK_ITEM:
 					assert((endian32(item->size) - sizeof(BtrfsChunkItem)) % sizeof(BtrfsChunkItemStripe) == 0); // ensure proper 30+20n size
-					assert(sizeof(BtrfsHeader) + endian32(item->offset) + endian32(item->size) <= endian32(super.nodeSize)); // ensure we're within bounds
 
 					temp = (unsigned short *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset) + 0x2c);
 
@@ -349,14 +347,10 @@ void parseRootTreeRec(unsigned __int64 addr, RTOperation operation)
 
 			if (operation == RTOP_LOAD)
 			{
-				/* note to me later: remember to be careful with DIR_ITEM because of variable length */
-				
 				switch (item->key.type)
 				{
 				case TYPE_INODE_ITEM:
 					assert(endian32(item->size) == sizeof(BtrfsInodeItem)); // ensure proper size
-					assert(sizeof(BtrfsHeader) + endian32(item->offset) + endian32(item->size)
-						<= endian32(super.nodeSize)); // ensure we're within bounds
 
 					memcpy(&itemP.item, item, sizeof(BtrfsItem));
 					itemP.data = malloc(endian32(item->size));
@@ -366,8 +360,6 @@ void parseRootTreeRec(unsigned __int64 addr, RTOperation operation)
 					break;
 				case TYPE_INODE_REF:
 					assert(endian32(item->size) >= sizeof(BtrfsInodeRef)); // ensure proper size range
-					assert(sizeof(BtrfsHeader) + endian32(item->offset) + endian32(item->size)
-						<= endian32(super.nodeSize)); // ensure we're within bounds
 
 					memcpy(&itemP.item, item, sizeof(BtrfsItem));
 					itemP.data = malloc(endian32(item->size));
@@ -378,8 +370,6 @@ void parseRootTreeRec(unsigned __int64 addr, RTOperation operation)
 				case TYPE_DIR_ITEM:
 				{
 					assert(endian32(item->size) >= sizeof(BtrfsDirItem)); // ensure proper size range
-					assert(sizeof(BtrfsHeader) + endian32(item->offset) + endian32(item->size)
-						<= endian32(super.nodeSize)); // ensure we're within bounds
 
 					memcpy(&itemP.item, item, sizeof(BtrfsItem));
 					itemP.data = malloc(endian32(item->size));
@@ -390,8 +380,6 @@ void parseRootTreeRec(unsigned __int64 addr, RTOperation operation)
 				}
 				case TYPE_ROOT_ITEM:
 					assert(endian32(item->size) == sizeof(BtrfsRootItem)); // ensure proper size
-					assert(sizeof(BtrfsHeader) + endian32(item->offset) + endian32(item->size)
-						<= endian32(super.nodeSize)); // ensure we're within bounds
 
 					memcpy(&itemP.item, item, sizeof(BtrfsItem));
 					itemP.data = malloc(endian32(item->size));
@@ -401,8 +389,6 @@ void parseRootTreeRec(unsigned __int64 addr, RTOperation operation)
 					break;
 				case TYPE_ROOT_BACKREF:
 					assert(endian32(item->size) >= sizeof(BtrfsRootBackref)); // ensure proper size range
-					assert(sizeof(BtrfsHeader) + endian32(item->offset) + endian32(item->size)
-						<= endian32(super.nodeSize)); // ensure we're within bounds
 
 					memcpy(&itemP.item, item, sizeof(BtrfsItem));
 					itemP.data = malloc(endian32(item->size));
@@ -412,8 +398,6 @@ void parseRootTreeRec(unsigned __int64 addr, RTOperation operation)
 					break;
 				case TYPE_ROOT_REF:
 					assert(endian32(item->size) >= sizeof(BtrfsRootRef)); // ensure proper size range
-					assert(sizeof(BtrfsHeader) + endian32(item->offset) + endian32(item->size)
-						<= endian32(super.nodeSize)); // ensure we're within bounds
 
 					memcpy(&itemP.item, item, sizeof(BtrfsItem));
 					itemP.data = malloc(endian32(item->size));
@@ -467,7 +451,8 @@ void parseRootTreeRec(unsigned __int64 addr, RTOperation operation)
 
 					printf("  [%02x] DIR_ITEM parent: 0x%I64x hash: 0x%08I64x child: 0x%I64x -> '%s'\n", i,
 						endian64(item->key.objectID), endian64(item->key.offset), endian64(dirItem->child.objectID), name);
-					
+					printf("FIX DIR_ITEM PARSING!\n");
+
 					delete[] name;
 					break;
 				}
@@ -563,15 +548,11 @@ void parseFSTreeRec(unsigned __int64 addr, FSOperation operation, void *input1, 
 				if (item->key.type == TYPE_DIR_ITEM && endian64(item->key.objectID) == *parentID &&
 					(unsigned int)(endian64(item->key.offset)) == *hash)
 				{
-					BtrfsDirItem *dirItem = (BtrfsDirItem *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset));
+					BtrfsDirItem *dirItem = (BtrfsDirItem *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset)),
+						*firstDirItem = dirItem;
 
 					while (true)
 					{
-						/* ensure that the variably sized item fits entirely in the node block */
-						assert((unsigned char *)dirItem + sizeof(BtrfsDirItem) <= (unsigned char *)nodeBlock + endian32(super.nodeSize) &&
-							(unsigned char *)dirItem + sizeof(BtrfsDirItem) + endian16(dirItem->m) + endian16(dirItem->n) <=
-							(unsigned char *)nodeBlock + endian32(super.nodeSize));
-					
 						if (endian16(dirItem->n) == strlen(name) && memcmp(dirItem->namePlusData, name, endian16(dirItem->n)) == 0)
 						{
 							/* found a match */
@@ -581,9 +562,10 @@ void parseFSTreeRec(unsigned __int64 addr, FSOperation operation, void *input1, 
 							*shortCircuit = true;
 							break;
 						}
-					
+						
 						/* advance to the next DIR_ITEM if there are more */
-						if (endian32(item->size) > sizeof(BtrfsDirItem) + endian16(dirItem->m) + endian16(dirItem->n))
+						if (endian32(item->size) > (dirItem - firstDirItem) + sizeof(BtrfsDirItem) +
+							endian16(dirItem->m) + endian16(dirItem->n))
 						{
 							dirItem = (BtrfsDirItem *)((unsigned char *)dirItem + sizeof(BtrfsDirItem) +
 								endian16(dirItem->m) + endian16(dirItem->n));
@@ -634,6 +616,7 @@ void parseFSTreeRec(unsigned __int64 addr, FSOperation operation, void *input1, 
 
 					printf("  [%02x] XATTR_ITEM 0x%I64x hash: 0x%08I64x name: '%s'\n", i, endian64(item->key.objectID),
 						endian64(item->key.offset), name);
+					printf("FIX XATTR_ITEM PARSING!\n");
 					
 					delete[] name;
 					break;
@@ -649,6 +632,7 @@ void parseFSTreeRec(unsigned __int64 addr, FSOperation operation, void *input1, 
 
 					printf("  [%02x] DIR_ITEM parent: 0x%I64x hash: 0x%08I64x child: 0x%I64x -> '%s'\n", i,
 						endian64(item->key.objectID), endian64(item->key.offset), endian64(dirItem->child.objectID), name);
+					printf("FIX DIR_ITEM PARSING!\n");
 					
 					delete[] name;
 					break;
@@ -698,9 +682,6 @@ void parseFSTreeRec(unsigned __int64 addr, FSOperation operation, void *input1, 
 				{
 					BtrfsInodeItem *inodeItem = (BtrfsInodeItem *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset));
 					
-					/* ensure that the item fits entirely in the node block */
-					assert((unsigned char *)inodeItem + sizeof(BtrfsInodeItem) <= (unsigned char *)nodeBlock + endian32(super.nodeSize));
-
 					memcpy(&(filePkg->inode), inodeItem, sizeof(BtrfsInodeItem));
 					
 					*returnCode &= ~0x1; // clear bit 0
@@ -710,15 +691,11 @@ void parseFSTreeRec(unsigned __int64 addr, FSOperation operation, void *input1, 
 				}
 				else if (item->key.type == TYPE_DIR_ITEM) // name & parent
 				{
-					BtrfsDirItem *dirItem = (BtrfsDirItem *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset));
+					BtrfsDirItem *dirItem = (BtrfsDirItem *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset)),
+						*firstDirItem = dirItem;
 					
 					while (true)
 					{
-						/* ensure that the variably sized item fits entirely in the node block */
-						assert((unsigned char *)dirItem + sizeof(BtrfsDirItem) <= (unsigned char *)nodeBlock + endian32(super.nodeSize) &&
-							(unsigned char *)dirItem + sizeof(BtrfsDirItem) + endian16(dirItem->m) + endian16(dirItem->n) <=
-							(unsigned char *)nodeBlock + endian32(super.nodeSize));
-						
 						if (endian64(dirItem->child.objectID) == *objectID) // parent info
 						{
 							memcpy(filePkg->name, dirItem->namePlusData,
@@ -731,7 +708,8 @@ void parseFSTreeRec(unsigned __int64 addr, FSOperation operation, void *input1, 
 						}
 						
 						/* advance to the next DIR_ITEM if there are more */
-						if (endian32(item->size) > sizeof(BtrfsDirItem) + endian16(dirItem->m) + endian16(dirItem->n))
+						if (endian32(item->size) > (dirItem - firstDirItem) + sizeof(BtrfsDirItem) +
+							endian16(dirItem->m) + endian16(dirItem->n))
 						{
 							dirItem = (BtrfsDirItem *)((unsigned char *)dirItem + sizeof(BtrfsDirItem) +
 								endian16(dirItem->m) + endian16(dirItem->n));
@@ -743,10 +721,6 @@ void parseFSTreeRec(unsigned __int64 addr, FSOperation operation, void *input1, 
 				else if (item->key.type == TYPE_EXTENT_DATA && item->key.objectID == *objectID) // extent information
 				{
 					BtrfsExtentData *extentData = (BtrfsExtentData *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset));
-
-					/* ensure that the item fits entirely in the node block */
-					assert((unsigned char *)extentData + sizeof(BtrfsInodeItem) <=
-						(unsigned char *)nodeBlock + endian32(super.nodeSize));
 
 					filePkg->extents = (ItemPlus *)realloc(filePkg->extents,
 						(filePkg->numExtents + 1) * sizeof(ItemPlus));
@@ -767,9 +741,6 @@ void parseFSTreeRec(unsigned __int64 addr, FSOperation operation, void *input1, 
 				{
 					BtrfsInodeItem *inodeItem = (BtrfsInodeItem *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset));
 					
-					/* ensure that the item fits entirely in the node block */
-					assert((unsigned char *)inodeItem + sizeof(BtrfsInodeItem) <= (unsigned char *)nodeBlock + endian32(super.nodeSize));
-
 					if (dirList->numEntries == (*objectID == OBJID_ROOT_DIR ? 0 : 1)) // no entries have been created yet
 					{
 						/* save this inode for later in case it happens to be the inode associated with '..' */
@@ -791,15 +762,11 @@ void parseFSTreeRec(unsigned __int64 addr, FSOperation operation, void *input1, 
 				}
 				else if (item->key.type == TYPE_DIR_ITEM) // allocate, ID, parent, name
 				{
-					BtrfsDirItem *dirItem = (BtrfsDirItem *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset));
+					BtrfsDirItem *dirItem = (BtrfsDirItem *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset)),
+						*firstDirItem = dirItem;
 					
 					while (true)
 					{
-						/* ensure that the variably sized item fits entirely in the node block */
-						assert((unsigned char *)dirItem + sizeof(BtrfsDirItem) <= (unsigned char *)nodeBlock + endian32(super.nodeSize) &&
-							(unsigned char *)dirItem + sizeof(BtrfsDirItem) + endian16(dirItem->m) + endian16(dirItem->n) <=
-							(unsigned char *)nodeBlock + endian32(super.nodeSize));
-						
 						if (endian64(item->key.objectID) == *objectID)
 						{
 							if (dirList->entries == NULL)
@@ -844,7 +811,8 @@ void parseFSTreeRec(unsigned __int64 addr, FSOperation operation, void *input1, 
 						}
 						
 						/* advance to the next DIR_ITEM if there are more */
-						if (endian32(item->size) > sizeof(BtrfsDirItem) + endian16(dirItem->m) + endian16(dirItem->n))
+						if (endian32(item->size) > (dirItem - firstDirItem) + sizeof(BtrfsDirItem) +
+							endian16(dirItem->m) + endian16(dirItem->n))
 						{
 							dirItem = (BtrfsDirItem *)((unsigned char *)dirItem + sizeof(BtrfsDirItem) +
 								endian16(dirItem->m) + endian16(dirItem->n));
