@@ -11,6 +11,7 @@
  * any later version.
  */
 
+#include "btrfs_operations.h"
 #include <Windows.h>
 #include "constants.h"
 #include "crc32c.h"
