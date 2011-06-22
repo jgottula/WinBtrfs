@@ -62,21 +62,21 @@ void firstTasks()
 
 	if ((errorCode = init()) != 0)
 	{
-		printf("Failed to get a handle on the partition! (GetLastError: %d)\n", errorCode);
+		printf("firstTasks: failed to get a handle on the partition! (GetLastError: %d)\n", errorCode);
 
 		exit(1);
 	}
 
 	if ((errorCode = setupBigDokanLock()) != 0)
 	{
-		printf("Failed to setup the Big Dokan Lock! (GetLastError: %d)\n", errorCode);
+		printf("firstTasks: failed to setup the Big Dokan Lock! (GetLastError: %d)\n", errorCode);
 
 		exit(1);
 	}
 
 	if ((errorCode = readPrimarySB()) != 0)
 	{
-		printf("Failed to read the primary superblock! (GetLastError: %d)\n", errorCode);
+		printf("firstTasks: failed to read the primary superblock! (GetLastError: %d)\n", errorCode);
 
 		cleanUp();
 		exit(1);
@@ -85,18 +85,18 @@ void firstTasks()
 	switch (validateSB(NULL))
 	{
 	case 0:
-		printf("Primary superblock is OK.\n");
+		printf("firstTasks: primary superblock is OK.\n");
 		break;
 	case 1:
-		printf("Superblock is missing or invalid!\n");
+		printf("firstTasks: superblock is missing or invalid!\n");
 		cleanUp();
 		exit(1);
 	case 2:
-		printf("Superblock checksum failed!\n");
+		printf("firstTasks: superblock checksum failed!\n");
 		cleanUp();
 		exit(1);
 	default:
-		printf("Superblock failed to validate for an unknown reason!\n");
+		printf("firstTasks: superblock failed to validate for an unknown reason!\n");
 		cleanUp();
 		exit(1);
 	}
