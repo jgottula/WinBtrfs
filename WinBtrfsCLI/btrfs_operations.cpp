@@ -18,6 +18,7 @@
 #include "crc32c.h"
 #include "endian.h"
 #include "btrfs_system.h"
+#include "btrfs_trees.h"
 
 extern BtrfsObjID defaultSubvol;
 

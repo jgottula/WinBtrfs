@@ -20,6 +20,7 @@
 #include "structures.h"
 #include "endian.h"
 #include "btrfs_system.h"
+#include "btrfs_trees.h"
 #include "dokan_callbacks.h"
 
 WCHAR devicePath[MAX_PATH], mountPoint[MAX_PATH];

@@ -24,6 +24,7 @@
 #include "btrfs_system.h"
 #include "btrfs_operations.h"
 #include "block_reader.h"
+#include "btrfs_trees.h"
 
 extern BlockReader *blockReader;
 extern BtrfsSuperblock super;
