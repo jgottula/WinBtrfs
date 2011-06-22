@@ -11,9 +11,9 @@
  * any later version.
  */
 
-#include <stdio.h>
-#include <string.h>
-#include <assert.h>
+#include <cstdio>
+#include <cstring>
+#include <cassert>
 #include <list>
 #include <Windows.h>
 #include <dokan.h>

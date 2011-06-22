@@ -11,7 +11,7 @@
  * any later version.
  */
 
-#include <assert.h>
+#include <cassert>
 #include "constants.h"
 #include "btrfs_system.h"
 #include "block_reader.h"

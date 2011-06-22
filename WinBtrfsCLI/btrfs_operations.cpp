@@ -11,7 +11,7 @@
  * any later version.
  */
 
-#include <assert.h>
+#include <cassert>
 #include <Windows.h>
 #include "constants.h"
 #include "structures.h"

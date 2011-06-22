@@ -11,8 +11,8 @@
  * any later version.
  */
 
-#include <stdio.h>
-#include <assert.h>
+#include <cstdio>
+#include <cassert>
 #include <Windows.h>
 #include "structures.h"
 #include "endian.h"

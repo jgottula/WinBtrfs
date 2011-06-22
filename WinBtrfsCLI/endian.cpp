@@ -11,8 +11,8 @@
  * any later version.
  */
 
+#include <cassert>
 #include <intrin.h>
-#include <assert.h>
 
 int archIsBigEndian = -1;
 

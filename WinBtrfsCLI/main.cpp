@@ -11,8 +11,8 @@
  * any later version.
  */
 
-#include <stdio.h>
-#include <assert.h>
+#include <cstdio>
+#include <cassert>
 #include <vector>
 #include <Windows.h>
 #include <dokan.h>
