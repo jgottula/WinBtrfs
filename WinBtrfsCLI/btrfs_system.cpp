@@ -14,8 +14,6 @@
 #include <cstdio>
 #include <cassert>
 #include <vector>
-#include <Windows.h>
-#include "structures.h"
 #include "constants.h"
 #include "util.h"
 #include "endian.h"

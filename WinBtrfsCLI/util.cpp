@@ -13,9 +13,8 @@
 
 #include <cstdio>
 #include <cassert>
-#include <Windows.h>
-#include "structures.h"
 #include "endian.h"
+#include "util.h"
 
 void convertTime(BtrfsTime *bTime, PFILETIME wTime)
 {

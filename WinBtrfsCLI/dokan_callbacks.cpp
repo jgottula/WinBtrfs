@@ -15,8 +15,6 @@
 #include <cstring>
 #include <cassert>
 #include <list>
-#include <Windows.h>
-#include <dokan.h>
 #include "constants.h"
 #include "structures.h"
 #include "endian.h"
@@ -27,6 +25,7 @@
 #include "chunktree_parser.h"
 #include "roottree_parser.h"
 #include "fstree_parser.h"
+#include "dokan_callbacks.h"
 
 extern BlockReader *blockReader;
 extern BtrfsSuperblock super;
