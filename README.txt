@@ -1,6 +1,6 @@
 WinBtrfs — Readme/FAQ
 
-Last updated 2011.06.18
+Last updated 2011.06.22
 
 
 NOTE: WinBtrfs is in NO WAY a finished product and is NOT ready for general use. At this time, it should only really be used by people interested in testing, experimentation, or development. See [03] below for details.
@@ -23,7 +23,7 @@ Justin Gottula began development on WinBtrfs in May 2011 as a result of the obse
 
 [03] In its current version, what can WinBtrfs do? What can't it do?
 
-As of 2011.06.18, WinBtrfs can load a Btrfs filesystem (from the command line), display information such as the drive label and free space in the Drive Properties dialog, perform directory listings, report file information (such as file size and attributes), and read files. There is no installer or GUI at this time. WinBtrfs is known to fail miserably on Btrfs filesystems that contain subvolumes because development on the handling of subvolumes is still a ways down the line. Multi-drive volumes will not work at this time. Compression won't work. Brtfs volumes that were converted from ext4 have not yet been tested, so they most likely do not work with WinBtrfs. The things that have been implemented most recently (file reading currently) are most likely to be buggy.
+As of 2011.06.22, WinBtrfs can load a single-device Btrfs volume (from the command line), display information such as the drive label and free space in the Drive Properties dialog, perform both command-line and GUI directory listings, report file information (such as file size and attributes), and read file contents. WinBtrfs will also automatically detect which subvolume is the default one and mount it as the root directory. However, if subvolumes are mounted below the root directory, directory listings are known to fail, as development concerning subvolumes is ongoing. There is no installer or GUI at this time. Multi-drive volumes currently will not work. Compression won't work either. Brtfs volumes that were converted from ext4 have not yet been tested, so they most likely do not work with WinBtrfs. Any and all features of WinBtrfs may be buggy, especially those most recently implemented. Also, the more unusual your particular situation, the more likely you will encounter a bug that the developer has not run across.
 
 
 [04] What dependencies are required for WinBtrfs?
