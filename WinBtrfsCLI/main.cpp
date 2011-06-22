@@ -49,6 +49,7 @@ DOKAN_OPERATIONS btrfsOperations = {
 	&btrfsSetFileSecurity
 };
 
+extern BtrfsObjID defaultSubvol;
 extern std::vector<KeyedItem> rootTree;
 
 bool noDump = false;
@@ -109,7 +110,9 @@ void firstTasks()
 	
 	if (!noDump) parseRootTree(RTOP_DUMP_TREE);
 	parseRootTree(RTOP_LOAD);
-	parseRootTree(RTOP_DEFAULT_SUBVOL);
+
+	if (defaultSubvol != (BtrfsObjID)0)
+		parseRootTree(RTOP_DEFAULT_SUBVOL);
 	
 	if (!noDump)
 	{
@@ -168,7 +171,8 @@ void usage()
 		"You can also specify an image file to mount.\n\n"
 		"The mount point can be a drive letter or an empty NTFS directory.\n\n"
 		"Options:\n"
-		"--no-dump       don't dump trees at startup\n");
+		"--no-dump       don't dump trees at startup\n"
+		"--subvol=n      mount the subvolume with the given object ID\n");
 
 	exit(1);
 }
@@ -221,6 +225,16 @@ int main(int argc, char **argv)
 	{
 		if (strcmp(argv[i], "--no-dump") == 0)
 			noDump = true;
+		else if (strncmp(argv[i], "--subvol", 8) == 0)
+		{
+			if (argv[i][8] == '=' && strlen(argv[i]) > 9)
+				defaultSubvol = (BtrfsObjID)atoi(argv[i] + 9);
+			else
+			{
+				printf("You used --subvol incorrectly!\n\n");
+				usage();
+			}
+		}
 		else
 		{
 			printf("'%s' is not a recognized command-line option!\n\n", argv[i]);
