@@ -440,18 +440,35 @@ void parseRootTreeRec(unsigned __int64 addr, RTOperation operation)
 				}
 				case TYPE_DIR_ITEM:
 				{
-					BtrfsDirItem *dirItem = (BtrfsDirItem *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset));
-					size_t len = endian16(dirItem->n);
-					char *name = new char[len + 1];
+					BtrfsDirItem *dirItem = (BtrfsDirItem *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset)),
+						*firstDirItem = dirItem;
 
-					memcpy(name, dirItem->namePlusData, len);
-					name[len] = 0;
+					while (true)
+					{
+						size_t len = endian16(dirItem->n);
+						char *name = new char[len + 1];
 
-					printf("  [%02x] DIR_ITEM parent: 0x%I64x hash: 0x%08I64x child: 0x%I64x -> '%s'\n", i,
-						endian64(item->key.objectID), endian64(item->key.offset), endian64(dirItem->child.objectID), name);
-					printf("FIX DIR_ITEM PARSING!\n");
+						memcpy(name, dirItem->namePlusData, len);
+						name[len] = 0;
 
-					delete[] name;
+						if (dirItem == firstDirItem)
+							printf("  [%02x] ", i);
+						else
+							printf("       ");
+						printf("DIR_ITEM parent: 0x%I64x hash: 0x%08I64x child: 0x%I64x -> '%s'\n",
+							endian64(item->key.objectID), endian64(item->key.offset), endian64(dirItem->child.objectID), name);
+						
+						delete[] name;
+						
+						/* advance to the next DIR_ITEM if there are more */
+						if (endian32(item->size) > ((char *)dirItem - (char *)firstDirItem) + sizeof(BtrfsDirItem) +
+							endian16(dirItem->m) + endian16(dirItem->n))
+							dirItem = (BtrfsDirItem *)((unsigned char *)dirItem + sizeof(BtrfsDirItem) +
+								endian16(dirItem->m) + endian16(dirItem->n));
+						else
+							break;
+					}
+
 					break;
 				}
 				case TYPE_ROOT_ITEM:
@@ -564,10 +581,8 @@ void parseFSTreeRec(unsigned __int64 addr, FSOperation operation, void *input1, 
 						/* advance to the next DIR_ITEM if there are more */
 						if (endian32(item->size) > ((char *)dirItem - (char *)firstDirItem) + sizeof(BtrfsDirItem) +
 							endian16(dirItem->m) + endian16(dirItem->n))
-						{
 							dirItem = (BtrfsDirItem *)((unsigned char *)dirItem + sizeof(BtrfsDirItem) +
 								endian16(dirItem->m) + endian16(dirItem->n));
-						}
 						else
 							break;
 					}
@@ -605,34 +620,70 @@ void parseFSTreeRec(unsigned __int64 addr, FSOperation operation, void *input1, 
 				}
 				case TYPE_XATTR_ITEM:
 				{
-					BtrfsDirItem *dirItem = (BtrfsDirItem *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset));
-					size_t len = endian16(dirItem->n);
-					char *name = new char[len + 1];
+					BtrfsDirItem *dirItem = (BtrfsDirItem *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset)),
+						*firstDirItem = dirItem;
 
-					memcpy(name, dirItem->namePlusData, len);
-					name[len] = 0;
+					while (true)
+					{
+						size_t len = endian16(dirItem->n);
+						char *name = new char[len + 1];
 
-					printf("  [%02x] XATTR_ITEM 0x%I64x hash: 0x%08I64x name: '%s'\n", i, endian64(item->key.objectID),
-						endian64(item->key.offset), name);
-					printf("FIX XATTR_ITEM PARSING!\n");
+						memcpy(name, dirItem->namePlusData, len);
+						name[len] = 0;
+
+						if (dirItem == firstDirItem)
+							printf("  [%02x] ", i);
+						else
+							printf("       ");
+						printf("XATTR_ITEM 0x%I64x hash: 0x%08I64x name: '%s'\n", endian64(item->key.objectID),
+							endian64(item->key.offset), name);
+						
+						delete[] name;
+						
+						/* advance to the next XATTR_ITEM if there are more */
+						if (endian32(item->size) > ((char *)dirItem - (char *)firstDirItem) + sizeof(BtrfsDirItem) +
+							endian16(dirItem->m) + endian16(dirItem->n))
+							dirItem = (BtrfsDirItem *)((unsigned char *)dirItem + sizeof(BtrfsDirItem) +
+								endian16(dirItem->m) + endian16(dirItem->n));
+						else
+							break;
+					}
 					
-					delete[] name;
 					break;
 				}
 				case TYPE_DIR_ITEM:
 				{
-					BtrfsDirItem *dirItem = (BtrfsDirItem *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset));
-					size_t len = endian16(dirItem->n);
-					char *name = new char[len + 1];
+					BtrfsDirItem *dirItem = (BtrfsDirItem *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset)),
+						*firstDirItem = dirItem;
 
-					memcpy(name, dirItem->namePlusData, len);
-					name[len] = 0;
+					while (true)
+					{
+						size_t len = endian16(dirItem->n);
+						char *name = new char[len + 1];
 
-					printf("  [%02x] DIR_ITEM parent: 0x%I64x hash: 0x%08I64x child: 0x%I64x -> '%s'\n", i,
-						endian64(item->key.objectID), endian64(item->key.offset), endian64(dirItem->child.objectID), name);
-					printf("FIX DIR_ITEM PARSING!\n");
+						memcpy(name, dirItem->namePlusData, len);
+						name[len] = 0;
+
+						if (dirItem == firstDirItem)
+							printf("  [%02x] ", i);
+						else
+							printf("       ");
+						printf("DIR_ITEM parent: 0x%I64x hash: 0x%08I64x child: 0x%I64x -> '%s'\n",
+							endian64(item->key.objectID), endian64(item->key.offset), endian64(dirItem->child.objectID), name);
+						
+						delete[] name;
+						
+						/* advance to the next DIR_ITEM if there are more */
+						if (endian32(item->size) > ((char *)dirItem - (char *)firstDirItem) + sizeof(BtrfsDirItem) +
+							endian16(dirItem->m) + endian16(dirItem->n))
+						{
+							dirItem = (BtrfsDirItem *)((unsigned char *)dirItem + sizeof(BtrfsDirItem) +
+								endian16(dirItem->m) + endian16(dirItem->n));
+						}
+						else
+							break;
+					}
 					
-					delete[] name;
 					break;
 				}
 				case TYPE_DIR_INDEX:
@@ -811,10 +862,8 @@ void parseFSTreeRec(unsigned __int64 addr, FSOperation operation, void *input1, 
 						/* advance to the next DIR_ITEM if there are more */
 						if (endian32(item->size) > ((char *)dirItem - (char *)firstDirItem) + sizeof(BtrfsDirItem) +
 							endian16(dirItem->m) + endian16(dirItem->n))
-						{
 							dirItem = (BtrfsDirItem *)((unsigned char *)dirItem + sizeof(BtrfsDirItem) +
 								endian16(dirItem->m) + endian16(dirItem->n));
-						}
 						else
 							break;
 					}
