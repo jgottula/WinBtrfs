@@ -54,7 +54,7 @@ void parseFSTreeRec(unsigned __int64 addr, FSOperation operation, void *input1, 
 
 					while (true)
 					{
-						if (endian16(dirItem->n) == strlen(name) && memcmp(dirItem->namePlusData, name, endian16(dirItem->n)) == 0)
+						if (endian16(dirItem->n) == strlen(name) && strncmp(dirItem->namePlusData, name, endian16(dirItem->n)) == 0)
 						{
 							/* found a match */
 							*childID = dirItem->child.objectID;
