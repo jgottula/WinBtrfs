@@ -26,7 +26,7 @@
 BlockReader *blockReader;
 BtrfsSuperblock super;
 std::vector<BtrfsSBChunk *> sbChunks; // using an array of ptrs because BtrfsSBChunk is variably sized
-std::vector<ItemPlus> chunkTree, rootTree;
+std::vector<KeyedItem> chunkTree, rootTree;
 
 DWORD init()
 {
@@ -58,16 +58,16 @@ unsigned __int64 logiToPhys(unsigned __int64 logiAddr, unsigned __int64 len)
 	size = chunkTree.size();
 	for (size_t i = 0; i < size; i++)
 	{
-		ItemPlus& itemP = chunkTree.at(i);
+		KeyedItem& kItem = chunkTree.at(i);
 
-		if (itemP.item.key.type == TYPE_CHUNK_ITEM)
+		if (kItem.key.type == TYPE_CHUNK_ITEM)
 		{
-			BtrfsChunkItem *chunkItem = (BtrfsChunkItem *)itemP.data;
+			BtrfsChunkItem *chunkItem = (BtrfsChunkItem *)kItem.data;
 
-			if (logiAddr >= itemP.item.key.offset && logiAddr + len <= itemP.item.key.offset + chunkItem->chunkSize)
+			if (logiAddr >= kItem.key.offset && logiAddr + len <= kItem.key.offset + chunkItem->chunkSize)
 				/* always using the zeroth stripe for now */
 				/* also assuming that everything is on the first device */
-				return (logiAddr - itemP.item.key.offset) + chunkItem->stripes[0].offset;
+				return (logiAddr - kItem.key.offset) + chunkItem->stripes[0].offset;
 		}
 	}
 
@@ -197,7 +197,7 @@ void parseChunkTreeRec(unsigned __int64 addr, CTOperation operation)
 	unsigned char *nodeBlock, *nodePtr;
 	BtrfsHeader *header;
 	BtrfsItem *item;
-	ItemPlus itemP;
+	KeyedItem kItem;
 	unsigned short *temp;
 	
 	nodeBlock = loadNode(addr, ADDR_LOGICAL, &header);
@@ -223,11 +223,11 @@ void parseChunkTreeRec(unsigned __int64 addr, CTOperation operation)
 				case TYPE_DEV_ITEM:
 					assert(endian32(item->size) == sizeof(BtrfsDevItem)); // ensure proper size
 
-					memcpy(&itemP.item, item, sizeof(BtrfsItem));
-					itemP.data = malloc(endian32(item->size));
-					memcpy(itemP.data, nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset), endian32(item->size));
+					memcpy(&kItem.key, &item->key, sizeof(BtrfsDiskKey));
+					kItem.data = malloc(endian32(item->size));
+					memcpy(kItem.data, nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset), endian32(item->size));
 
-					chunkTree.push_back(itemP);
+					chunkTree.push_back(kItem);
 					break;
 				case TYPE_CHUNK_ITEM:
 					assert((endian32(item->size) - sizeof(BtrfsChunkItem)) % sizeof(BtrfsChunkItemStripe) == 0); // ensure proper 30+20n size
@@ -237,11 +237,11 @@ void parseChunkTreeRec(unsigned __int64 addr, CTOperation operation)
 					/* check the ACTUAL size now that we have it */
 					assert(endian32(item->size) == sizeof(BtrfsChunkItem) + (*temp * sizeof(BtrfsChunkItemStripe)));
 
-					memcpy(&itemP.item, item, sizeof(BtrfsItem));
-					itemP.data = malloc(endian32(item->size));
-					memcpy(itemP.data, nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset), endian32(item->size));
+					memcpy(&kItem.key, &item->key, sizeof(BtrfsDiskKey));
+					kItem.data = malloc(endian32(item->size));
+					memcpy(kItem.data, nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset), endian32(item->size));
 
-					chunkTree.push_back(itemP);
+					chunkTree.push_back(kItem);
 					break;
 				default:
 					printf("parseChunkTreeRec: don't know how to load item of type 0x%02x!\n", item->key.type);
@@ -327,7 +327,7 @@ void parseRootTreeRec(unsigned __int64 addr, RTOperation operation)
 	unsigned char *nodeBlock, *nodePtr;
 	BtrfsHeader *header;
 	BtrfsItem *item;
-	ItemPlus itemP;
+	KeyedItem kItem;
 
 	nodeBlock = loadNode(addr, ADDR_LOGICAL, &header);
 
@@ -352,58 +352,56 @@ void parseRootTreeRec(unsigned __int64 addr, RTOperation operation)
 				case TYPE_INODE_ITEM:
 					assert(endian32(item->size) == sizeof(BtrfsInodeItem)); // ensure proper size
 
-					memcpy(&itemP.item, item, sizeof(BtrfsItem));
-					itemP.data = malloc(endian32(item->size));
-					memcpy(itemP.data, nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset), endian32(item->size));
+					memcpy(&kItem.key, &item->key, sizeof(BtrfsDiskKey));
+					kItem.data = malloc(endian32(item->size));
+					memcpy(kItem.data, nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset), endian32(item->size));
 
-					rootTree.push_back(itemP);
+					rootTree.push_back(kItem);
 					break;
 				case TYPE_INODE_REF:
 					assert(endian32(item->size) >= sizeof(BtrfsInodeRef)); // ensure proper size range
 
-					memcpy(&itemP.item, item, sizeof(BtrfsItem));
-					itemP.data = malloc(endian32(item->size));
-					memcpy(itemP.data, nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset), endian32(item->size));
+					memcpy(&kItem.key, &item->key, sizeof(BtrfsDiskKey));
+					kItem.data = malloc(endian32(item->size));
+					memcpy(kItem.data, nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset), endian32(item->size));
 
-					rootTree.push_back(itemP);
+					rootTree.push_back(kItem);
 					break;
 				case TYPE_DIR_ITEM:
-				{
 					assert(endian32(item->size) >= sizeof(BtrfsDirItem)); // ensure proper size range
 
-					memcpy(&itemP.item, item, sizeof(BtrfsItem));
-					itemP.data = malloc(endian32(item->size));
-					memcpy(itemP.data, nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset), endian32(item->size));
+					memcpy(&kItem.key, &item->key, sizeof(BtrfsDiskKey));
+					kItem.data = malloc(endian32(item->size));
+					memcpy(kItem.data, nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset), endian32(item->size));
 
-					rootTree.push_back(itemP);
+					rootTree.push_back(kItem);
 					break;
-				}
 				case TYPE_ROOT_ITEM:
 					assert(endian32(item->size) == sizeof(BtrfsRootItem)); // ensure proper size
 
-					memcpy(&itemP.item, item, sizeof(BtrfsItem));
-					itemP.data = malloc(endian32(item->size));
-					memcpy(itemP.data, nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset), endian32(item->size));
+					memcpy(&kItem.key, &item->key, sizeof(BtrfsDiskKey));
+					kItem.data = malloc(endian32(item->size));
+					memcpy(kItem.data, nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset), endian32(item->size));
 
-					rootTree.push_back(itemP);
+					rootTree.push_back(kItem);
 					break;
 				case TYPE_ROOT_BACKREF:
 					assert(endian32(item->size) >= sizeof(BtrfsRootBackref)); // ensure proper size range
 
-					memcpy(&itemP.item, item, sizeof(BtrfsItem));
-					itemP.data = malloc(endian32(item->size));
-					memcpy(itemP.data, nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset), endian32(item->size));
+					memcpy(&kItem.key, &item->key, sizeof(BtrfsDiskKey));
+					kItem.data = malloc(endian32(item->size));
+					memcpy(kItem.data, nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset), endian32(item->size));
 
-					rootTree.push_back(itemP);
+					rootTree.push_back(kItem);
 					break;
 				case TYPE_ROOT_REF:
 					assert(endian32(item->size) >= sizeof(BtrfsRootRef)); // ensure proper size range
 
-					memcpy(&itemP.item, item, sizeof(BtrfsItem));
-					itemP.data = malloc(endian32(item->size));
-					memcpy(itemP.data, nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset), endian32(item->size));
+					memcpy(&kItem.key, &item->key, sizeof(BtrfsDiskKey));
+					kItem.data = malloc(endian32(item->size));
+					memcpy(kItem.data, nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset), endian32(item->size));
 
-					rootTree.push_back(itemP);
+					rootTree.push_back(kItem);
 					break;
 				default:
 					printf("parseRootTreeRec: don't know how to load item of type 0x%02x!\n", item->key.type);
@@ -722,11 +720,11 @@ void parseFSTreeRec(unsigned __int64 addr, FSOperation operation, void *input1, 
 				{
 					BtrfsExtentData *extentData = (BtrfsExtentData *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset));
 
-					filePkg->extents = (ItemPlus *)realloc(filePkg->extents,
-						(filePkg->numExtents + 1) * sizeof(ItemPlus));
+					filePkg->extents = (KeyedItem *)realloc(filePkg->extents,
+						(filePkg->numExtents + 1) * sizeof(KeyedItem));
 					filePkg->extents[filePkg->numExtents].data = (BtrfsExtentData *)malloc(endian32(item->size));
 
-					memcpy(&(filePkg->extents[filePkg->numExtents].item), item, sizeof(BtrfsItem));
+					memcpy(&(filePkg->extents[filePkg->numExtents].key), &item->key, sizeof(BtrfsDiskKey));
 					memcpy(filePkg->extents[filePkg->numExtents].data, extentData, endian32(item->size));
 
 					filePkg->numExtents++;
@@ -894,7 +892,7 @@ int parseFSTree(FSOperation operation, void *input1, void *input2, void *input3,
 		filePkg->objectID = *objectID;
 
 		filePkg->numExtents = 0;
-		filePkg->extents = (ItemPlus *)malloc(0);
+		filePkg->extents = (KeyedItem *)malloc(0);
 
 		/* for the special case of the root dir, this stuff wouldn't get filled in by any other means */
 		if (*objectID == OBJID_ROOT_DIR)
@@ -977,11 +975,11 @@ unsigned __int64 getTreeRootAddr(BtrfsObjID tree)
 	size_t size = rootTree.size();
 	for (size_t i = 0; i < size; i++)
 	{
-		ItemPlus& itemP = rootTree.at(i);
+		KeyedItem& kItem = rootTree.at(i);
 
-		if (itemP.item.key.type == TYPE_ROOT_ITEM && endian64(itemP.item.key.objectID) == tree)
+		if (kItem.key.type == TYPE_ROOT_ITEM && endian64(kItem.key.objectID) == tree)
 		{
-			BtrfsRootItem *rootItem = (BtrfsRootItem *)itemP.data;
+			BtrfsRootItem *rootItem = (BtrfsRootItem *)kItem.data;
 
 			return endian64(rootItem->rootNodeBlockNum);
 		}

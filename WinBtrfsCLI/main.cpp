@@ -51,7 +51,7 @@ DOKAN_OPERATIONS btrfsOperations = {
 	&btrfsSetFileSecurity
 };
 
-extern std::vector<ItemPlus> rootTree;
+extern std::vector<KeyedItem> rootTree;
 
 bool noDump = false;
 
@@ -120,11 +120,11 @@ void firstTasks()
 		size_t size = rootTree.size();
 		for (size_t i = 0; i < size; i++)
 		{
-			ItemPlus& itemP = rootTree.at(i);
+			KeyedItem& kItem = rootTree.at(i);
 
-			if (itemP.item.key.type == TYPE_ROOT_REF && endian64(itemP.item.key.objectID) == OBJID_FS_TREE)
+			if (kItem.key.type == TYPE_ROOT_REF && endian64(kItem.key.objectID) == OBJID_FS_TREE)
 			{
-				unsigned __int64 addr = getTreeRootAddr((BtrfsObjID)endian64(itemP.item.key.offset));
+				unsigned __int64 addr = getTreeRootAddr((BtrfsObjID)endian64(kItem.key.offset));
 			
 				parseFSTree(FSOP_DUMP_TREE, &addr, NULL, NULL, NULL, NULL);
 			}

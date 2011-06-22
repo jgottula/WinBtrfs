@@ -222,7 +222,7 @@ int DOKAN_CALLBACK btrfsReadFile(LPCWSTR fileName, LPVOID buffer, DWORD numberOf
 	assert(it != end);
 
 	int numExtents = it->numExtents;
-	ItemPlus *extents = it->extents;
+	KeyedItem *extents = it->extents;
 
 	/* zero out the areas that don't get read in */
 	memset(buffer, 0, numberOfBytesToRead);
@@ -235,11 +235,11 @@ int DOKAN_CALLBACK btrfsReadFile(LPCWSTR fileName, LPVOID buffer, DWORD numberOf
 		BtrfsExtentData *extentData = (BtrfsExtentData *)extents[i].data;
 
 		/* does the requested range include the first byte of this extent? */
-		bool a = (endian64(extents[i].item.key.offset) >= offset &&
-			endian64(extents[i].item.key.offset) < offset + numberOfBytesToRead);
+		bool a = (endian64(extents[i].key.offset) >= offset &&
+			endian64(extents[i].key.offset) < offset + numberOfBytesToRead);
 		/* does the requested range include the last byte of this extent? */
-		bool b = (endian64(extents[i].item.key.offset) + endian64(extentData->n) - 1 >= offset &&
-			endian64(extents[i].item.key.offset) + endian64(extentData->n) - 1 < offset + numberOfBytesToRead);
+		bool b = (endian64(extents[i].key.offset) + endian64(extentData->n) - 1 >= offset &&
+			endian64(extents[i].key.offset) + endian64(extentData->n) - 1 < offset + numberOfBytesToRead);
 		
 		/* does the requested range start inside this extent? */
 		bool first = !a && b;
@@ -248,8 +248,8 @@ int DOKAN_CALLBACK btrfsReadFile(LPCWSTR fileName, LPVOID buffer, DWORD numberOf
 		/* does the requested range take up the entirety of this extent? */
 		bool span = a && b;
 		/* does the requested range fit entirely within this extent? */
-		bool within = (offset >= endian64(extents[i].item.key.offset) &&
-			offset + numberOfBytesToRead <= endian64(extents[i].item.key.offset) + endian64(extentData->n));
+		bool within = (offset >= endian64(extents[i].key.offset) &&
+			offset + numberOfBytesToRead <= endian64(extents[i].key.offset) + endian64(extentData->n));
 
 		if (first || last || span || within)
 		{
@@ -285,18 +285,18 @@ int DOKAN_CALLBACK btrfsReadFile(LPCWSTR fileName, LPVOID buffer, DWORD numberOf
 				}
 				else if (within)
 				{
-					from = offset - endian64(extents[i].item.key.offset);
+					from = offset - endian64(extents[i].key.offset);
 					len = numberOfBytesToRead;
 				}
 				else if (first)
 				{
-					from = offset - endian64(extents[i].item.key.offset);
-					len = extentData->n - (offset - endian64(extents[i].item.key.offset));
+					from = offset - endian64(extents[i].key.offset);
+					len = extentData->n - (offset - endian64(extents[i].key.offset));
 				}
 				else if (last)
 				{
 					from = 0;
-					len = (offset + numberOfBytesToRead) - endian64(extents[i].item.key.offset);
+					len = (offset + numberOfBytesToRead) - endian64(extents[i].key.offset);
 				}
 
 				if (!skipCopy)

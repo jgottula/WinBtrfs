@@ -258,9 +258,9 @@ struct BtrfsSuperblock
 	unsigned char			unused				[0x4d5];
 };
 
-struct ItemPlus
+struct KeyedItem
 {
-	BtrfsItem				item;
+	BtrfsDiskKey			key;
 	void					*data;
 };
 
@@ -276,7 +276,7 @@ struct FilePkg
 	BtrfsObjID				parentID; // not assigned by dir list
 	BtrfsInodeItem			inode;
 	int						numExtents; // not assigned by dir list
-	ItemPlus				*extents; // not assigned by dir list
+	KeyedItem				*extents; // not assigned by dir list
 	char					name[256];
 	bool					hidden;
 };
