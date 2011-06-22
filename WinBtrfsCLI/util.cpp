@@ -33,7 +33,7 @@ void uuidToStr(const unsigned char *uuid, char *dest)
 
 	strcpy(dest, "{");
 
-	for (int i = 0; i < 16; i++)
+	for (size_t i = 0; i < 16; i++)
 	{
 		if (i == 4 || i == 6 || i == 8 || i == 10)
 			strcat(dest, "-");

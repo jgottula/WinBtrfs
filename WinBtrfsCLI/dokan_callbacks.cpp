@@ -190,8 +190,8 @@ int DOKAN_CALLBACK btrfsCloseFile(LPCWSTR fileName, PDOKAN_FILE_INFO info)
 	assert(it != end);
 
 	/* free this stuff on the heap */
-	int numExtents = it->numExtents;
-	for (int i = 0; i < numExtents; i++)
+	size_t numExtents = it->numExtents;
+	for (size_t i = 0; i < numExtents; i++)
 		free(it->extents[i].data);
 	free(it->extents);
 
@@ -217,7 +217,7 @@ int DOKAN_CALLBACK btrfsReadFile(LPCWSTR fileName, LPVOID buffer, DWORD numberOf
 	/* failing to find the element is NOT an option */
 	assert(it != end);
 
-	int numExtents = it->numExtents;
+	size_t numExtents = it->numExtents;
 	KeyedItem *extents = it->extents;
 
 	/* zero out the areas that don't get read in */
@@ -226,7 +226,7 @@ int DOKAN_CALLBACK btrfsReadFile(LPCWSTR fileName, LPVOID buffer, DWORD numberOf
 	/* we'll read from this, so to be safe we'll set it first */
 	*numberOfBytesRead = 0;
 
-	for (int i = 0; i < numExtents; i++)
+	for (size_t i = 0; i < numExtents; i++)
 	{
 		BtrfsExtentData *extentData = (BtrfsExtentData *)extents[i].data;
 
@@ -416,7 +416,7 @@ int DOKAN_CALLBACK btrfsFindFiles(LPCWSTR pathName, PFillFindData pFillFindData,
 	
 	ReleaseMutex(hBigDokanLock);
 
-	for (int i = 0; i < dirList.numEntries; i++)
+	for (size_t i = 0; i < dirList.numEntries; i++)
 	{
 		/* TODO: extract this stuff out into a separate conversion function */
 		

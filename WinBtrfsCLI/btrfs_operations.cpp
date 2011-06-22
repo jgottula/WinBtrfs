@@ -20,7 +20,7 @@ extern BtrfsObjID defaultSubvol;
 
 void validatePath(const char *input, char *output)
 {
-	size_t i, c = 0, len = strlen(input);
+	size_t c = 0, len = strlen(input);
 
 	/* convert "" into "\\" */
 	if (len == 0)
@@ -34,7 +34,7 @@ void validatePath(const char *input, char *output)
 	if (input[0] != '\\')
 		output[c++] = '\\';
 
-	for (i = 0; i < len; i++)
+	for (size_t i = 0; i < len; i++)
 	{
 		/* don't copy over double/triple/n-tuple backslashes */
 		if (i == 0 || input[i] != '\\' || input[i - 1] != '\\')
@@ -49,15 +49,15 @@ void validatePath(const char *input, char *output)
 }
 
 /* path MUST be validated for this to work properly */
-int componentizePath(const char *path, char ***output)
+unsigned int componentizePath(const char *path, char ***output)
 {
-	size_t len = strlen(path), compLen = 0, i;
+	size_t len = strlen(path), compLen = 0;
 	int numComponents = 0, compIdx = 0, compC = 0;
 
 	if (len == 1 && path[0] == '\\')
 		return 0;
 
-	for (i = 0; i < len; i++)
+	for (size_t i = 0; i < len; i++)
 	{
 		if (path[i] == '\\')
 			numComponents++;
@@ -66,7 +66,7 @@ int componentizePath(const char *path, char ***output)
 	/* allocate the array of pointers */
 	*output = (char **)malloc(sizeof(char *) * numComponents);
 
-	for (i = 1; i < len; i++) // skip the first backslash
+	for (size_t i = 1; i < len; i++) // skip the first backslash
 	{
 		if (path[i] != '\\')
 			compLen++;
@@ -83,7 +83,7 @@ int componentizePath(const char *path, char ***output)
 
 	compIdx = 0;
 
-	for (i = 1; i < len; i++) // again, skip the first backslash
+	for (size_t i = 1; i < len; i++) // again, skip the first backslash
 	{
 		if (path[i] != '\\')
 		{
@@ -108,8 +108,8 @@ int getPathID(const char *path, BtrfsObjID *output)
 {
 	char vPath[MAX_PATH], **components;
 	BtrfsObjID parentID = OBJID_ROOT_DIR, childID;
+	unsigned int numComponents;
 	unsigned int hash;
-	int numComponents = -1;
 
 	validatePath(path, vPath);
 	numComponents = componentizePath(path, &components);

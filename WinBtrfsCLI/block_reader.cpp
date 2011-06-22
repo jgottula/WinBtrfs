@@ -179,8 +179,8 @@ void BlockReader::dump()
 	printf("BlockReader::dump: nodeArr.size() = %d cacheSize = %d\n", nodeArr.size(), cacheSize);
 	
 	std::list<CacheNode>::iterator it = nodeArr.begin(), end = nodeArr.end();
-	for (int i = 0; it != end; i++, ++it)
-		printf("%3d] numReads: %I64d size: %I64d physAddr: %I64x\n", i, it->numReads, it->size,
+	for (size_t i = 0; it != end; i++, ++it)
+		printf("%3lu] numReads: %I64d size: %I64d physAddr: %I64x\n", i, it->numReads, it->size,
 			it->physAddr);
 
 	printf("\n");

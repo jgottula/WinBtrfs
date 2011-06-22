@@ -35,7 +35,7 @@ void parseFSTreeRec(unsigned __int64 addr, FSOperation operation, void *input1, 
 
 	if (header->level == 0) // leaf node
 	{
-		for (int i = 0; i < endian32(header->nrItems); i++)
+		for (unsigned int i = 0; i < endian32(header->nrItems); i++)
 		{
 			item = (BtrfsItem *)nodePtr;
 
@@ -368,7 +368,7 @@ void parseFSTreeRec(unsigned __int64 addr, FSOperation operation, void *input1, 
 	{
 		if (operation == FSOP_DUMP_TREE)
 		{
-			for (int i = 0; i < endian32(header->nrItems); i++)
+			for (unsigned int i = 0; i < endian32(header->nrItems); i++)
 			{
 				BtrfsKeyPtr *keyPtr = (BtrfsKeyPtr *)(nodePtr + (sizeof(BtrfsKeyPtr) * i));
 
@@ -378,7 +378,7 @@ void parseFSTreeRec(unsigned __int64 addr, FSOperation operation, void *input1, 
 			}
 		}
 
-		for (int i = 0; i < endian32(header->nrItems); i++)
+		for (unsigned int i = 0; i < endian32(header->nrItems); i++)
 		{
 			BtrfsKeyPtr *keyPtr = (BtrfsKeyPtr *)nodePtr;
 
@@ -480,7 +480,7 @@ int parseFSTree(BtrfsObjID tree, FSOperation operation, void *input1, void *inpu
 
 		if (returnCode == 0)
 		{
-			for (int i = 0; i < dirList->numEntries; i++)
+			for (size_t i = 0; i < dirList->numEntries; i++)
 			{
 				if (dirList->entries[i].name[0] == '.' && strcmp(dirList->entries[i].name, ".") != 0 &&
 					strcmp(dirList->entries[i].name, "..") != 0)

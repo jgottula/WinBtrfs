@@ -42,7 +42,7 @@ void parseRootTreeRec(unsigned __int64 addr, RTOperation operation)
 
 	if (header->level == 0) // leaf node
 	{
-		for (int i = 0; i < endian32(header->nrItems); i++)
+		for (unsigned int i = 0; i < endian32(header->nrItems); i++)
 		{
 			item = (BtrfsItem *)nodePtr;
 
@@ -237,7 +237,7 @@ void parseRootTreeRec(unsigned __int64 addr, RTOperation operation)
 	{
 		if (operation == RTOP_DUMP_TREE)
 		{
-			for (int i = 0; i < endian32(header->nrItems); i++)
+			for (unsigned int i = 0; i < endian32(header->nrItems); i++)
 			{
 				BtrfsKeyPtr *keyPtr = (BtrfsKeyPtr *)(nodePtr + (sizeof(BtrfsKeyPtr) * i));
 
@@ -247,7 +247,7 @@ void parseRootTreeRec(unsigned __int64 addr, RTOperation operation)
 			}
 		}
 
-		for (int i = 0; i < endian32(header->nrItems); i++)
+		for (unsigned int i = 0; i < endian32(header->nrItems); i++)
 		{
 			BtrfsKeyPtr *keyPtr = (BtrfsKeyPtr *)nodePtr;
 

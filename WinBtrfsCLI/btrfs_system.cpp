@@ -164,7 +164,7 @@ void loadSBChunks(bool dump)
 			bgFlagsToStr((BlockGroupFlags)endian64(sbChunk->chunkItem.type), type);
 			printf("  CHUNK_ITEM size: 0x%I64x logi: 0x%I64x type: %s\n", endian64(sbChunk->chunkItem.chunkSize),
 				endian64(sbChunk->key.offset), type);
-			for (int i = 0; i < sbChunk->chunkItem.numStripes; i++)
+			for (unsigned short i = 0; i < sbChunk->chunkItem.numStripes; i++)
 				printf("    + STRIPE devID: 0x%I64x offset: 0x%I64x\n", endian64(sbChunk->chunkItem.stripes[i].devID),
 					endian64(sbChunk->chunkItem.stripes[i].offset));
 		}

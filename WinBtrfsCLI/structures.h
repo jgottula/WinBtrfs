@@ -275,7 +275,7 @@ struct FilePkg
 	BtrfsObjID				objectID;
 	BtrfsObjID				parentID; // not assigned by dir list
 	BtrfsInodeItem			inode;
-	int						numExtents; // not assigned by dir list
+	size_t					numExtents; // not assigned by dir list
 	KeyedItem				*extents; // not assigned by dir list
 	char					name[256];
 	bool					hidden;
@@ -283,6 +283,6 @@ struct FilePkg
 
 struct DirList
 {
-	unsigned __int64		numEntries;
+	size_t					numEntries;
 	FilePkg					*entries;
 };

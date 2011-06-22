@@ -14,5 +14,5 @@
 #include "constants.h"
 
 void validatePath(const char *input, char *output);
-int componentizePath(const char *path, char ***output);
+unsigned int componentizePath(const char *path, char ***output);
 int getPathID(const char *path, BtrfsObjID *output);
