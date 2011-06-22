@@ -22,9 +22,6 @@ Outputs:
 [1] BtrfsObjID *				child's object ID
 
 FSOP_DUMP_TREE: Dumps the entire FS tree to stdout
-Inputs:
-[1] const unsigned __int64		ptr to addr of tree to dump; NULL will dump tree 0x5 (the normal FS tree)
-No outputs
 
 FSOP_GET_FILE_PKG: Returns a FilePkg struct containing information about a file from its object ID
 Inputs:

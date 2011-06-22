@@ -944,9 +944,8 @@ void parseFSTreeRec(unsigned __int64 addr, FSOperation operation, void *input1, 
 	free(nodeBlock);
 }
 
-int parseFSTree(FSOperation operation, void *input1, void *input2, void *input3, void *output1, void *output2)
+int parseFSTree(BtrfsObjID tree, FSOperation operation, void *input1, void *input2, void *input3, void *output1, void *output2)
 {
-	unsigned __int64 addr;
 	int returnCode;
 	bool shortCircuit = false;
 	BtrfsInodeItem inode;
@@ -1007,12 +1006,7 @@ int parseFSTree(FSOperation operation, void *input1, void *input2, void *input3,
 		}
 	}
 
-	if (operation == FSOP_DUMP_TREE && input1 != NULL)
-		addr = *((unsigned __int64 *)input1);
-	else
-		addr = getTreeRootAddr(defaultSubvol);
-	
-	parseFSTreeRec(addr, operation, input1, input2, input3, output1, output2,
+	parseFSTreeRec(getTreeRootAddr(tree), operation, input1, input2, input3, output1, output2,
 		(operation == FSOP_DIR_LIST ? &inode : NULL), &returnCode, &shortCircuit);
 
 	if (operation == FSOP_GET_FILE_PKG)

@@ -115,9 +115,7 @@ void firstTasks()
 	
 	if (!noDump)
 	{
-		unsigned __int64 addr = getTreeRootAddr((BtrfsObjID)endian64(OBJID_FS_TREE));
-
-		parseFSTree(FSOP_DUMP_TREE, &addr, NULL, NULL, NULL, NULL);
+		parseFSTree(OBJID_FS_TREE, FSOP_DUMP_TREE, NULL, NULL, NULL, NULL, NULL);
 
 		/* dump FS subtrees */
 		size_t size = rootTree.size();
@@ -126,11 +124,8 @@ void firstTasks()
 			KeyedItem& kItem = rootTree.at(i);
 
 			if (kItem.key.type == TYPE_ROOT_REF && endian64(kItem.key.objectID) == OBJID_FS_TREE)
-			{
-				addr = getTreeRootAddr((BtrfsObjID)endian64(kItem.key.offset));
-			
-				parseFSTree(FSOP_DUMP_TREE, &addr, NULL, NULL, NULL, NULL);
-			}
+				parseFSTree((BtrfsObjID)endian64(kItem.key.offset), FSOP_DUMP_TREE,
+					NULL, NULL, NULL, NULL, NULL);
 		}
 	}
 }

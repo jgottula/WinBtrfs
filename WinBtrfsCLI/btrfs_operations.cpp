@@ -19,6 +19,8 @@
 #include "endian.h"
 #include "btrfs_system.h"
 
+extern BtrfsObjID defaultSubvol;
+
 void validatePath(const char *input, char *output)
 {
 	size_t i, c = 0, len = strlen(input);
@@ -119,7 +121,8 @@ int getPathID(const char *path, BtrfsObjID *output)
 	{
 		hash = crc32c((unsigned int)~1, (const unsigned char *)(components[i]), strlen(components[i]));
 		
-		if (parseFSTree(FSOP_NAME_TO_ID, &parentID, &hash, components[i], &childID, NULL) != 0)
+		if (parseFSTree(defaultSubvol, FSOP_NAME_TO_ID, &parentID, &hash, components[i],
+			&childID, NULL) != 0)
 			return 1;
 
 		parentID = childID;

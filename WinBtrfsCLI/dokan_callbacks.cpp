@@ -27,6 +27,7 @@
 
 extern BlockReader *blockReader;
 extern BtrfsSuperblock super;
+extern BtrfsObjID defaultSubvol;
 
 std::list<FilePkg> openFiles;
 HANDLE hBigDokanLock = INVALID_HANDLE_VALUE;
@@ -74,7 +75,7 @@ int DOKAN_CALLBACK btrfsCreateFile(LPCWSTR fileName, DWORD desiredAccess, DWORD 
 		return -ERROR_FILE_NOT_FOUND;
 	}
 
-	if (parseFSTree(FSOP_GET_FILE_PKG, &objectID, NULL, NULL, &filePkg, NULL) != 0)
+	if (parseFSTree(defaultSubvol, FSOP_GET_FILE_PKG, &objectID, NULL, NULL, &filePkg, NULL) != 0)
 	{
 		ReleaseMutex(hBigDokanLock);
 		printf("btrfsCreateFile: parseFSTree with FSOP_GET_FILE_PKG failed! [%S]\n", fileName);
@@ -135,7 +136,7 @@ int DOKAN_CALLBACK btrfsOpenDirectory(LPCWSTR fileName, PDOKAN_FILE_INFO info)
 		return -ERROR_FILE_NOT_FOUND;
 	}
 
-	if (parseFSTree(FSOP_GET_FILE_PKG, &objectID, NULL, NULL, &filePkg, NULL) != 0)
+	if (parseFSTree(defaultSubvol, FSOP_GET_FILE_PKG, &objectID, NULL, NULL, &filePkg, NULL) != 0)
 	{
 		ReleaseMutex(hBigDokanLock);
 		printf("btrfsOpenDirectory: parseFSTree with FSOP_GET_FILE_PKG failed! [%S]\n", fileName);
@@ -411,7 +412,7 @@ int DOKAN_CALLBACK btrfsFindFiles(LPCWSTR pathName, PFillFindData pFillFindData,
 		return -ERROR_SEM_TIMEOUT; // error code looks sketchy
 	}
 
-	if (parseFSTree(FSOP_DIR_LIST, &objectID, NULL, NULL, &dirList, NULL) != 0)
+	if (parseFSTree(defaultSubvol, FSOP_DIR_LIST, &objectID, NULL, NULL, &dirList, NULL) != 0)
 	{
 		ReleaseMutex(hBigDokanLock);
 		printf("btrfsFindFiles: parseFSTree with FSOP_DIR_LIST failed! [%S]\n", pathName);
