@@ -20,7 +20,16 @@ MinGW/Cygwin[/Mono] build support
 UI translations
 OS testing: Win9x and ReactOS (provided Dokan supports these)
 
+Tests:
+Verify that unicode path strings don't result in a crash
+Try to hit all the outward-facing filesystem interfaces (especially btrfs_operations.c) with extra-long strings for buffer overrun testing
+Test weird node/sector/leaf sizes
+
+Profile:
+Check out how bad my overuse of realloc really is
+
 Code stuff:
+Add overflow checks for program arguments
 Check for memleaks with valgrind
 Rectify inconsistent struct member names: num/nr, csum/cSum/crc32c/etc, generation/gen, objectID/objID, len/length
 Rectify inconsistent function arg names: len/length, addr/lAddr/logicalAddr/physAddr/etc, super/SB/superblock
@@ -28,34 +37,18 @@ Multithread support for everything: make block reading threadsafe, and ensure th
 	from different threads do not use any shared state
 Check all malloc/realloc calls and end fatally upon malloc failure (return win32 equivalent of -ENOMEM)
 Develop a better system for nonfatal error reporting than just piling on a bunch of assertions (look up assert best practices)
-Rectify comiler warnings
-Make sure performance isn't horrendous for filesystems with big FS trees (i.e. large directory structures)
-	Do, say, a Linux installation on a Btrfs partition and then feed the image into WinBtrfs and have it do a dirlist or something
-	Fix this with... caching? or something?
-Verify that weird-ass Windows unicode path strings don't crash the driver program
-Make sure that file times get converted absolutely precisely
-Add symlinks and hard links to the test FS and make sure they work as intended
-Try to hit all the outward-facing filesystem interfaces (especially btrfs_operations.c) with extra-long strings for buffer overrun testing
-Optimize situations where I used realloc to pound the memory allocator at least a little less
-Test FSes with: weird node/sector/leafsizes; tons of small files; deep directory structures
-Clean up headers, they are currently too messy and work by different conventions
-Refactor out the endianness conversions (perhaps make separate structs or classes for on-disk vs. in-memory structs and have
-	the constructor do all the conversions)
-Reimplement the block cache system so it works on recentness rather than number of reads: sort by most-recent to least-recent (easy splicing)
-	and remove oldest nodes. have a static int increment on each cached read and store that number in the node struct on each read.
+Rectify compiler warnings
 Retool the FS tree return code system so it returns Windows error codes that are descriptive and can be passed back to the OS
 	when control returns to the Dokan callback; to do this, segregate the real return value (a win32 DWORD error code value) from
 	the int used internally to count things and ensure the call went successfully
 Is MS's STL threadsafe? If not, we may have problems with the openFiles linked list being used in multiple threads in dokan_callbacks.cpp
+	but that can be overridden by having a mutex just for that purpose
 Reimplement the openFiles array in dokan_callbacks.cpp as a multimap<BtrfsObjID, FileStruct> where FileStruct is a new struct that holds,
 	in addition to a FilePkg, the values passed as desiredAccess and shareMode to CreateFile; this should allow duplicates and properly
 	respect sharing and access mode requests from CreateFile
-Replace C casts with C++ casts possibly?
 Remove type punning (casting void pointers back and forth) from parseFSTree; instead, possibly create an interface that each FSOP
 	implements, and each implementation class can have its own values that are passed with it
 Add optimizations for FS tree parsing: use the rules of sorting within the tree to skip over parts entirely to get to the relevant item(s)
 	This is likely to be more feasible with smaller FSOPs, the likes of FSOP_NAME_TO_ID; although, for FSOP_DIR_LIST, it may be
 	highly effective to skip right to the INODE_ITEM for the parent directory and then resume parsing like usual
-Find out how Btrfs does striping (i.e. RAID0-like drives) and how that affects chunk stripes and the code that uses them
-Be extra precise with filename strs: char foo[bar], strcpy, str conversions
-Look over all i, j for type; use size_t, unsigned, other types where appropriate
+Be extra precise with filename strs due to overflow concerns: char foo[bar], strcpy, str conversions
