@@ -13,12 +13,12 @@
 
 #include <cassert>
 #include <vector>
-#include "endian.h"
 #include "btrfs_system.h"
 #include "chunktree_parser.h"
-#include "roottree_parser.h"
-#include "fstree_parser.h"
 #include "dokan_callbacks.h"
+#include "endian.h"
+#include "fstree_parser.h"
+#include "roottree_parser.h"
 
 WCHAR devicePath[MAX_PATH], mountPoint[MAX_PATH];
 DOKAN_OPERATIONS btrfsOperations = {

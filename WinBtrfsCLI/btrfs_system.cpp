@@ -11,12 +11,12 @@
  * any later version.
  */
 
-#include <vector>
-#include "util.h"
-#include "endian.h"
-#include "crc32c.h"
 #include "btrfs_system.h"
+#include <vector>
 #include "block_reader.h"
+#include "crc32c.h"
+#include "endian.h"
+#include "util.h"
 
 extern std::vector<KeyedItem> chunkTree, rootTree;
 

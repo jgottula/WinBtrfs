@@ -11,6 +11,7 @@
  * any later version.
  */
 
+#include "endian.h"
 #include <cassert>
 #include <intrin.h>
 

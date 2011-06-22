@@ -11,10 +11,10 @@
  * any later version.
  */
 
-#include <cstdio>
-#include <cassert>
-#include "endian.h"
 #include "util.h"
+#include <cassert>
+#include <cstdio>
+#include "endian.h"
 
 void convertTime(BtrfsTime *bTime, PFILETIME wTime)
 {

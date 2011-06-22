@@ -11,8 +11,8 @@
  * any later version.
  */
 
-#include "btrfs_system.h"
 #include "block_reader.h"
+#include "btrfs_system.h"
 
 extern WCHAR devicePath[MAX_PATH];
 
