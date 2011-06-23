@@ -1,7 +1,7 @@
 TODO list
 
 Roadmap:
-Symlinks, hardlinks
+Symlinks
 File locking and unlocking callbacks
 File security callback
 XATTRs
@@ -20,9 +20,14 @@ UI translations
 OS testing: Win9x and ReactOS (provided Dokan supports these)
 
 Tests:
+Symlinks to files and directories
+Cross-subvolume symlinks
 Verify that unicode path strings don't result in a crash
 Try to hit all the outward-facing filesystem interfaces (especially btrfs_operations.c) with extra-long strings for buffer overrun testing
 Test weird node/sector/leaf sizes
+
+Bugs:
+Mouting btrfs_symlinks.img to C:\mount and dirlisting C:\mount\dir results in a getPathID failure
 
 Profile:
 Check out how bad my overuse of realloc really is
@@ -51,3 +56,4 @@ Add optimizations for FS tree parsing: use the rules of sorting within the tree 
 	This is likely to be more feasible with smaller FSOPs, the likes of FSOP_NAME_TO_ID; although, for FSOP_DIR_LIST, it may be
 	highly effective to skip right to the INODE_ITEM for the parent directory and then resume parsing like usual
 Be extra precise with filename strs due to overflow concerns: char foo[bar], strcpy, str conversions
+Get rid of atoi!
