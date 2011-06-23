@@ -17,7 +17,7 @@
 
 int archIsBigEndian = -1;
 
-void endianDetect()
+int endianDetect()
 {
 	union
 	{
@@ -28,9 +28,15 @@ void endianDetect()
 		le[] = { 0x04, 0x03, 0x02, 0x01 };
 
 	if (memcmp(bigint.c, be, 4) == 0)
+	{
 		archIsBigEndian = 1;
+		return 1;
+	}
 	else if (memcmp(bigint.c, le, 4) == 0)
+	{
 		archIsBigEndian = 0;
+		return 0;
+	}
 
 	/* middle endian?! */
 	assert(archIsBigEndian != -1);

@@ -60,7 +60,8 @@ void firstTasks()
 {
 	DWORD errorCode;
 
-	endianDetect();
+	if (endianDetect() == 1)
+		printf("firstTasks: warning, big-endian support is untested!\n");
 
 	if ((errorCode = init()) != 0)
 	{

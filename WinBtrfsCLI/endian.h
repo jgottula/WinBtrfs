@@ -11,7 +11,7 @@
  * any later version.
  */
 
-void endianDetect();
+int endianDetect();
 unsigned short endian16(unsigned short leFromDisk);
 unsigned int endian32(unsigned int leFromDisk);
 unsigned __int64 endian64(unsigned __int64 leFromDisk);
