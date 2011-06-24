@@ -11,7 +11,8 @@
  * any later version.
  */
 
-#pragma once
+#ifndef WINBTRFS_CONSTANTS_H
+#define WINBTRFS_CONSTANTS_H
 
 enum BtrfsObjID : unsigned __int64
 {
@@ -139,3 +140,5 @@ const unsigned int S_IRWXO = 00007;		// mask for others' permissions
 const unsigned int S_IROTH = 00004;		// others have read permission
 const unsigned int S_IWOTH = 00002;		// others have write permission
 const unsigned int S_IXOTH = 00001;		// others have execute permission
+
+#endif

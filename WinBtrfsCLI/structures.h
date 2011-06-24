@@ -11,7 +11,8 @@
  * any later version.
  */
 
-#pragma once
+#ifndef WINBTRFS_STRUCTURES_H
+#define WINBTRFS_STRUCTURES_H
 
 /* pack structs the way they are on the disk */
 #pragma pack(1)
@@ -286,3 +287,5 @@ struct DirList
 	size_t					numEntries;
 	FilePkg					*entries;
 };
+
+#endif
