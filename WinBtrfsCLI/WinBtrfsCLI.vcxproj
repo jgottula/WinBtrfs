@@ -107,7 +107,6 @@
     <ClCompile Include="btrfs_system.cpp" />
     <ClCompile Include="dokan_callbacks.cpp" />
     <ClCompile Include="crc32c.cpp" />
-    <ClCompile Include="endian.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="util.cpp" />
   </ItemGroup>

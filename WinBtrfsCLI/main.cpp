@@ -13,6 +13,7 @@
 
 #include <cassert>
 #include <vector>
+#include <boost/detail/endian.hpp>
 #include "btrfs_system.h"
 #include "chunktree_parser.h"
 #include "dokan_callbacks.h"
@@ -60,8 +61,9 @@ void firstTasks()
 {
 	DWORD errorCode;
 
-	if (endianDetect() == 1)
-		printf("firstTasks: warning, big-endian support is untested!\n");
+#ifndef BOOST_LITTLE_ENDIAN
+		printf("firstTasks: warning, support for non-little-endian architectures is untested!\n");
+#endif
 
 	if ((errorCode = init()) != 0)
 	{
