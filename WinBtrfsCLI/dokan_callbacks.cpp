@@ -24,7 +24,7 @@ extern BlockReader *blockReader;
 extern BtrfsSuperblock super;
 extern BtrfsObjID mountedSubvol;
 
-std::list<FilePkg> openFiles;
+std::list<FilePkg> openFiles, cleanedUpFiles;
 HANDLE hBigDokanLock = INVALID_HANDLE_VALUE;
 
 DWORD setupBigDokanLock()
@@ -154,7 +154,8 @@ int DOKAN_CALLBACK btrfsOpenDirectory(LPCWSTR fileName, PDOKAN_FILE_INFO info)
 		if (it->objectID >= objectID)
 			break;
 	}
-
+	
+	/* insert the element such that the list is sorted in ascending object ID order */
 	openFiles.insert(it, filePkg);
 
 	info->Context = objectID;
@@ -175,13 +176,36 @@ int DOKAN_CALLBACK btrfsCreateDirectory(LPCWSTR fileName, PDOKAN_FILE_INFO info)
 
 int DOKAN_CALLBACK btrfsCleanup(LPCWSTR fileName, PDOKAN_FILE_INFO info)
 {
+	std::list<FilePkg>::iterator it = openFiles.begin(), end = openFiles.end();
+	for ( ; it != end; ++it)
+	{
+		if (it->objectID == (BtrfsObjID)info->Context)
+			break;
+	}
+
+	/* we should always be able to find an entry in openFiles */
+	assert(it != end);
+
+	FilePkg filePkg = *it;
+	openFiles.erase(it);
+
+	it = cleanedUpFiles.begin(), end = cleanedUpFiles.end();
+	for ( ; it != end; ++it)
+	{
+		if (it->objectID >= (BtrfsObjID)info->Context)
+			break;
+	}
+	
+	/* insert the element such that the list is sorted in ascending object ID order */
+	cleanedUpFiles.insert(it, filePkg);
+	
 	printf("btrfsCleanup: OK [%s]\n", fileName);
 	return ERROR_SUCCESS;
 }
 
 int DOKAN_CALLBACK btrfsCloseFile(LPCWSTR fileName, PDOKAN_FILE_INFO info)
 {
-	std::list<FilePkg>::iterator it = openFiles.begin(), end = openFiles.end();
+	std::list<FilePkg>::iterator it = cleanedUpFiles.begin(), end = cleanedUpFiles.end();
 	for ( ; it != end; ++it)
 	{
 		if (it->objectID == (BtrfsObjID)info->Context)
@@ -197,7 +221,7 @@ int DOKAN_CALLBACK btrfsCloseFile(LPCWSTR fileName, PDOKAN_FILE_INFO info)
 		free(it->extents[i].data);
 	free(it->extents);
 
-	openFiles.erase(it);
+	cleanedUpFiles.erase(it);
 	
 	printf("btrfsCloseFile: OK [%s]\n", fileName);
 	return ERROR_SUCCESS;
@@ -216,8 +240,18 @@ int DOKAN_CALLBACK btrfsReadFile(LPCWSTR fileName, LPVOID buffer, DWORD numberOf
 			break;
 	}
 
-	/* failing to find the element is NOT an option */
-	assert(it != end);
+	if (it == end)
+	{
+		it = cleanedUpFiles.begin(), end = cleanedUpFiles.end();
+		for ( ; it != end; ++it)
+		{
+			if (it->objectID == (BtrfsObjID)info->Context)
+				break;
+		}
+
+		/* failing to find the element is NOT an option */
+		assert(it != end);
+	}
 
 	size_t numExtents = it->numExtents;
 	KeyedItem *extents = it->extents;
