@@ -108,6 +108,8 @@ void parseFSTreeRec(unsigned __int64 addr, FSOperation operation, void *input1, 
 				{
 					BtrfsDirItem *dirItem = (BtrfsDirItem *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset)),
 						*firstDirItem = dirItem;
+					static const char childTypeStrs[9][10] = { "unknown", "file", "directory", "char", "block",
+						"FIFO", "socket", "symlink", "xattr" };
 
 					while (true)
 					{
@@ -121,8 +123,10 @@ void parseFSTreeRec(unsigned __int64 addr, FSOperation operation, void *input1, 
 							printf("  [%02x] ", i);
 						else
 							printf("       ");
-						printf("XATTR_ITEM 0x%I64x hash: 0x%08I64x name: '%s'\n", endian64(item->key.objectID),
-							endian64(item->key.offset), name);
+						printf("XATTR_ITEM 0x%I64x -> '%s' hash: 0x%08I64x\n"
+							"                type: %s data: 0x%x bytes\n",
+							endian64(item->key.objectID), name, endian64(item->key.offset),
+							childTypeStrs[dirItem->childType], endian16(dirItem->m));
 						
 						delete[] name;
 						
@@ -156,9 +160,9 @@ void parseFSTreeRec(unsigned __int64 addr, FSOperation operation, void *input1, 
 							printf("  [%02x] ", i);
 						else
 							printf("       ");
-						printf("DIR_ITEM parent: 0x%I64x hash: 0x%08I64x data: 0x%x bytes\n"
+						printf("DIR_ITEM parent: 0x%I64x hash: 0x%08I64x\n"
 							"                child: 0x%I64x -> '%s' type: %s\n",
-							endian64(item->key.objectID), endian64(item->key.offset), endian16(dirItem->m),
+							endian64(item->key.objectID), endian64(item->key.offset),
 							endian64(dirItem->child.objectID), name, childTypeStrs[dirItem->childType]);
 						
 						delete[] name;
