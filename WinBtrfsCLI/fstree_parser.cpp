@@ -18,7 +18,7 @@
 #include "endian.h"
 #include "util.h"
 
-void parseFSTreeRec(unsigned __int64 addr, FSOperation operation, void *input1, void *input2, void *input3,
+void parseFSTreeRec(unsigned __int64 addr, BtrfsObjID tree, FSOperation operation, void *input1, void *input2, void *input3,
 	void *output1, void *output2, void *temp, int *returnCode, bool *shortCircuit)
 {
 	unsigned char *nodeBlock, *nodePtr;
@@ -292,7 +292,10 @@ void parseFSTreeRec(unsigned __int64 addr, FSOperation operation, void *input1, 
 
 					for (int j = 0; j < dirList->numEntries; j++) // try to find a matching entry
 					{
-						if (endian64(item->key.objectID) == dirList->entries[j].objectID)
+						/* TODO: check if the tree check here is really necessary,
+						or if it will simply always evalaute to true */
+						if (tree == dirList->entries[j].fileID.treeID &&
+							endian64(item->key.objectID) == dirList->entries[j].fileID.objectID)
 						{
 							memcpy(&(dirList->entries[j].inode), inodeItem, sizeof(BtrfsInodeItem));
 
@@ -317,7 +320,9 @@ void parseFSTreeRec(unsigned __int64 addr, FSOperation operation, void *input1, 
 							else
 								dirList->entries = (FilePkg *)realloc(dirList->entries, sizeof(FilePkg) * (dirList->numEntries + 1));
 
-							dirList->entries[dirList->numEntries].objectID = (BtrfsObjID)endian64(dirItem->child.objectID);
+							assert(0); /* the line below is WRONG WRONG WRONG for dirs that are subvol mount points */
+							dirList->entries[dirList->numEntries].fileID.treeID = tree;
+							dirList->entries[dirList->numEntries].fileID.objectID = (BtrfsObjID)endian64(dirItem->child.objectID);
 							dirList->entries[dirList->numEntries].parentID = (BtrfsObjID)endian64(item->key.objectID);
 
 							memcpy(dirList->entries[dirList->numEntries].name, dirItem->namePlusData,
@@ -341,8 +346,10 @@ void parseFSTreeRec(unsigned __int64 addr, FSOperation operation, void *input1, 
 							/* this assumes that the first entry is always '.' for non-root dirs, which is currently
 								always the case. */
 							dirList->entries[0].parentID = (BtrfsObjID)endian64(item->key.objectID);
-
-							dirList->entries[dirList->numEntries].objectID = (BtrfsObjID)endian64(item->key.objectID);
+							
+							assert(0); /* the line below does NOT account for .. possibly being in a different tree! */
+							dirList->entries[dirList->numEntries].fileID.treeID = tree;
+							dirList->entries[dirList->numEntries].fileID.objectID = (BtrfsObjID)endian64(item->key.objectID);
 							/* not currently assigning parentID, as it's unnecessary and not needed by the dir list callback */
 
 							strcpy(dirList->entries[dirList->numEntries].name, "..");
@@ -391,8 +398,8 @@ void parseFSTreeRec(unsigned __int64 addr, FSOperation operation, void *input1, 
 			BtrfsKeyPtr *keyPtr = (BtrfsKeyPtr *)nodePtr;
 
 			/* recurse down one level of the tree */
-			parseFSTreeRec(endian64(keyPtr->blockNum), operation, input1, input2, input3, output1, output2,
-				temp, returnCode, shortCircuit);
+			parseFSTreeRec(endian64(keyPtr->blockNum), tree, operation, input1, input2, input3,
+				output1, output2, temp, returnCode, shortCircuit);
 
 			if (*shortCircuit)
 				break;
@@ -431,7 +438,8 @@ int parseFSTree(BtrfsObjID tree, FSOperation operation, void *input1, void *inpu
 		const BtrfsObjID *objectID = (const BtrfsObjID *)input1;
 		FilePkg *filePkg = (FilePkg *)output1;
 
-		filePkg->objectID = *objectID;
+		filePkg->fileID.treeID = tree;
+		filePkg->fileID.objectID = *objectID;
 
 		filePkg->numExtents = 0;
 		filePkg->extents = (KeyedItem *)malloc(0);
@@ -454,7 +462,8 @@ int parseFSTree(BtrfsObjID tree, FSOperation operation, void *input1, void *inpu
 			dirList->entries = (FilePkg *)malloc(sizeof(FilePkg));
 
 			/* add '.' to the list */
-			dirList->entries[0].objectID = *objectID;
+			dirList->entries[0].fileID.treeID = tree;
+			dirList->entries[0].fileID.objectID = *objectID;
 			strcpy(dirList->entries[0].name, ".");
 
 			returnCode++;
@@ -466,7 +475,7 @@ int parseFSTree(BtrfsObjID tree, FSOperation operation, void *input1, void *inpu
 		}
 	}
 
-	parseFSTreeRec(getTreeRootAddr(tree), operation, input1, input2, input3, output1, output2,
+	parseFSTreeRec(getTreeRootAddr(tree), tree, operation, input1, input2, input3, output1, output2,
 		(operation == FSOP_DIR_LIST ? &inode : NULL), &returnCode, &shortCircuit);
 
 	if (operation == FSOP_GET_FILE_PKG)

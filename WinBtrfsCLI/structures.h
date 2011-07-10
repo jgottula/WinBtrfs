@@ -271,9 +271,15 @@ struct Root
 	BtrfsRootItem			rootItem;
 };
 
+struct FileID
+{
+	BtrfsObjID				treeID;
+	BtrfsObjID				objectID;
+};
+
 struct FilePkg
 {
-	BtrfsObjID				objectID;
+	FileID					fileID;
 	BtrfsObjID				parentID; // not assigned by dir list
 	BtrfsInodeItem			inode;
 	size_t					numExtents; // not assigned by dir list

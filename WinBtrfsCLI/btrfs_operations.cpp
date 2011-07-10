@@ -104,28 +104,42 @@ unsigned int componentizePath(const char *path, char ***output)
 	return numComponents;
 }
 
-int getPathID(const char *path, BtrfsObjID *output)
+/* REMOVE ME */
+#include <cassert>
+
+int getPathID(const char *path, FileID *output)
 {
 	char vPath[MAX_PATH], **components;
-	BtrfsObjID parentID = OBJID_ROOT_DIR, childID;
+	FileID fileID, childID;
 	unsigned int numComponents;
 	unsigned int hash;
 
+	/*
+	TODO: CHANGES TO ENABLE SUBVOLUME SUPPORT
+	This function needs to respect FileIDs instead of BtrfsObjIDs now, and it needs to detect when a component
+	matches a subvolume mount point, and from there, set the treeID member of the FileID struct accordingly.
+	*/
+
 	validatePath(path, vPath);
 	numComponents = componentizePath(path, &components);
+
+	/* TODO: verify that this is the proper behavior */
+	fileID.treeID = (mountedSubvol == (BtrfsObjID)0 ? OBJID_FS_TREE : mountedSubvol);
+	fileID.objectID = OBJID_ROOT_DIR;
 
 	for (int i = 0; i < numComponents; i++)
 	{
 		hash = crc32c((unsigned int)~1, (const unsigned char *)(components[i]), strlen(components[i]));
 		
-		if (parseFSTree(mountedSubvol, FSOP_NAME_TO_ID, &parentID, &hash, components[i],
+		assert(0); // TODO: redo the below
+		/*if (parseFSTree(mountedSubvol, FSOP_NAME_TO_ID, &parentID, &hash, components[i],
 			&childID, NULL) != 0)
-			return 1;
+			return 1;*/
 
-		parentID = childID;
+		memcpy(&fileID, &childID, sizeof(FileID));
 	}
 
-	*output = parentID;
+	memcpy(output, &fileID, sizeof(FileID));
 
 	return 0;
 }

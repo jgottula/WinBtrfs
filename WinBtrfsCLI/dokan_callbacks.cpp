@@ -47,7 +47,7 @@ int DOKAN_CALLBACK btrfsCreateFile(LPCWSTR fileName, DWORD desiredAccess, DWORD 
 	DWORD flagsAndAttributes, PDOKAN_FILE_INFO info)
 {
 	char fileNameB[MAX_PATH];
-	BtrfsObjID objectID;
+	FileID fileID;
 	FilePkg filePkg;
 
 	assert(creationDisposition != CREATE_ALWAYS && creationDisposition != OPEN_ALWAYS);
@@ -63,7 +63,7 @@ int DOKAN_CALLBACK btrfsCreateFile(LPCWSTR fileName, DWORD desiredAccess, DWORD 
 		return -ERROR_SEM_TIMEOUT; // error code looks sketchy
 	}
 
-	if (getPathID(fileNameB, &objectID) != 0)
+	if (getPathID(fileNameB, &fileID) != 0)
 	{
 		ReleaseMutex(hBigDokanLock);
 		printf("btrfsCreateFile: getPathID failed! [%S]\n", fileName);
@@ -71,7 +71,7 @@ int DOKAN_CALLBACK btrfsCreateFile(LPCWSTR fileName, DWORD desiredAccess, DWORD 
 	}
 
 	int result2;
-	if ((result2 = parseFSTree(mountedSubvol, FSOP_GET_FILE_PKG, &objectID, NULL, NULL, &filePkg, NULL)) != 0)
+	if ((result2 = parseFSTree(fileID.treeID, FSOP_GET_FILE_PKG, &fileID.objectID, NULL, NULL, &filePkg, NULL)) != 0)
 	{
 		ReleaseMutex(hBigDokanLock);
 		printf("btrfsCreateFile: parseFSTree with FSOP_GET_FILE_PKG returned %d! [%S]\n", result2, fileName);
@@ -89,13 +89,16 @@ int DOKAN_CALLBACK btrfsCreateFile(LPCWSTR fileName, DWORD desiredAccess, DWORD 
 			contain exactly the same information, so it doesn't matter which one gets cleared up later. this should
 			be totally cleared up when we move over to a multimap container instead of the current linked list. */
 		
-		if (it->objectID >= objectID)
+		/* sort the list in ascending treeID/objectID order */
+		if (it->fileID.treeID > fileID.treeID ||
+			(it->fileID.treeID == fileID.treeID && it->fileID.objectID > fileID.objectID))
 			break;
 	}
 
 	openFiles.insert(it, filePkg);
 
-	info->Context = objectID;
+	assert(0);
+	/*info->Context = objectID;*/
 
 	if (!info->IsDirectory && (filePkg.inode.stMode & S_IFDIR))
 		info->IsDirectory = TRUE;
@@ -110,7 +113,7 @@ int DOKAN_CALLBACK btrfsCreateFile(LPCWSTR fileName, DWORD desiredAccess, DWORD 
 int DOKAN_CALLBACK btrfsOpenDirectory(LPCWSTR fileName, PDOKAN_FILE_INFO info)
 {
 	char fileNameB[MAX_PATH];
-	BtrfsObjID objectID;
+	FileID *fileID = (FileID *)malloc(sizeof(FileID));
 	FilePkg filePkg;
 	
 	size_t result = wcstombs(fileNameB, fileName, MAX_PATH);
@@ -125,7 +128,7 @@ int DOKAN_CALLBACK btrfsOpenDirectory(LPCWSTR fileName, PDOKAN_FILE_INFO info)
 		return -ERROR_SEM_TIMEOUT; // error code looks sketchy
 	}
 
-	if (getPathID(fileNameB, &objectID) != 0)
+	if (getPathID(fileNameB, fileID) != 0)
 	{
 		ReleaseMutex(hBigDokanLock);
 		printf("btrfsOpenDirectory: getPathID failed! [%S]\n", fileName);
@@ -133,7 +136,7 @@ int DOKAN_CALLBACK btrfsOpenDirectory(LPCWSTR fileName, PDOKAN_FILE_INFO info)
 	}
 
 	int result2;
-	if ((result2 = parseFSTree(mountedSubvol, FSOP_GET_FILE_PKG, &objectID, NULL, NULL, &filePkg, NULL)) != 0)
+	if ((result2 = parseFSTree(fileID->treeID, FSOP_GET_FILE_PKG, &fileID->objectID, NULL, NULL, &filePkg, NULL)) != 0)
 	{
 		ReleaseMutex(hBigDokanLock);
 		printf("btrfsOpenDirectory: parseFSTree with FSOP_GET_FILE_PKG returned %d! [%S]\n", result2, fileName);
@@ -151,14 +154,15 @@ int DOKAN_CALLBACK btrfsOpenDirectory(LPCWSTR fileName, PDOKAN_FILE_INFO info)
 			contain exactly the same information, so it doesn't matter which one gets cleared up later. this should
 			be totally cleared up when we move over to a multimap container instead of the current linked list. */
 		
-		if (it->objectID >= objectID)
+		/* sort the list in ascending treeID/objectID order */
+		if (it->fileID.treeID > fileID->treeID ||
+			(it->fileID.treeID == fileID->treeID && it->fileID.objectID > fileID->objectID))
 			break;
 	}
-	
-	/* insert the element such that the list is sorted in ascending object ID order */
+
 	openFiles.insert(it, filePkg);
 
-	info->Context = objectID;
+	info->Context = (unsigned __int64)fileID;
 
 	if (!info->IsDirectory && (filePkg.inode.stMode & S_IFDIR))
 		info->IsDirectory = TRUE;
@@ -176,10 +180,12 @@ int DOKAN_CALLBACK btrfsCreateDirectory(LPCWSTR fileName, PDOKAN_FILE_INFO info)
 
 int DOKAN_CALLBACK btrfsCleanup(LPCWSTR fileName, PDOKAN_FILE_INFO info)
 {
+	FileID *fileID = (FileID *)info->Context;
+	
 	std::list<FilePkg>::iterator it = openFiles.begin(), end = openFiles.end();
 	for ( ; it != end; ++it)
 	{
-		if (it->objectID == (BtrfsObjID)info->Context)
+		if (it->fileID.treeID == fileID->treeID && it->fileID.objectID == fileID->objectID)
 			break;
 	}
 
@@ -192,7 +198,7 @@ int DOKAN_CALLBACK btrfsCleanup(LPCWSTR fileName, PDOKAN_FILE_INFO info)
 	it = cleanedUpFiles.begin(), end = cleanedUpFiles.end();
 	for ( ; it != end; ++it)
 	{
-		if (it->objectID >= (BtrfsObjID)info->Context)
+		if (it->fileID.treeID == fileID->treeID && it->fileID.objectID == fileID->objectID)
 			break;
 	}
 	
@@ -205,10 +211,12 @@ int DOKAN_CALLBACK btrfsCleanup(LPCWSTR fileName, PDOKAN_FILE_INFO info)
 
 int DOKAN_CALLBACK btrfsCloseFile(LPCWSTR fileName, PDOKAN_FILE_INFO info)
 {
+	FileID *fileID = (FileID *)info->Context;
+	
 	std::list<FilePkg>::iterator it = cleanedUpFiles.begin(), end = cleanedUpFiles.end();
 	for ( ; it != end; ++it)
 	{
-		if (it->objectID == (BtrfsObjID)info->Context)
+		if (it->fileID.treeID == fileID->treeID && it->fileID.objectID == fileID->objectID)
 			break;
 	}
 
@@ -222,6 +230,8 @@ int DOKAN_CALLBACK btrfsCloseFile(LPCWSTR fileName, PDOKAN_FILE_INFO info)
 	free(it->extents);
 
 	cleanedUpFiles.erase(it);
+
+	free(fileID);
 	
 	printf("btrfsCloseFile: OK [%s]\n", fileName);
 	return ERROR_SUCCESS;
@@ -231,12 +241,14 @@ int DOKAN_CALLBACK btrfsCloseFile(LPCWSTR fileName, PDOKAN_FILE_INFO info)
 int DOKAN_CALLBACK btrfsReadFile(LPCWSTR fileName, LPVOID buffer, DWORD numberOfBytesToRead, LPDWORD numberOfBytesRead,
 	LONGLONG offset, PDOKAN_FILE_INFO info)
 {
+	FileID *fileID = (FileID *)info->Context;
+	
 	/* Big Dokan Lock not needed here */
 
 	std::list<FilePkg>::iterator it = openFiles.begin(), end = openFiles.end();
 	for ( ; it != end; ++it)
 	{
-		if (it->objectID == (BtrfsObjID)info->Context)
+		if (it->fileID.treeID == fileID->treeID && it->fileID.objectID == fileID->objectID)
 			break;
 	}
 
@@ -245,7 +257,7 @@ int DOKAN_CALLBACK btrfsReadFile(LPCWSTR fileName, LPVOID buffer, DWORD numberOf
 		it = cleanedUpFiles.begin(), end = cleanedUpFiles.end();
 		for ( ; it != end; ++it)
 		{
-			if (it->objectID == (BtrfsObjID)info->Context)
+			if (it->fileID.treeID == fileID->treeID && it->fileID.objectID == fileID->objectID)
 				break;
 		}
 
@@ -373,12 +385,14 @@ int DOKAN_CALLBACK btrfsFlushFileBuffers(LPCWSTR fileName, PDOKAN_FILE_INFO info
 
 int DOKAN_CALLBACK btrfsGetFileInformation(LPCWSTR fileName, LPBY_HANDLE_FILE_INFORMATION buffer, PDOKAN_FILE_INFO info)
 {
+	FileID *fileID = (FileID *)info->Context;
+	
 	/* Big Dokan Lock not needed here */
 
 	std::list<FilePkg>::iterator it = openFiles.begin(), end = openFiles.end();
 	for ( ; it != end; ++it)
 	{
-		if (it->objectID == (BtrfsObjID)info->Context)
+		if (it->fileID.treeID == fileID->treeID && it->fileID.objectID == fileID->objectID)
 			break;
 	}
 
@@ -408,8 +422,11 @@ int DOKAN_CALLBACK btrfsGetFileInformation(LPCWSTR fileName, LPBY_HANDLE_FILE_IN
 
 	buffer->nNumberOfLinks = endian32(it->inode.stNLink);
 
-	buffer->nFileIndexHigh = (DWORD)(endian64(it->objectID) << 32);
-	buffer->nFileIndexLow = (DWORD)endian64(it->objectID);
+	/* reimplement the file index values so they are unique values among the currently-open[/cleanedup] files.
+		don't know quite how to do this yet, but treeID+objectID is 128 bits, definitely will not work for a 64-bit value. */
+	printf("TODO: fix windows file index values\n");
+	buffer->nFileIndexHigh = 0/*(DWORD)(endian64(it->objectID) << 32)*/;
+	buffer->nFileIndexLow = 0/*(DWORD)endian64(it->objectID)*/;
 	
 	printf("btrfsGetFileInformation: OK [%S]\n", fileName);
 	return ERROR_SUCCESS;
@@ -419,7 +436,7 @@ int DOKAN_CALLBACK btrfsFindFiles(LPCWSTR pathName, PFillFindData pFillFindData,
 {
 	char pathNameB[MAX_PATH];
 	wchar_t nameW[MAX_PATH];
-	BtrfsObjID objectID = (BtrfsObjID)info->Context;
+	FileID *fileID = (FileID *)info->Context;
 	DirList dirList;
 	WIN32_FIND_DATAW findData;
 
@@ -430,7 +447,7 @@ int DOKAN_CALLBACK btrfsFindFiles(LPCWSTR pathName, PFillFindData pFillFindData,
 	for ( ; it != end; ++it)
 	{
 		/* return ERROR_DIRECTORY (267) if attempting to dirlist a file; this is what NTFS does */
-		if (it->objectID == objectID && !(it->inode.stMode & S_IFDIR))
+		if (it->fileID.treeID == fileID->treeID && it->fileID.objectID == fileID->objectID && !(it->inode.stMode & S_IFDIR))
 		{
 			printf("btrfsFindFiles: expected a dir but was given a file! [%S]\n", pathName);
 			return -ERROR_DIRECTORY; // for some reason, ERROR_FILE_NOT_FOUND is reported to FindFirstFile
@@ -444,7 +461,7 @@ int DOKAN_CALLBACK btrfsFindFiles(LPCWSTR pathName, PFillFindData pFillFindData,
 	}
 
 	int result2;
-	if ((result2 = parseFSTree(mountedSubvol, FSOP_DIR_LIST, &objectID, NULL, NULL, &dirList, NULL)) != 0)
+	if ((result2 = parseFSTree(fileID->treeID, FSOP_DIR_LIST, &fileID->objectID, NULL, NULL, &dirList, NULL)) != 0)
 	{
 		ReleaseMutex(hBigDokanLock);
 		printf("btrfsFindFiles: parseFSTree with FSOP_DIR_LIST returned %d! [%S]\n", result2, pathName);
