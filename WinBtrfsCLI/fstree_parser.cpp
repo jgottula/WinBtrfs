@@ -363,11 +363,12 @@ void parseFSTreeRec(unsigned __int64 addr, BtrfsObjID tree, FSOperation operatio
 							/* go back and assign the parent for '.' since we have that value handy */
 							/* this assumes that the first entry is always '.' for non-root dirs, which is currently
 								always the case. */
-							printf("parseFSTreeRec: TODO: check FSOP_DIR_LIST parentID logic for '..'!\n");
+							printf("parseFSTreeRec: TODO: check FSOP_DIR_LIST parentID logic for '.'!\n");
 							dirList->entries[0].parentID.treeID = tree;
 							dirList->entries[0].parentID.objectID = (BtrfsObjID)endian64(item->key.objectID);
 							
-							assert(0); /* the line below does NOT account for .. possibly being in a different tree! */
+							/* this code does NOT account for .. possibly being in a different tree! */
+							printf("parseFSTreeRec: TODO: redo FSOP_DIR_LIST fileID logic for '..'!\n");
 							dirList->entries[dirList->numEntries].fileID.treeID = tree;
 							dirList->entries[dirList->numEntries].fileID.objectID = (BtrfsObjID)endian64(item->key.objectID);
 							/* not currently assigning parentID, as it's unnecessary and not needed by the dir list callback */
