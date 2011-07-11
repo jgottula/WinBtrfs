@@ -53,8 +53,9 @@ DOKAN_OPERATIONS btrfsOperations = {
 extern BtrfsObjID mountedSubvol;
 extern std::vector<KeyedItem> rootTree;
 
-BtrfsObjID subvolID = (BtrfsObjID)0;
-char *subvolName = NULL;
+bool useSubvolID = false, useSubvolName = false;
+BtrfsObjID subvolID;
+char *subvolName;
 bool noDump = false;
 
 void firstTasks()
@@ -116,7 +117,7 @@ void firstTasks()
 	if (!noDump) parseRootTree(RTOP_DUMP_TREE, NULL, NULL);
 	parseRootTree(RTOP_LOAD, NULL, NULL);
 
-	if (subvolID == (BtrfsObjID)0 && subvolName == NULL)
+	if (!useSubvolID && !useSubvolName)
 	{
 		int result;
 		if ((result = parseRootTree(RTOP_DEFAULT_SUBVOL, NULL, NULL)) != 0)
@@ -126,7 +127,7 @@ void firstTasks()
 			exit(1);
 		}
 	}
-	else if (subvolName != NULL)
+	else if (useSubvolName)
 	{
 		int result;
 		if ((result = parseRootTree(RTOP_GET_SUBVOL_ID, subvolName, &mountedSubvol)) != 0)
@@ -137,8 +138,8 @@ void firstTasks()
 		}
 	}
 	else
-		mountedSubvol = subvolID;
-	
+		mountedSubvol = (subvolID == (BtrfsObjID)0 ? OBJID_FS_TREE : subvolID);
+
 	if (!noDump)
 	{
 		parseFSTree(OBJID_FS_TREE, FSOP_DUMP_TREE, NULL, NULL, NULL, NULL, NULL);
@@ -154,6 +155,8 @@ void firstTasks()
 					NULL, NULL, NULL, NULL, NULL);
 		}
 	}
+	
+	printf("Mounting subvolume 0x%I64x.\n", (unsigned __int64)mountedSubvol);
 }
 
 void dokanError(int dokanResult)
@@ -255,11 +258,14 @@ int main(int argc, char **argv)
 		{
 			if (strlen(argv[i]) > 9)
 			{
-				if (subvolID == (BtrfsObjID)0 && subvolName == NULL)
+				if (!useSubvolID && !useSubvolName)
+				{
 					subvolName = argv[i] + 9;
+					useSubvolName = true;
+				}
 				else
 				{
-					printf("You already chose a subvolume to mount!\n\n");
+					printf("You specified more than one subvolume to mount!\n\n");
 					usage();
 				}
 			}
@@ -273,11 +279,14 @@ int main(int argc, char **argv)
 		{
 			if (strlen(argv[i]) > 12)
 			{
-				if (subvolID == (BtrfsObjID)0 && subvolName == NULL)
+				if (!useSubvolID && !useSubvolName)
+				{
 					subvolID = (BtrfsObjID)atoi(argv[i] + 12);
+					useSubvolID = true;
+				}
 				else
 				{
-					printf("You already chose a subvolume to mount!\n\n");
+					printf("You specified more than one subvolume to mount!\n\n");
 					usage();
 				}
 			}
