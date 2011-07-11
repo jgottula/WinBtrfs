@@ -127,7 +127,10 @@ void firstTasks()
 		{
 			KeyedItem& kItem = rootTree.at(i);
 
-			if (kItem.key.type == TYPE_ROOT_REF && endian64(kItem.key.objectID) == OBJID_FS_TREE)
+			/* this old code only dumped root-level (i.e. non-nested) subvolumes */
+			/*if (kItem.key.type == TYPE_ROOT_REF && endian64(kItem.key.objectID) == OBJID_FS_TREE)*/
+			if (kItem.key.type == TYPE_ROOT_REF && endian64(kItem.key.offset) >= 0x100 &&
+				endian64(kItem.key.offset) < OBJID_MULTIPLE)
 				parseFSTree((BtrfsObjID)endian64(kItem.key.offset), FSOP_DUMP_TREE,
 					NULL, NULL, NULL, NULL, NULL);
 		}
