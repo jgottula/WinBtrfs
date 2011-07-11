@@ -300,9 +300,6 @@ void parseFSTreeRec(unsigned __int64 addr, BtrfsObjID tree, FSOperation operatio
 
 					for (int j = 0; j < dirList->numEntries; j++) // try to find a matching entry
 					{
-						/* check if the tree check here is really necessary,
-						or if it will simply always evalaute to true */
-						printf("parseFSTreeRec: TODO: determine necessity of tree check for dir list inodes\n");
 						if (tree == dirList->entries[j].fileID.treeID &&
 							endian64(item->key.objectID) == dirList->entries[j].fileID.objectID)
 						{
