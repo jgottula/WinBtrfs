@@ -126,7 +126,7 @@ int getPathID(const char *path, FileID *output)
 	{
 		hash = crc32c((unsigned int)~1, (const unsigned char *)(components[i]), strlen(components[i]));
 		
-		if (parseFSTree(mountedSubvol, FSOP_NAME_TO_ID, &fileID.objectID, &hash, components[i],
+		if (parseFSTree(fileID.treeID, FSOP_NAME_TO_ID, &fileID.objectID, &hash, components[i],
 			&childID.objectID, &isSubvolume) != 0)
 			return 1;
 
