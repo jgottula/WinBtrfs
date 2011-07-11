@@ -15,6 +15,7 @@
 #include "structures.h"
 
 void convertTime(BtrfsTime *bTime, PFILETIME wTime);
+void hexToChar(unsigned char hex, char *chr);
 void uuidToStr(const unsigned char *uuid, char *dest);
 void stModeToStr(unsigned int mode, char *dest);
 void bgFlagsToStr(BlockGroupFlags flags, char *dest);

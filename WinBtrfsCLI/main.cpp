@@ -90,7 +90,7 @@ void firstTasks()
 	switch (validateSB(NULL))
 	{
 	case 0:
-		printf("firstTasks: primary superblock is OK.\n");
+		/* quiet on successful SB validation */
 		break;
 	case 1:
 		printf("firstTasks: superblock is missing or invalid!\n");
@@ -235,7 +235,7 @@ int main(int argc, char **argv)
 	PDOKAN_OPTIONS dokanOptions;
 	int dokanResult;
 
-	printf("WinBtrfsCLI\nCopyright (c) 2011 Justin Gottula\n\n");
+	printf("WinBtrfs Command Line Interface\nCopyright (c) 2011 Justin Gottula\n\n");
 
 	unitTests();
 

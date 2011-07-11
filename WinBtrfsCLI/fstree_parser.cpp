@@ -45,6 +45,7 @@ void parseFSTreeRec(unsigned __int64 addr, BtrfsObjID tree, FSOperation operatio
 				const unsigned int *hash = (const unsigned int *)input2;
 				const char *name = (const char *)input3;
 				BtrfsObjID *childID = (BtrfsObjID *)output1;
+				bool *isSubvolume = (bool *)output2;
 				
 				if (item->key.type == TYPE_DIR_ITEM && endian64(item->key.objectID) == *parentID &&
 					(unsigned int)(endian64(item->key.offset)) == *hash)
@@ -56,8 +57,12 @@ void parseFSTreeRec(unsigned __int64 addr, BtrfsObjID tree, FSOperation operatio
 					{
 						if (endian16(dirItem->n) == strlen(name) && strncmp(dirItem->namePlusData, name, endian16(dirItem->n)) == 0)
 						{
+							/* these are the only EXPECTED child types; others shouldn't probably appear */
+							assert(dirItem->child.type == TYPE_INODE_ITEM || dirItem->child.type == TYPE_ROOT_ITEM);
+							
 							/* found a match */
 							*childID = dirItem->child.objectID;
+							*isSubvolume = (dirItem->child.type == TYPE_ROOT_ITEM);
 
 							*returnCode = 0;
 							*shortCircuit = true;
@@ -161,9 +166,10 @@ void parseFSTreeRec(unsigned __int64 addr, BtrfsObjID tree, FSOperation operatio
 						else
 							printf("       ");
 						printf("DIR_ITEM parent: 0x%I64x hash: 0x%08I64x\n"
-							"                child: 0x%I64x -> '%s' type: %s\n",
+							"                child: 0x%I64x -> '%s' type: %s%s\n",
 							endian64(item->key.objectID), endian64(item->key.offset),
-							endian64(dirItem->child.objectID), name, childTypeStrs[dirItem->childType]);
+							endian64(dirItem->child.objectID), name, childTypeStrs[dirItem->childType],
+							(dirItem->child.type == TYPE_ROOT_ITEM ? " (subvolume)" : ""));
 						
 						delete[] name;
 						
@@ -245,7 +251,9 @@ void parseFSTreeRec(unsigned __int64 addr, BtrfsObjID tree, FSOperation operatio
 								(endian16(dirItem->n) <= 255 ? endian16(dirItem->n) : 255)); // limit to 255
 							filePkg->name[endian16(dirItem->n)] = 0;
 
-							filePkg->parentID = (BtrfsObjID)endian64(item->key.objectID);
+							printf("parseFSTreeRec: TODO: check FSOP_GET_FILE_PKG parentID logic!\n");
+							filePkg->parentID.treeID = tree;
+							filePkg->parentID.objectID = (BtrfsObjID)endian64(item->key.objectID);
 							
 							*returnCode &= ~0x2; // clear bit 1
 						}
@@ -292,8 +300,9 @@ void parseFSTreeRec(unsigned __int64 addr, BtrfsObjID tree, FSOperation operatio
 
 					for (int j = 0; j < dirList->numEntries; j++) // try to find a matching entry
 					{
-						/* TODO: check if the tree check here is really necessary,
+						/* check if the tree check here is really necessary,
 						or if it will simply always evalaute to true */
+						printf("parseFSTreeRec: TODO: determine necessity of tree check for dir list inodes\n");
 						if (tree == dirList->entries[j].fileID.treeID &&
 							endian64(item->key.objectID) == dirList->entries[j].fileID.objectID)
 						{
@@ -323,7 +332,10 @@ void parseFSTreeRec(unsigned __int64 addr, BtrfsObjID tree, FSOperation operatio
 							assert(0); /* the line below is WRONG WRONG WRONG for dirs that are subvol mount points */
 							dirList->entries[dirList->numEntries].fileID.treeID = tree;
 							dirList->entries[dirList->numEntries].fileID.objectID = (BtrfsObjID)endian64(dirItem->child.objectID);
-							dirList->entries[dirList->numEntries].parentID = (BtrfsObjID)endian64(item->key.objectID);
+
+							printf("parseFSTreeRec: TODO: check FSOP_DIR_LIST parentID logic!\n");
+							dirList->entries[dirList->numEntries].parentID.treeID = tree;
+							dirList->entries[dirList->numEntries].parentID.objectID = (BtrfsObjID)endian64(item->key.objectID);
 
 							memcpy(dirList->entries[dirList->numEntries].name, dirItem->namePlusData,
 								(endian16(dirItem->n) <= 255 ? endian16(dirItem->n) : 255)); // limit to 255
@@ -345,7 +357,9 @@ void parseFSTreeRec(unsigned __int64 addr, BtrfsObjID tree, FSOperation operatio
 							/* go back and assign the parent for '.' since we have that value handy */
 							/* this assumes that the first entry is always '.' for non-root dirs, which is currently
 								always the case. */
-							dirList->entries[0].parentID = (BtrfsObjID)endian64(item->key.objectID);
+							printf("parseFSTreeRec: TODO: check FSOP_DIR_LIST parentID logic for '..'!\n");
+							dirList->entries[0].parentID.treeID = tree;
+							dirList->entries[0].parentID.objectID = (BtrfsObjID)endian64(item->key.objectID);
 							
 							assert(0); /* the line below does NOT account for .. possibly being in a different tree! */
 							dirList->entries[dirList->numEntries].fileID.treeID = tree;
@@ -448,7 +462,7 @@ int parseFSTree(BtrfsObjID tree, FSOperation operation, void *input1, void *inpu
 		if (*objectID == OBJID_ROOT_DIR)
 		{
 			strcpy(filePkg->name, "ROOT_DIR");
-			filePkg->parentID = (BtrfsObjID)0x0;
+			memset(&filePkg->parentID, 0, sizeof(FileID));
 		}
 	}
 	else if (operation == FSOP_DIR_LIST)

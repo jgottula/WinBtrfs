@@ -47,7 +47,7 @@ int DOKAN_CALLBACK btrfsCreateFile(LPCWSTR fileName, DWORD desiredAccess, DWORD 
 	DWORD flagsAndAttributes, PDOKAN_FILE_INFO info)
 {
 	char fileNameB[MAX_PATH];
-	FileID fileID;
+	FileID *fileID = (FileID *)malloc(sizeof(FileID));
 	FilePkg filePkg;
 
 	assert(creationDisposition != CREATE_ALWAYS && creationDisposition != OPEN_ALWAYS);
@@ -63,7 +63,7 @@ int DOKAN_CALLBACK btrfsCreateFile(LPCWSTR fileName, DWORD desiredAccess, DWORD 
 		return -ERROR_SEM_TIMEOUT; // error code looks sketchy
 	}
 
-	if (getPathID(fileNameB, &fileID) != 0)
+	if (getPathID(fileNameB, fileID) != 0)
 	{
 		ReleaseMutex(hBigDokanLock);
 		printf("btrfsCreateFile: getPathID failed! [%S]\n", fileName);
@@ -71,7 +71,7 @@ int DOKAN_CALLBACK btrfsCreateFile(LPCWSTR fileName, DWORD desiredAccess, DWORD 
 	}
 
 	int result2;
-	if ((result2 = parseFSTree(fileID.treeID, FSOP_GET_FILE_PKG, &fileID.objectID, NULL, NULL, &filePkg, NULL)) != 0)
+	if ((result2 = parseFSTree(fileID->treeID, FSOP_GET_FILE_PKG, &fileID->objectID, NULL, NULL, &filePkg, NULL)) != 0)
 	{
 		ReleaseMutex(hBigDokanLock);
 		printf("btrfsCreateFile: parseFSTree with FSOP_GET_FILE_PKG returned %d! [%S]\n", result2, fileName);
@@ -90,32 +90,33 @@ int DOKAN_CALLBACK btrfsCreateFile(LPCWSTR fileName, DWORD desiredAccess, DWORD 
 			be totally cleared up when we move over to a multimap container instead of the current linked list. */
 		
 		/* sort the list in ascending treeID/objectID order */
-		if (it->fileID.treeID > fileID.treeID ||
-			(it->fileID.treeID == fileID.treeID && it->fileID.objectID > fileID.objectID))
+		if (it->fileID.treeID > fileID->treeID ||
+			(it->fileID.treeID == fileID->treeID && it->fileID.objectID > fileID->objectID))
 			break;
 	}
 
 	openFiles.insert(it, filePkg);
 
-	assert(0);
-	/*info->Context = objectID;*/
+	info->Context = (unsigned __int64)fileID;
 
 	if (!info->IsDirectory && (filePkg.inode.stMode & S_IFDIR))
 		info->IsDirectory = TRUE;
 
-	/* TODO: respect the desiredAccess parameter and lock the file based on shareMode */
+	/* need to respect the desired access level, and lock the file based on shareMode */
+	printf("btrfsCreateFile: TOOD: handle desiredAccess and shareMode\n");
 	
 	printf("btrfsCreateFile: OK [%S]\n", fileName);
 	return ERROR_SUCCESS;
 }
 
-/* TODO: merge this with btrfsCreateFile */
 int DOKAN_CALLBACK btrfsOpenDirectory(LPCWSTR fileName, PDOKAN_FILE_INFO info)
 {
 	char fileNameB[MAX_PATH];
 	FileID *fileID = (FileID *)malloc(sizeof(FileID));
 	FilePkg filePkg;
 	
+	printf("btrfsOpenDirectory: TODO: merge this function with btrfsCreateFile\n");
+
 	size_t result = wcstombs(fileNameB, fileName, MAX_PATH);
 	assert(result == wcslen(fileName));
 
@@ -389,6 +390,9 @@ int DOKAN_CALLBACK btrfsGetFileInformation(LPCWSTR fileName, LPBY_HANDLE_FILE_IN
 	
 	/* Big Dokan Lock not needed here */
 
+	/* merge most of this function with the loop portion of btrfsFindFiles */
+	printf("btrfsGetFileInformation: TODO: extract and unify file attribute code\n");
+
 	std::list<FilePkg>::iterator it = openFiles.begin(), end = openFiles.end();
 	for ( ; it != end; ++it)
 	{
@@ -399,7 +403,9 @@ int DOKAN_CALLBACK btrfsGetFileInformation(LPCWSTR fileName, LPBY_HANDLE_FILE_IN
 	/* failing to find the element is NOT an option */
 	assert(it != end);
 
-	/* TODO: FILE_ATTRIBUTE_COMPRESSED, FILE_ATTRIBUTE_SPARSE_FILE, FILE_ATTRIBUTE_REPARSE_POINT (maybe) */
+	/* FILE_ATTRIBUTE_COMPRESSED, FILE_ATTRIBUTE_SPARSE_FILE, FILE_ATTRIBUTE_REPARSE_POINT (maybe) */
+	printf("btrfsGetFileInformation: TODO: handle more attributes\n");
+
 	buffer->dwFileAttributes = 0;
 	if (endian32(it->inode.stMode) & S_IFBLK) buffer->dwFileAttributes |= FILE_ATTRIBUTE_DEVICE; // is this right?
 	if (endian32(it->inode.stMode) & S_IFDIR) buffer->dwFileAttributes |= FILE_ATTRIBUTE_DIRECTORY;
@@ -424,7 +430,7 @@ int DOKAN_CALLBACK btrfsGetFileInformation(LPCWSTR fileName, LPBY_HANDLE_FILE_IN
 
 	/* reimplement the file index values so they are unique values among the currently-open[/cleanedup] files.
 		don't know quite how to do this yet, but treeID+objectID is 128 bits, definitely will not work for a 64-bit value. */
-	printf("TODO: fix windows file index values\n");
+	printf("btrfsGetFileInformation: TODO: properly set file index values\n");
 	buffer->nFileIndexHigh = 0/*(DWORD)(endian64(it->objectID) << 32)*/;
 	buffer->nFileIndexLow = 0/*(DWORD)endian64(it->objectID)*/;
 	
@@ -472,9 +478,12 @@ int DOKAN_CALLBACK btrfsFindFiles(LPCWSTR pathName, PFillFindData pFillFindData,
 
 	for (size_t i = 0; i < dirList.numEntries; i++)
 	{
-		/* TODO: extract this stuff out into a separate conversion function */
-		
-		/* TODO: FILE_ATTRIBUTE_COMPRESSED, FILE_ATTRIBUTE_SPARSE_FILE, FILE_ATTRIBUTE_REPARSE_POINT (maybe) */
+		/* merge this part with the associated part of btrfsGetFileInformation */
+		printf("btrfsFindFiles: TODO: extract and unify file attribute code\n");
+
+		/* FILE_ATTRIBUTE_COMPRESSED, FILE_ATTRIBUTE_SPARSE_FILE, FILE_ATTRIBUTE_REPARSE_POINT (maybe) */
+		printf("btrfsFindFiles: TODO: handle more attributes\n");
+
 		findData.dwFileAttributes = 0;
 		if (endian32(dirList.entries[i].inode.stMode) & S_IFBLK) findData.dwFileAttributes |= FILE_ATTRIBUTE_DEVICE; // is this right?
 		if (endian32(dirList.entries[i].inode.stMode) & S_IFDIR) findData.dwFileAttributes |= FILE_ATTRIBUTE_DIRECTORY;
@@ -615,9 +624,11 @@ int DOKAN_CALLBACK btrfsGetVolumeInformation(LPWSTR volumeNameBuffer, DWORD volu
 	
 	/* Big Dokan Lock not needed here */
 
-	/* TODO: switch to strcpy_s & mbstowcs_s; this currently causes pointers to go bad,
+	/* switch to strcpy_s & mbstowcs_s; this currently causes pointers to go bad,
 		which presumably indicates some sort of vulnerability in the present code that
 		the *_s functions are systematically preventing by padding with 0xfefefefe etc. */
+	printf("btrfsGetVolumeInformation: TODO: use secure string functions (1/2)\n");
+
 	strcpy(labelS, super.label);
 	mbstowcs(volumeNameBuffer, labelS, volumeNameSize);
 
@@ -628,8 +639,8 @@ int DOKAN_CALLBACK btrfsGetVolumeInformation(LPWSTR volumeNameBuffer, DWORD volu
 
 	/* change these flags as features are added: e.g. extended metadata, compression, rw support, ... */
 	*fileSystemFlags = FILE_CASE_PRESERVED_NAMES | FILE_CASE_SENSITIVE_SEARCH | FILE_READ_ONLY_VOLUME;
-
-	/* TODO: switch to wcscpy_s */
+	
+	printf("btrfsGetVolumeInformation: TODO: use secure string functions (2/2)\n");
 	wcscpy(fileSystemNameBuffer, L"Btrfs");
 	
 	printf("btrfsGetVolumeInformation: OK\n");

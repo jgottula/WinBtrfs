@@ -27,22 +27,28 @@ void convertTime(BtrfsTime *bTime, PFILETIME wTime)
 	wTime->dwLowDateTime = (DWORD)s64;
 }
 
+void hexToChar(unsigned char hex, char *chr)
+{
+	static const char digits[] = { '0', '1', '2', '3', '4', '5', '6', '7',
+		'8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
+
+	*chr = digits[hex & 0x0f];
+}
+
 void uuidToStr(const unsigned char *uuid, char *dest)
 {
-	char temp[1024];
-
-	strcpy(dest, "{");
+	size_t len = 0;
 
 	for (size_t i = 0; i < 16; i++)
 	{
 		if (i == 4 || i == 6 || i == 8 || i == 10)
-			strcat(dest, "-");
+			dest[len++] = '-';
 		
-		sprintf(temp, "%02x", uuid[i]);
-		strcat(dest, temp);
+		hexToChar((uuid[i] & 0xf0) >> 4, &dest[len++]);
+		hexToChar(uuid[i] & 0x0f, &dest[len++]);
 	}
 
-	strcat(dest, "}");
+	dest[len] = 0;
 }
 
 void stModeToStr(unsigned int mode, char *dest)

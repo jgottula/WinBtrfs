@@ -280,7 +280,7 @@ struct FileID
 struct FilePkg
 {
 	FileID					fileID;
-	BtrfsObjID				parentID; // not assigned by dir list
+	FileID					parentID; // not assigned by dir list
 	BtrfsInodeItem			inode;
 	size_t					numExtents; // not assigned by dir list
 	KeyedItem				*extents; // not assigned by dir list
