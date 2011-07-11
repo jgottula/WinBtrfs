@@ -129,12 +129,17 @@ void firstTasks()
 	}
 	else if (useSubvolName)
 	{
-		int result;
-		if ((result = parseRootTree(RTOP_GET_SUBVOL_ID, subvolName, &mountedSubvol)) != 0)
+		if (strcmp(subvolName, "default") == 0)
+			mountedSubvol = OBJID_FS_TREE;
+		else
 		{
-			printf("firstTasks: could not find the requested subvolume to mount!\n");
-			cleanUp();
-			exit(1);
+			int result;
+			if ((result = parseRootTree(RTOP_GET_SUBVOL_ID, subvolName, &mountedSubvol)) != 0)
+			{
+				printf("firstTasks: could not find the requested subvolume to mount!\n");
+				cleanUp();
+				exit(1);
+			}
 		}
 	}
 	else
@@ -155,8 +160,6 @@ void firstTasks()
 					NULL, NULL, NULL, NULL, NULL);
 		}
 	}
-	
-	printf("Mounting subvolume 0x%I64x.\n", (unsigned __int64)mountedSubvol);
 }
 
 void dokanError(int dokanResult)
