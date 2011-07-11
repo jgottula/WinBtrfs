@@ -116,7 +116,7 @@ int getPathID(const char *path, FileID *output)
 	numComponents = componentizePath(path, &components);
 
 	/* start at the root directory of the currently mounted subvolume */
-	fileID.treeID = (mountedSubvol == (BtrfsObjID)0 ? OBJID_FS_TREE : mountedSubvol);
+	fileID.treeID = mountedSubvol;
 	fileID.objectID = OBJID_ROOT_DIR;
 
 	/* the first child's DIR_ITEM will be in the first parent's tree */
@@ -126,7 +126,7 @@ int getPathID(const char *path, FileID *output)
 	{
 		hash = crc32c((unsigned int)~1, (const unsigned char *)(components[i]), strlen(components[i]));
 		
-		if (parseFSTree(mountedSubvol, FSOP_NAME_TO_ID, &fileID, &hash, components[i],
+		if (parseFSTree(mountedSubvol, FSOP_NAME_TO_ID, &fileID.objectID, &hash, components[i],
 			&childID.objectID, &isSubvolume) != 0)
 			return 1;
 
