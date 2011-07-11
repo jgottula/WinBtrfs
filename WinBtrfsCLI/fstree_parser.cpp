@@ -329,9 +329,18 @@ void parseFSTreeRec(unsigned __int64 addr, BtrfsObjID tree, FSOperation operatio
 							else
 								dirList->entries = (FilePkg *)realloc(dirList->entries, sizeof(FilePkg) * (dirList->numEntries + 1));
 
-							assert(0); /* the line below is WRONG WRONG WRONG for dirs that are subvol mount points */
-							dirList->entries[dirList->numEntries].fileID.treeID = tree;
-							dirList->entries[dirList->numEntries].fileID.objectID = (BtrfsObjID)endian64(dirItem->child.objectID);
+							assert(dirItem->child.type == TYPE_INODE_ITEM || dirItem->child.type == TYPE_ROOT_ITEM);
+
+							if (dirItem->child.type == TYPE_INODE_ITEM)
+							{
+								dirList->entries[dirList->numEntries].fileID.treeID = tree;
+								dirList->entries[dirList->numEntries].fileID.objectID = (BtrfsObjID)endian64(dirItem->child.objectID);
+							}
+							else
+							{
+								dirList->entries[dirList->numEntries].fileID.treeID = (BtrfsObjID)endian64(dirItem->child.objectID);
+								dirList->entries[dirList->numEntries].fileID.objectID = OBJID_ROOT_DIR;
+							}
 
 							printf("parseFSTreeRec: TODO: check FSOP_DIR_LIST parentID logic!\n");
 							dirList->entries[dirList->numEntries].parentID.treeID = tree;
