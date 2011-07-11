@@ -13,35 +13,35 @@ RTOP_DEFAULT_SUBVOL: Finds and mounts the default subvolume
 
 RTOP_GET_SUBVOL_ID: Returns the object ID for a given subvolume name
 Inputs:
-[1] const char *				subvolume name
+[1] const char *			subvolume name
 Outputs:
-[1] BtrfsObjID *				ptr to subvol's object ID
+[1] BtrfsObjID *			ptr to subvol's object ID
 
 FS tree ops
 
 FSOP_NAME_TO_ID: Finds the object ID for a named file or dir
 Inputs:
-[1] const BtrfsObjID *			parent's object ID
-[2] const unsigned int *		hash of the child file/dir's name
-[3] const char *				child file/dir's name
+[1] const BtrfsObjID *		parent's object ID
+[2] const unsigned int *	hash of the child file/dir's name
+[3] const char *			child file/dir's name
 Outputs:
-[1] BtrfsObjID *				child's object ID
-[2] bool *						whether child is a subvolume
+[1] BtrfsObjID *			child's object ID
+[2] bool *					whether child is a subvolume
 
 FSOP_DUMP_TREE: Dumps the entire FS tree to stdout
 
 FSOP_GET_FILE_PKG: Returns a FilePkg struct containing information about a file from its object ID
 Inputs:
-[1] const BtrfsObjID *			object ID
+[1] const BtrfsObjID *		object ID
 Outputs:
-[1] FilePkg *					FilePkg struct to fill
+[1] FilePkg *				FilePkg struct to fill
 
 FSOP_DIR_LIST: Performs a directory listing of the dir represented by the object ID given in one step
 Inputs:
-[1] const BtrfsObjID *			dir's object ID
+[1] const BtrfsObjID *		dir's object ID
 Outputs:
-[1] DirList *					DirList struct to fill
+[1] DirList *				DirList struct to fill
 
 FSOP_GET_ROOT_INODE: Gets the inode associated with the root directory of a given filesystem tree
 Outputs:
-[1] BtrfsInodeItem *			BtrfsInodeItem struct to fill
+[1] BtrfsInodeItem *		BtrfsInodeItem struct to fill
