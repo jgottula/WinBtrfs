@@ -117,6 +117,22 @@ void firstTasks()
 	if (!noDump) parseRootTree(RTOP_DUMP_TREE, NULL, NULL);
 	parseRootTree(RTOP_LOAD, NULL, NULL);
 
+	if (!noDump)
+	{
+		parseFSTree(OBJID_FS_TREE, FSOP_DUMP_TREE, NULL, NULL, NULL, NULL, NULL);
+
+		/* dump FS subtrees */
+		size_t size = rootTree.size();
+		for (size_t i = 0; i < size; i++)
+		{
+			KeyedItem& kItem = rootTree.at(i);
+
+			if (kItem.key.type == TYPE_ROOT_REF && endian64(kItem.key.objectID) == OBJID_FS_TREE)
+				parseFSTree((BtrfsObjID)endian64(kItem.key.offset), FSOP_DUMP_TREE,
+					NULL, NULL, NULL, NULL, NULL);
+		}
+	}
+
 	if (!useSubvolID && !useSubvolName)
 	{
 		int result;
@@ -144,22 +160,6 @@ void firstTasks()
 	}
 	else
 		mountedSubvol = (subvolID == (BtrfsObjID)0 ? OBJID_FS_TREE : subvolID);
-
-	if (!noDump)
-	{
-		parseFSTree(OBJID_FS_TREE, FSOP_DUMP_TREE, NULL, NULL, NULL, NULL, NULL);
-
-		/* dump FS subtrees */
-		size_t size = rootTree.size();
-		for (size_t i = 0; i < size; i++)
-		{
-			KeyedItem& kItem = rootTree.at(i);
-
-			if (kItem.key.type == TYPE_ROOT_REF && endian64(kItem.key.objectID) == OBJID_FS_TREE)
-				parseFSTree((BtrfsObjID)endian64(kItem.key.offset), FSOP_DUMP_TREE,
-					NULL, NULL, NULL, NULL, NULL);
-		}
-	}
 }
 
 void dokanError(int dokanResult)
