@@ -25,9 +25,10 @@ Cross-subvolume symlinks
 Verify that unicode path strings don't result in a crash
 Try to hit all the outward-facing filesystem interfaces (especially btrfs_operations.c) with extra-long strings for buffer overrun testing
 Test weird node/sector/leaf sizes
+Check for endianness errors by reversing byte orders on disk or running on a BE architecture (Wine on PPC Linux??)
 
 Bugs:
-Mouting btrfs_symlinks.img to C:\mount and dirlisting C:\mount\dir results in a getPathID failure
+Mounting btrfs_symlinks.img to C:\mount and dirlisting C:\mount\dir results in a getPathID failure
 
 Profile:
 Check out how bad my overuse of realloc really is
