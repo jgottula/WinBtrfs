@@ -31,6 +31,9 @@ Determine if, when a subvolume (B) is created within another subvolume (A), the 
 
 Bugs:
 Mounting btrfs_symlinks.img to C:\mount and dirlisting C:\mount\dir results in a getPathID failure
+Dirlisting an empty subvolume (e.g. X:\a2 or X:\a1\b2 in btrfs_nestsubvol.img) results in a FSOP_DIR_LIST failure
+	(this seems to be related to the fact that Windows expects '.' and '..' for every directory other than '\', but
+	the new subvolume code elides the '.' and '..' for every SUBVOL's root (so X:\a2 returns no '.' and '..' but it should)
 
 Profile:
 Check out how bad my overuse of realloc really is
