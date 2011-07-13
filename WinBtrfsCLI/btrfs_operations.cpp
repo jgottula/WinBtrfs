@@ -104,7 +104,7 @@ unsigned int componentizePath(const char *path, char ***output)
 	return numComponents;
 }
 
-int getPathID(const char *path, FileID *output)
+int getPathID(const char *path, FileID *output, FileID *parent)
 {
 	char vPath[MAX_PATH], **components;
 	FileID fileID, childID;
@@ -116,14 +116,14 @@ int getPathID(const char *path, FileID *output)
 	numComponents = componentizePath(path, &components);
 
 	/* start at the root directory of the currently mounted subvolume */
-	fileID.treeID = mountedSubvol;
-	fileID.objectID = OBJID_ROOT_DIR;
-
-	/* the first child's DIR_ITEM will be in the first parent's tree */
-	childID.treeID = fileID.treeID;
+	fileID.treeID = childID.treeID = mountedSubvol;
+	fileID.objectID = childID.objectID = OBJID_ROOT_DIR;
 
 	for (int i = 0; i < numComponents; i++)
 	{
+		/* ratchet up */
+		memcpy(&fileID, &childID, sizeof(FileID));
+
 		hash = crc32c((unsigned int)~1, (const unsigned char *)(components[i]), strlen(components[i]));
 		
 		if (parseFSTree(fileID.treeID, FSOP_NAME_TO_ID, &fileID.objectID, &hash, components[i],
@@ -136,12 +136,10 @@ int getPathID(const char *path, FileID *output)
 			childID.treeID = childID.objectID;
 			childID.objectID = OBJID_ROOT_DIR;
 		}
-
-		/* ratchet up */
-		memcpy(&fileID, &childID, sizeof(FileID));
 	}
 
-	memcpy(output, &fileID, sizeof(FileID));
+	memcpy(output, &childID, sizeof(FileID));
+	memcpy(parent, &fileID, sizeof(FileID));
 
 	return 0;
 }

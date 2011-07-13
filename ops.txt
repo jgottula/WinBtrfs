@@ -38,7 +38,7 @@ Outputs:
 
 FSOP_DIR_LIST: Performs a directory listing of the dir represented by the object ID given in one step
 Inputs:
-[1] const BtrfsObjID *		dir's object ID
+[1] const FilePkg *			FilePkg struct associated with the directory
 [2] const bool *			whether this directory is the root (the root of the _mounted_ subvolume)
 Outputs:
 [1] DirList *				DirList struct to fill

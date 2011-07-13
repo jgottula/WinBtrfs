@@ -177,8 +177,7 @@ unsigned char *loadNode(unsigned __int64 blockAddr, AddrType type, BtrfsHeader *
 	unsigned char *nodeBlock = (unsigned char *)malloc(blockSize);
 
 	/* this might not always be fatal, so in the future an assertion may be inappropriate */
-	DWORD result = blockReader->directRead(blockAddr, type, blockSize, nodeBlock);
-	assert(result == 0);
+	assert(blockReader->directRead(blockAddr, type, blockSize, nodeBlock) == 0);
 
 	*header = (BtrfsHeader *)nodeBlock;
 

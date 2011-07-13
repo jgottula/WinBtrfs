@@ -41,7 +41,7 @@ int btrfsCreateFileCommon(bool dir, LPCWSTR fileName, DWORD desiredAccess, DWORD
 	DWORD flagsAndAttributes, PDOKAN_FILE_INFO info)
 {
 	char fileNameB[MAX_PATH];
-	FileID *fileID = (FileID *)malloc(sizeof(FileID));
+	FileID parentID, *fileID = (FileID *)malloc(sizeof(FileID));
 	FilePkg filePkg;
 
 	if (!dir)
@@ -60,7 +60,7 @@ int btrfsCreateFileCommon(bool dir, LPCWSTR fileName, DWORD desiredAccess, DWORD
 		return -ERROR_SEM_TIMEOUT; // error code looks sketchy
 	}
 
-	if (getPathID(fileNameB, fileID) != 0)
+	if (getPathID(fileNameB, fileID, &parentID) != 0)
 	{
 		ReleaseMutex(hBigDokanLock);
 		printf("%s: getPathID failed! [%S]\n",
@@ -78,6 +78,20 @@ int btrfsCreateFileCommon(bool dir, LPCWSTR fileName, DWORD desiredAccess, DWORD
 	}
 	
 	ReleaseMutex(hBigDokanLock);
+
+	/* populate the parent object ID */
+	memcpy(&filePkg.parentID, &parentID, sizeof(FileID));
+
+	/* populate the parent inode */
+	int result3;
+	if ((result3 = parseFSTree(filePkg.parentID.treeID, FSOP_GET_INODE, &filePkg.parentID.objectID,
+		NULL, NULL, &filePkg.parentInode, NULL)) != 0)
+	{
+		ReleaseMutex(hBigDokanLock);
+		printf("%s: parseFSTreewith FSOP_GET_INODE returned %d! [%S]\n",
+			(dir ? "btrfsOpenDirectory" : "brtfsCreateFile"), result3, fileName);
+		return -ERROR_FILE_NOT_FOUND;
+	}
 
 	std::list<FilePkg>::iterator it = openFiles.begin(), end = openFiles.end();
 	for ( ; it != end; ++it)
@@ -400,6 +414,7 @@ int DOKAN_CALLBACK btrfsFindFiles(LPCWSTR pathName, PFillFindData pFillFindData,
 	char pathNameB[MAX_PATH];
 	wchar_t nameW[MAX_PATH];
 	FileID *fileID = (FileID *)info->Context;
+	FilePkg *filePkg;
 	DirList dirList;
 	WIN32_FIND_DATAW findData;
 	bool root;
@@ -410,13 +425,23 @@ int DOKAN_CALLBACK btrfsFindFiles(LPCWSTR pathName, PFillFindData pFillFindData,
 	std::list<FilePkg>::iterator it = openFiles.begin(), end = openFiles.end();
 	for ( ; it != end; ++it)
 	{
-		/* return ERROR_DIRECTORY (267) if attempting to dirlist a file; this is what NTFS does */
-		if (it->fileID.treeID == fileID->treeID && it->fileID.objectID == fileID->objectID && !(it->inode.stMode & S_IFDIR))
+		if (it->fileID.treeID == fileID->treeID && it->fileID.objectID == fileID->objectID)
 		{
-			printf("btrfsFindFiles: expected a dir but was given a file! [%S]\n", pathName);
-			return -ERROR_DIRECTORY; // for some reason, ERROR_FILE_NOT_FOUND is reported to FindFirstFile
+			/* return ERROR_DIRECTORY (267) if attempting to dirlist a file; this is what NTFS does */
+			if (!(it->inode.stMode & S_IFDIR))
+			{
+				printf("btrfsFindFiles: expected a dir but was given a file! [%S]\n", pathName);
+				return -ERROR_DIRECTORY; // for some reason, ERROR_FILE_NOT_FOUND is reported to FindFirstFile
+			}
+
+			break;
 		}
 	}
+
+	/* failing to find the element is NOT an option */
+	assert(it != end);
+
+	filePkg = &(*it);
 
 	if (WaitForSingleObject(hBigDokanLock, 10000) != WAIT_OBJECT_0)
 	{
@@ -427,7 +452,7 @@ int DOKAN_CALLBACK btrfsFindFiles(LPCWSTR pathName, PFillFindData pFillFindData,
 	root = (strcmp(pathNameB, "\\") == 0);
 
 	int result2;
-	if ((result2 = parseFSTree(fileID->treeID, FSOP_DIR_LIST, &fileID->objectID, &root, NULL, &dirList, NULL)) != 0)
+	if ((result2 = parseFSTree(fileID->treeID, FSOP_DIR_LIST, filePkg, &root, NULL, &dirList, NULL)) != 0)
 	{
 		ReleaseMutex(hBigDokanLock);
 		printf("btrfsFindFiles: parseFSTree with FSOP_DIR_LIST returned %d! [%S]\n", result2, pathName);

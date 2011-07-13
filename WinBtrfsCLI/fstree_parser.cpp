@@ -19,7 +19,7 @@
 #include "util.h"
 
 void parseFSTreeRec(unsigned __int64 addr, BtrfsObjID tree, FSOperation operation, void *input1, void *input2, void *input3,
-	void *output1, void *output2, void *temp, int *returnCode, bool *shortCircuit)
+	void *output1, void *output2, int *returnCode, bool *shortCircuit)
 {
 	unsigned char *nodeBlock, *nodePtr;
 	BtrfsHeader *header;
@@ -238,22 +238,18 @@ void parseFSTreeRec(unsigned __int64 addr, BtrfsObjID tree, FSOperation operatio
 					if (inodeItem->stMode & S_IFDIR)
 						*returnCode &= ~0x4; // clear bit 2; we don't need extent info for dirs
 				}
-				else if (item->key.type == TYPE_DIR_ITEM) // name & parent
+				else if (item->key.type == TYPE_DIR_ITEM) // name
 				{
 					BtrfsDirItem *dirItem = (BtrfsDirItem *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset)),
 						*firstDirItem = dirItem;
 					
 					while (true)
 					{
-						if (endian64(dirItem->child.objectID) == *objectID) // parent info
+						if (endian64(dirItem->child.objectID) == *objectID)
 						{
 							memcpy(filePkg->name, dirItem->namePlusData,
 								(endian16(dirItem->n) <= 255 ? endian16(dirItem->n) : 255)); // limit to 255
 							filePkg->name[endian16(dirItem->n)] = 0;
-
-							printf("parseFSTreeRec: TODO: check FSOP_GET_FILE_PKG parentID logic!\n");
-							filePkg->parentID.treeID = tree;
-							filePkg->parentID.objectID = (BtrfsObjID)endian64(item->key.objectID);
 							
 							*returnCode &= ~0x2; // clear bit 1
 						}
@@ -285,21 +281,15 @@ void parseFSTreeRec(unsigned __int64 addr, BtrfsObjID tree, FSOperation operatio
 			}
 			else if (operation == FSOP_DIR_LIST)
 			{
-				const BtrfsObjID *objectID = (const BtrfsObjID *)input1;
+				const FilePkg *filePkg = (const FilePkg *)input1;
 				const bool *root = (const bool *)input2;
 				DirList *dirList = (DirList *)output1;
 				
 				if (item->key.type == TYPE_INODE_ITEM) // inode
 				{
 					BtrfsInodeItem *inodeItem = (BtrfsInodeItem *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset));
-					
-					if (dirList->numEntries == (*objectID == OBJID_ROOT_DIR ? 0 : 1)) // no entries have been created yet
-					{
-						/* save this inode for later in case it happens to be the inode associated with '..' */
-						memcpy(temp, inodeItem, sizeof(BtrfsInodeItem));
-					}
 
-					for (int j = 0; j < dirList->numEntries; j++) // try to find a matching entry
+					for (int j = 2; j < dirList->numEntries; j++) // try to find a matching entry, skip '.' and '..'
 					{
 						if (tree == dirList->entries[j].fileID.treeID &&
 							endian64(item->key.objectID) == dirList->entries[j].fileID.objectID)
@@ -320,7 +310,7 @@ void parseFSTreeRec(unsigned __int64 addr, BtrfsObjID tree, FSOperation operatio
 					
 					while (true)
 					{
-						if (endian64(item->key.objectID) == *objectID)
+						if (endian64(item->key.objectID) == filePkg->fileID.objectID)
 						{
 							if (dirList->entries == NULL)
 								dirList->entries = (FilePkg *)malloc(sizeof(FilePkg));
@@ -351,35 +341,6 @@ void parseFSTreeRec(unsigned __int64 addr, BtrfsObjID tree, FSOperation operatio
 							dirList->numEntries++;
 							
 							(*returnCode)++;
-						}
-						
-						/* special case for '..' */
-						if (!(*root) && endian64(dirItem->child.objectID) == *objectID)
-						{
-							if (dirList->entries == NULL)
-								dirList->entries = (FilePkg *)malloc(sizeof(FilePkg));
-							else
-								dirList->entries = (FilePkg *)realloc(dirList->entries, sizeof(FilePkg) * (dirList->numEntries + 1));
-
-							/* go back and assign the parent for '.' since we have that value handy */
-							/* this assumes that the first entry is always '.' for non-root dirs, which is currently
-								always the case. */
-							printf("parseFSTreeRec: TODO: check FSOP_DIR_LIST parentID logic for '.'!\n");
-							dirList->entries[0].parentID.treeID = tree;
-							dirList->entries[0].parentID.objectID = (BtrfsObjID)endian64(item->key.objectID);
-							
-							/* this code does NOT account for .. possibly being in a different tree! */
-							printf("parseFSTreeRec: TODO: redo FSOP_DIR_LIST fileID logic for '..'!\n");
-							dirList->entries[dirList->numEntries].fileID.treeID = tree;
-							dirList->entries[dirList->numEntries].fileID.objectID = (BtrfsObjID)endian64(item->key.objectID);
-							/* not currently assigning parentID, as it's unnecessary and not needed by the dir list callback */
-
-							strcpy(dirList->entries[dirList->numEntries].name, "..");
-
-							/* grab the inode we saved earlier and shove it in */
-							memcpy(&(dirList->entries[dirList->numEntries].inode), temp, sizeof(BtrfsInodeItem));
-
-							dirList->numEntries++;
 						}
 						
 						/* advance to the next DIR_ITEM if there are more */
@@ -444,7 +405,7 @@ void parseFSTreeRec(unsigned __int64 addr, BtrfsObjID tree, FSOperation operatio
 
 			/* recurse down one level of the tree */
 			parseFSTreeRec(endian64(keyPtr->blockNum), tree, operation, input1, input2, input3,
-				output1, output2, temp, returnCode, shortCircuit);
+				output1, output2, returnCode, shortCircuit);
 
 			if (*shortCircuit)
 				break;
@@ -460,7 +421,6 @@ int parseFSTree(BtrfsObjID tree, FSOperation operation, void *input1, void *inpu
 {
 	int returnCode;
 	bool shortCircuit = false;
-	BtrfsInodeItem inode;
 	
 	switch (operation)
 	{
@@ -471,7 +431,7 @@ int parseFSTree(BtrfsObjID tree, FSOperation operation, void *input1, void *inpu
 	case FSOP_GET_FILE_PKG:
 		returnCode = 0x1; // always need the inode
 		if (*((BtrfsObjID *)input1) != OBJID_ROOT_DIR)
-			returnCode |= 0x2; // need parent & name for all except the root dir
+			returnCode |= 0x2; // needs name for all except the root dir
 		break;
 	default:
 		returnCode = 0x1; // 1 bit = 1 part MUST be fulfilled
@@ -498,21 +458,24 @@ int parseFSTree(BtrfsObjID tree, FSOperation operation, void *input1, void *inpu
 	}
 	else if (operation == FSOP_DIR_LIST)
 	{
-		const BtrfsObjID *objectID = (const BtrfsObjID *)input1;
+		const FilePkg *filePkg = (const FilePkg *)input1;
 		const bool *root = (const bool *)input2;
 		DirList *dirList = (DirList *)output1;
 
 		if (!(*root))
 		{
-			dirList->numEntries = 1;
-			dirList->entries = (FilePkg *)malloc(sizeof(FilePkg));
+			dirList->numEntries = 2;
+			dirList->entries = (FilePkg *)malloc(2 * sizeof(FilePkg));
 
 			/* add '.' to the list */
-			dirList->entries[0].fileID.treeID = tree;
-			dirList->entries[0].fileID.objectID = *objectID;
+			memcpy(&dirList->entries[0], filePkg, sizeof(FilePkg));
 			strcpy(dirList->entries[0].name, ".");
 
-			returnCode++;
+			/* add '..' to the list */
+			memcpy(&dirList->entries[1].fileID, &filePkg->parentID, sizeof(FileID));
+			memcpy(&dirList->entries[1].inode, &filePkg->parentInode, sizeof(BtrfsInodeItem));
+			strcpy(dirList->entries[1].name, "..");
+			dirList->entries[1].hidden = false;
 		}
 		else
 		{
@@ -522,7 +485,7 @@ int parseFSTree(BtrfsObjID tree, FSOperation operation, void *input1, void *inpu
 	}
 
 	parseFSTreeRec(getTreeRootAddr(tree), tree, operation, input1, input2, input3, output1, output2,
-		(operation == FSOP_DIR_LIST ? &inode : NULL), &returnCode, &shortCircuit);
+		&returnCode, &shortCircuit);
 
 	if (operation == FSOP_GET_FILE_PKG)
 	{
@@ -538,10 +501,11 @@ int parseFSTree(BtrfsObjID tree, FSOperation operation, void *input1, void *inpu
 	}
 	else if (operation == FSOP_DIR_LIST)
 	{
-		const BtrfsObjID *objectID = (const BtrfsObjID *)input1;
+		/*const FilePkg *filePkg = (const FilePkg *)input1;*/
+		const bool *root = (const bool *)input2;
 		DirList *dirList = (DirList *)output1;
 
-		for (size_t i = 0; i < dirList->numEntries; i++)
+		for (size_t i = 2; i < dirList->numEntries; i++) // skip '.' and '..'
 		{
 			if (dirList->entries[i].fileID.treeID != tree)
 			{
@@ -555,10 +519,10 @@ int parseFSTree(BtrfsObjID tree, FSOperation operation, void *input1, void *inpu
 
 		if (returnCode == 0)
 		{
-			for (size_t i = 0; i < dirList->numEntries; i++)
+			/* skip the first two items (. and ..) if this is the volume root */
+			for (size_t i = (*root ? 0 : 2); i < dirList->numEntries; i++)
 			{
-				if (dirList->entries[i].name[0] == '.' && strcmp(dirList->entries[i].name, ".") != 0 &&
-					strcmp(dirList->entries[i].name, "..") != 0)
+				if (dirList->entries[i].name[0] == '.')
 					dirList->entries[i].hidden = true;
 				else
 					dirList->entries[i].hidden = false;
