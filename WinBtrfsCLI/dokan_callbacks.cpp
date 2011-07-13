@@ -445,6 +445,7 @@ int DOKAN_CALLBACK btrfsFindFiles(LPCWSTR pathName, PFillFindData pFillFindData,
 	FileID *fileID = (FileID *)info->Context;
 	DirList dirList;
 	WIN32_FIND_DATAW findData;
+	bool root;
 
 	size_t result = wcstombs(pathNameB, pathName, MAX_PATH);
 	assert (result == wcslen(pathName));
@@ -466,8 +467,10 @@ int DOKAN_CALLBACK btrfsFindFiles(LPCWSTR pathName, PFillFindData pFillFindData,
 		return -ERROR_SEM_TIMEOUT; // error code looks sketchy
 	}
 
+	root = (strcmp(pathNameB, "\\") == 0);
+
 	int result2;
-	if ((result2 = parseFSTree(fileID->treeID, FSOP_DIR_LIST, &fileID->objectID, NULL, NULL, &dirList, NULL)) != 0)
+	if ((result2 = parseFSTree(fileID->treeID, FSOP_DIR_LIST, &fileID->objectID, &root, NULL, &dirList, NULL)) != 0)
 	{
 		ReleaseMutex(hBigDokanLock);
 		printf("btrfsFindFiles: parseFSTree with FSOP_DIR_LIST returned %d! [%S]\n", result2, pathName);

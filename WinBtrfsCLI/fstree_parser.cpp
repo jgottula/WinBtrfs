@@ -286,6 +286,7 @@ void parseFSTreeRec(unsigned __int64 addr, BtrfsObjID tree, FSOperation operatio
 			else if (operation == FSOP_DIR_LIST)
 			{
 				const BtrfsObjID *objectID = (const BtrfsObjID *)input1;
+				const bool *root = (const bool *)input2;
 				DirList *dirList = (DirList *)output1;
 				
 				if (item->key.type == TYPE_INODE_ITEM) // inode
@@ -353,7 +354,7 @@ void parseFSTreeRec(unsigned __int64 addr, BtrfsObjID tree, FSOperation operatio
 						}
 						
 						/* special case for '..' */
-						if (*objectID != OBJID_ROOT_DIR && endian64(dirItem->child.objectID) == *objectID)
+						if (!(*root) && endian64(dirItem->child.objectID) == *objectID)
 						{
 							if (dirList->entries == NULL)
 								dirList->entries = (FilePkg *)malloc(sizeof(FilePkg));
@@ -497,9 +498,10 @@ int parseFSTree(BtrfsObjID tree, FSOperation operation, void *input1, void *inpu
 	else if (operation == FSOP_DIR_LIST)
 	{
 		const BtrfsObjID *objectID = (const BtrfsObjID *)input1;
+		const bool *root = (const bool *)input2;
 		DirList *dirList = (DirList *)output1;
 
-		if (*objectID != OBJID_ROOT_DIR)
+		if (!(*root))
 		{
 			dirList->numEntries = 1;
 			dirList->entries = (FilePkg *)malloc(sizeof(FilePkg));
