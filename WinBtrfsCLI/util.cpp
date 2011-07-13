@@ -16,7 +16,9 @@
 #include <cstdio>
 #include "endian.h"
 
-void convertTime(BtrfsTime *bTime, PFILETIME wTime)
+extern BtrfsSuperblock super;
+
+void convertTime(const BtrfsTime *bTime, PFILETIME wTime)
 {
 	LONGLONG s64 = 116444736000000000; // 1601-to-1970 correction factor
 
@@ -25,6 +27,96 @@ void convertTime(BtrfsTime *bTime, PFILETIME wTime)
 
 	wTime->dwHighDateTime = (DWORD)(s64 >> 32);
 	wTime->dwLowDateTime = (DWORD)s64;
+}
+
+void convertMetadata(const FilePkg *input, void *output, bool dirList)
+{
+	LPBY_HANDLE_FILE_INFORMATION fileInfo = (LPBY_HANDLE_FILE_INFORMATION)output;
+	PWIN32_FIND_DATAW dirListData = (PWIN32_FIND_DATAW)output;
+
+	/* FILE_ATTRIBUTE_COMPRESSED, FILE_ATTRIBUTE_SPARSE_FILE, FILE_ATTRIBUTE_REPARSE_POINT (maybe) */
+	printf("convertMetadata: TODO: handle more attributes\n");
+
+	if (!dirList)
+	{
+		fileInfo->dwFileAttributes = 0;
+		if (endian32(input->inode.stMode) & S_IFBLK) fileInfo->dwFileAttributes |= FILE_ATTRIBUTE_DEVICE; // is this right?
+		if (endian32(input->inode.stMode) & S_IFDIR) fileInfo->dwFileAttributes |= FILE_ATTRIBUTE_DIRECTORY;
+		if (!(endian32(input->inode.stMode) & S_IWUSR)) fileInfo->dwFileAttributes |= FILE_ATTRIBUTE_READONLY; // using owner perms
+		if (input->hidden) fileInfo->dwFileAttributes |= FILE_ATTRIBUTE_HIDDEN;
+	}
+	else
+	{
+		dirListData->dwFileAttributes = 0;
+		if (endian32(input->inode.stMode) & S_IFBLK) dirListData->dwFileAttributes |= FILE_ATTRIBUTE_DEVICE; // is this right?
+		if (endian32(input->inode.stMode) & S_IFDIR) dirListData->dwFileAttributes |= FILE_ATTRIBUTE_DIRECTORY;
+		if (input->hidden) dirListData->dwFileAttributes |= FILE_ATTRIBUTE_HIDDEN;
+	}
+	
+	/* not sure if this is necessary, but it seems to be what you're supposed to do */
+	if (!dirList)
+	{
+		if (fileInfo->dwFileAttributes == 0)
+			fileInfo->dwFileAttributes = FILE_ATTRIBUTE_NORMAL;
+	}
+	else
+	{
+		if (dirListData->dwFileAttributes == 0)
+			dirListData->dwFileAttributes = FILE_ATTRIBUTE_NORMAL;
+	}
+
+	if (!dirList)
+	{
+		convertTime(&input->inode.stCTime, &fileInfo->ftCreationTime);
+		convertTime(&input->inode.stATime, &fileInfo->ftLastAccessTime);
+		convertTime(&input->inode.stMTime, &fileInfo->ftLastWriteTime);
+	}
+	else
+	{
+		convertTime(&input->inode.stCTime, &dirListData->ftCreationTime);
+		convertTime(&input->inode.stATime, &dirListData->ftLastAccessTime);
+		convertTime(&input->inode.stMTime, &dirListData->ftLastWriteTime);
+	}
+
+	if (!dirList)
+	{
+		/* using the least significant 4 bytes of the UUID */
+		fileInfo->dwVolumeSerialNumber = super.uuid[0] + (super.uuid[1] << 8) +
+			(super.uuid[2] << 16) + (super.uuid[3] << 24);
+	}
+
+	if (!dirList)
+	{
+		fileInfo->nFileSizeHigh = (DWORD)(endian64(input->inode.stSize) >> 32);
+		fileInfo->nFileSizeLow = (DWORD)endian64(input->inode.stSize);
+	}
+	else
+	{
+		dirListData->nFileSizeHigh = (DWORD)(endian64(input->inode.stSize) >> 32);
+		dirListData->nFileSizeLow = (DWORD)endian64(input->inode.stSize);
+	}
+
+	if (!dirList)
+	{
+		fileInfo->nNumberOfLinks = endian32(input->inode.stNLink);
+
+		/* reimplement the file index values so they are unique values among the currently-open[/cleanedup] files.
+			don't know quite how to do this yet, but treeID+objectID is 128 bits, definitely will not work for a 64-bit value. */
+		printf("convertMetadata: TODO: properly set file index values\n");
+		fileInfo->nFileIndexHigh = 0/*(DWORD)(endian64(it->objectID) << 32)*/;
+		fileInfo->nFileIndexLow = 0/*(DWORD)endian64(it->objectID)*/;
+	}
+
+	if (dirList)
+	{
+		wchar_t nameW[MAX_PATH];
+		
+		size_t result = mbstowcs(nameW, input->name, MAX_PATH);
+		assert(result == strlen(input->name));
+
+		wcscpy(dirListData->cFileName, nameW);
+		dirListData->cAlternateFileName[0] = 0; // no 8.3 name
+	}
 }
 
 void hexToChar(unsigned char hex, char *chr)

@@ -361,9 +361,6 @@ int DOKAN_CALLBACK btrfsGetFileInformation(LPCWSTR fileName, LPBY_HANDLE_FILE_IN
 	
 	/* Big Dokan Lock not needed here */
 
-	/* merge most of this function with the loop portion of btrfsFindFiles */
-	printf("btrfsGetFileInformation: TODO: extract and unify file attribute code\n");
-
 	std::list<FilePkg>::iterator it = openFiles.begin(), end = openFiles.end();
 	for ( ; it != end; ++it)
 	{
@@ -374,36 +371,7 @@ int DOKAN_CALLBACK btrfsGetFileInformation(LPCWSTR fileName, LPBY_HANDLE_FILE_IN
 	/* failing to find the element is NOT an option */
 	assert(it != end);
 
-	/* FILE_ATTRIBUTE_COMPRESSED, FILE_ATTRIBUTE_SPARSE_FILE, FILE_ATTRIBUTE_REPARSE_POINT (maybe) */
-	printf("btrfsGetFileInformation: TODO: handle more attributes\n");
-
-	buffer->dwFileAttributes = 0;
-	if (endian32(it->inode.stMode) & S_IFBLK) buffer->dwFileAttributes |= FILE_ATTRIBUTE_DEVICE; // is this right?
-	if (endian32(it->inode.stMode) & S_IFDIR) buffer->dwFileAttributes |= FILE_ATTRIBUTE_DIRECTORY;
-	if (!(endian32(it->inode.stMode) & S_IWUSR)) buffer->dwFileAttributes |= FILE_ATTRIBUTE_READONLY; // using owner perms
-	if (it->hidden) buffer->dwFileAttributes |= FILE_ATTRIBUTE_HIDDEN;
-
-	/* not sure if this is necessary, but it seems to be what you're supposed to do */
-	if (buffer->dwFileAttributes == 0)
-		buffer->dwFileAttributes = FILE_ATTRIBUTE_NORMAL;
-
-	convertTime(&it->inode.stCTime, &buffer->ftCreationTime);
-	convertTime(&it->inode.stATime, &buffer->ftLastAccessTime);
-	convertTime(&it->inode.stMTime, &buffer->ftLastWriteTime);
-	
-	/* using the least significant 4 bytes of the UUID */
-	buffer->dwVolumeSerialNumber = super.uuid[0] + (super.uuid[1] << 8) + (super.uuid[2] << 16) + (super.uuid[3] << 24);
-
-	buffer->nFileSizeHigh = (DWORD)(endian64(it->inode.stSize) >> 32);
-	buffer->nFileSizeLow = (DWORD)endian64(it->inode.stSize);
-
-	buffer->nNumberOfLinks = endian32(it->inode.stNLink);
-
-	/* reimplement the file index values so they are unique values among the currently-open[/cleanedup] files.
-		don't know quite how to do this yet, but treeID+objectID is 128 bits, definitely will not work for a 64-bit value. */
-	printf("btrfsGetFileInformation: TODO: properly set file index values\n");
-	buffer->nFileIndexHigh = 0/*(DWORD)(endian64(it->objectID) << 32)*/;
-	buffer->nFileIndexLow = 0/*(DWORD)endian64(it->objectID)*/;
+	convertMetadata(&(*it), buffer, false);
 	
 	printf("btrfsGetFileInformation: OK [%S]\n", fileName);
 	return ERROR_SUCCESS;
@@ -412,7 +380,6 @@ int DOKAN_CALLBACK btrfsGetFileInformation(LPCWSTR fileName, LPBY_HANDLE_FILE_IN
 int DOKAN_CALLBACK btrfsFindFiles(LPCWSTR pathName, PFillFindData pFillFindData, PDOKAN_FILE_INFO info)
 {
 	char pathNameB[MAX_PATH];
-	wchar_t nameW[MAX_PATH];
 	FileID *fileID = (FileID *)info->Context;
 	FilePkg *filePkg;
 	DirList dirList;
@@ -463,37 +430,9 @@ int DOKAN_CALLBACK btrfsFindFiles(LPCWSTR pathName, PFillFindData pFillFindData,
 
 	for (size_t i = 0; i < dirList.numEntries; i++)
 	{
-		/* merge this part with the associated part of btrfsGetFileInformation */
-		printf("btrfsFindFiles: TODO: extract and unify file attribute code\n");
+		convertMetadata(filePkg, &findData, true);
 
-		/* FILE_ATTRIBUTE_COMPRESSED, FILE_ATTRIBUTE_SPARSE_FILE, FILE_ATTRIBUTE_REPARSE_POINT (maybe) */
-		printf("btrfsFindFiles: TODO: handle more attributes\n");
-
-		findData.dwFileAttributes = 0;
-		if (endian32(dirList.entries[i].inode.stMode) & S_IFBLK) findData.dwFileAttributes |= FILE_ATTRIBUTE_DEVICE; // is this right?
-		if (endian32(dirList.entries[i].inode.stMode) & S_IFDIR) findData.dwFileAttributes |= FILE_ATTRIBUTE_DIRECTORY;
-		if (dirList.entries[i].hidden) findData.dwFileAttributes |= FILE_ATTRIBUTE_HIDDEN;
-
-		/* not sure if this is necessary, but it seems to be what you're supposed to do */
-		if (findData.dwFileAttributes == 0)
-			findData.dwFileAttributes = FILE_ATTRIBUTE_NORMAL;
-		
-		convertTime(&(dirList.entries[i].inode.stCTime), &findData.ftCreationTime);
-		convertTime(&(dirList.entries[i].inode.stATime), &findData.ftLastAccessTime);
-		convertTime(&(dirList.entries[i].inode.stMTime), &findData.ftLastWriteTime);
-
-		findData.nFileSizeHigh = (DWORD)(endian64(dirList.entries[i].inode.stSize) >> 32);
-		findData.nFileSizeLow = (DWORD)endian64(dirList.entries[i].inode.stSize);
-
-		size_t result = mbstowcs(nameW, dirList.entries[i].name, MAX_PATH);
-		assert(result == strlen(dirList.entries[i].name));
-
-		wcscpy(findData.cFileName, nameW);
-		findData.cAlternateFileName[0] = 0; // no 8.3 name
-
-		/* calling pFillFindData multiple times with the same pointer arg (but different contents) should work properly */
-
-		/* call the function pointer */
+		/* this function works OK if the same pointer (but different data) is passed in each time */
 		(*pFillFindData)(&findData, info);
 	}
 	

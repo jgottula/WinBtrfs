@@ -14,7 +14,8 @@
 #include <Windows.h>
 #include "structures.h"
 
-void convertTime(BtrfsTime *bTime, PFILETIME wTime);
+void convertTime(const BtrfsTime *bTime, PFILETIME wTime);
+void convertMetadata(const FilePkg *input, void *output, bool dirList);
 void hexToChar(unsigned char hex, char *chr);
 void uuidToStr(const unsigned char *uuid, char *dest);
 void stModeToStr(unsigned int mode, char *dest);
