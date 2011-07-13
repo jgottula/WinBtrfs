@@ -505,7 +505,7 @@ int parseFSTree(BtrfsObjID tree, FSOperation operation, void *input1, void *inpu
 		const bool *root = (const bool *)input2;
 		DirList *dirList = (DirList *)output1;
 
-		for (size_t i = 2; i < dirList->numEntries; i++) // skip '.' and '..'
+		for (size_t i = (*root ? 0 : 2); i < dirList->numEntries; i++) // skip '.' and '..'
 		{
 			if (dirList->entries[i].fileID.treeID != tree)
 			{
