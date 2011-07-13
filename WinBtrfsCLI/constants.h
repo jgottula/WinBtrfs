@@ -108,7 +108,7 @@ enum FSOperation
 	FSOP_DUMP_TREE,
 	FSOP_GET_FILE_PKG,
 	FSOP_DIR_LIST,
-	FSOP_GET_ROOT_INODE
+	FSOP_GET_INODE
 };
 
 /* Btrfs superblock physical addresses */

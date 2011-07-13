@@ -392,18 +392,19 @@ void parseFSTreeRec(unsigned __int64 addr, BtrfsObjID tree, FSOperation operatio
 					}
 				}
 			}
-			else if (operation == FSOP_GET_ROOT_INODE)
+			else if (operation == FSOP_GET_INODE)
 			{
+				const BtrfsObjID *objectID = (const BtrfsObjID *)input1;
 				BtrfsInodeItem *inode = (BtrfsInodeItem *)output1;
 				
-				/* it's safe to jump out once we pass the object ID in question */
-				if (item->key.objectID > OBJID_ROOT_DIR)
+				/* abort once we pass the object ID in question */
+				if (item->key.objectID > *objectID)
 				{
 					*shortCircuit = true;
 					break;
 				}
 
-				if (item->key.type == TYPE_INODE_ITEM && endian64(item->key.objectID) == OBJID_ROOT_DIR) // inode
+				if (item->key.type == TYPE_INODE_ITEM && endian64(item->key.objectID) == *objectID) // inode
 				{
 					BtrfsInodeItem *inodeItem = (BtrfsInodeItem *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset));
 					
@@ -544,7 +545,9 @@ int parseFSTree(BtrfsObjID tree, FSOperation operation, void *input1, void *inpu
 		{
 			if (dirList->entries[i].fileID.treeID != tree)
 			{
-				parseFSTree(dirList->entries[i].fileID.treeID, FSOP_GET_ROOT_INODE, NULL, NULL, NULL,
+				BtrfsObjID rootID = OBJID_ROOT_DIR;
+				
+				parseFSTree(dirList->entries[i].fileID.treeID, FSOP_GET_INODE, &rootID, NULL, NULL,
 					&dirList->entries[i].inode, NULL);
 				returnCode--;
 			}

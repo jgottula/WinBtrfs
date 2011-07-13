@@ -43,6 +43,8 @@ Inputs:
 Outputs:
 [1] DirList *				DirList struct to fill
 
-FSOP_GET_ROOT_INODE: Gets the inode associated with the root directory of a given filesystem tree
+FSOP_GET_INODE: Gets an inode with the specified object ID
+Inputs:
+[1] const BtrfsObjID *		file's object ID
 Outputs:
-[1] BtrfsInodeItem *		BtrfsInodeItem struct to fill
+[1] BtrfsInodeItem *		inode
