@@ -330,7 +330,6 @@ void parseFSTreeRec(unsigned __int64 addr, BtrfsObjID tree, FSOperation operatio
 								dirList->entries[dirList->numEntries].fileID.objectID = OBJID_ROOT_DIR;
 							}
 
-							printf("parseFSTreeRec: TODO: check FSOP_DIR_LIST parentID logic!\n");
 							dirList->entries[dirList->numEntries].parentID.treeID = tree;
 							dirList->entries[dirList->numEntries].parentID.objectID = (BtrfsObjID)endian64(item->key.objectID);
 
