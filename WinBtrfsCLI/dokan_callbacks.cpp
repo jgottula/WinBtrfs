@@ -37,6 +37,80 @@ DWORD setupBigDokanLock()
 		return ERROR_SUCCESS;
 }
 
+int btrfsCreateFileCommon(bool dir, LPCWSTR fileName, DWORD desiredAccess, DWORD shareMode, DWORD creationDisposition,
+	DWORD flagsAndAttributes, PDOKAN_FILE_INFO info)
+{
+	char fileNameB[MAX_PATH];
+	FileID *fileID = (FileID *)malloc(sizeof(FileID));
+	FilePkg filePkg;
+
+	if (!dir)
+		assert(creationDisposition != CREATE_ALWAYS && creationDisposition != OPEN_ALWAYS);
+
+	size_t result = wcstombs(fileNameB, fileName, MAX_PATH);
+	assert(result == wcslen(fileName));
+
+	/* just in case */
+	info->Context = 0x0;
+	
+	if (WaitForSingleObject(hBigDokanLock, 10000) != WAIT_OBJECT_0)
+	{
+		printf("%s: couldn't get ownership of the Big Dokan Lock! [%S]\n",
+			(dir ? "btrfsOpenDirectory" : "brtfsCreateFile"), fileName);
+		return -ERROR_SEM_TIMEOUT; // error code looks sketchy
+	}
+
+	if (getPathID(fileNameB, fileID) != 0)
+	{
+		ReleaseMutex(hBigDokanLock);
+		printf("%s: getPathID failed! [%S]\n",
+			(dir ? "btrfsOpenDirectory" : "brtfsCreateFile"), fileName);
+		return -ERROR_FILE_NOT_FOUND;
+	}
+
+	int result2;
+	if ((result2 = parseFSTree(fileID->treeID, FSOP_GET_FILE_PKG, &fileID->objectID, NULL, NULL, &filePkg, NULL)) != 0)
+	{
+		ReleaseMutex(hBigDokanLock);
+		printf("%s: parseFSTree with FSOP_GET_FILE_PKG returned %d! [%S]\n",
+			(dir ? "btrfsOpenDirectory" : "brtfsCreateFile"), result2, fileName);
+		return -ERROR_FILE_NOT_FOUND;
+	}
+	
+	ReleaseMutex(hBigDokanLock);
+
+	std::list<FilePkg>::iterator it = openFiles.begin(), end = openFiles.end();
+	for ( ; it != end; ++it)
+	{
+		/* there should not be any duplicate records in this array! */
+		//assert(it->objectID != objectID);
+		/* actually, that's a *terrible* assumption. for now, we'll allow dupes under the knowledge that they will
+			contain exactly the same information, so it doesn't matter which one gets cleared up later. this should
+			be totally cleared up when we move over to a multimap container instead of the current linked list. */
+		
+		/* sort the list in ascending treeID/objectID order */
+		if (it->fileID.treeID > fileID->treeID ||
+			(it->fileID.treeID == fileID->treeID && it->fileID.objectID > fileID->objectID))
+			break;
+	}
+
+	openFiles.insert(it, filePkg);
+
+	info->Context = (unsigned __int64)fileID;
+
+	if (!info->IsDirectory && (filePkg.inode.stMode & S_IFDIR))
+		info->IsDirectory = TRUE;
+
+	if (!dir)
+	{
+		/* need to respect the desired access level, and lock the file based on shareMode */
+		printf("btrfsCreateFile: TOOD: handle desiredAccess and shareMode\n");
+	}
+	
+	printf("%s: OK [%S]\n", (dir ? "btrfsOpenDirectory" : "brtfsCreateFile"), fileName);
+	return ERROR_SUCCESS;
+}
+
 // CreateFile
 //   If file is a directory, CreateFile (not OpenDirectory) may be called.
 //   In this case, CreateFile should return 0 when that directory can be opened.
@@ -46,130 +120,13 @@ DWORD setupBigDokanLock()
 int DOKAN_CALLBACK btrfsCreateFile(LPCWSTR fileName, DWORD desiredAccess, DWORD shareMode, DWORD creationDisposition,
 	DWORD flagsAndAttributes, PDOKAN_FILE_INFO info)
 {
-	char fileNameB[MAX_PATH];
-	FileID *fileID = (FileID *)malloc(sizeof(FileID));
-	FilePkg filePkg;
-
-	assert(creationDisposition != CREATE_ALWAYS && creationDisposition != OPEN_ALWAYS);
-	size_t result = wcstombs(fileNameB, fileName, MAX_PATH);
-	assert(result == wcslen(fileName));
-
-	/* just in case */
-	info->Context = 0x0;
-	
-	if (WaitForSingleObject(hBigDokanLock, 10000) != WAIT_OBJECT_0)
-	{
-		printf("btrfsCreateFile: couldn't get ownership of the Big Dokan Lock! [%S]\n", fileName);
-		return -ERROR_SEM_TIMEOUT; // error code looks sketchy
-	}
-
-	if (getPathID(fileNameB, fileID) != 0)
-	{
-		ReleaseMutex(hBigDokanLock);
-		printf("btrfsCreateFile: getPathID failed! [%S]\n", fileName);
-		return -ERROR_FILE_NOT_FOUND;
-	}
-
-	int result2;
-	if ((result2 = parseFSTree(fileID->treeID, FSOP_GET_FILE_PKG, &fileID->objectID, NULL, NULL, &filePkg, NULL)) != 0)
-	{
-		ReleaseMutex(hBigDokanLock);
-		printf("btrfsCreateFile: parseFSTree with FSOP_GET_FILE_PKG returned %d! [%S]\n", result2, fileName);
-		return -ERROR_FILE_NOT_FOUND;
-	}
-	
-	ReleaseMutex(hBigDokanLock);
-
-	std::list<FilePkg>::iterator it = openFiles.begin(), end = openFiles.end();
-	for ( ; it != end; ++it)
-	{
-		/* there should not be any duplicate records in this array! */
-		//assert(it->objectID != objectID);
-		/* actually, that's a *terrible* assumption. for now, we'll allow dupes under the knowledge that they will
-			contain exactly the same information, so it doesn't matter which one gets cleared up later. this should
-			be totally cleared up when we move over to a multimap container instead of the current linked list. */
-		
-		/* sort the list in ascending treeID/objectID order */
-		if (it->fileID.treeID > fileID->treeID ||
-			(it->fileID.treeID == fileID->treeID && it->fileID.objectID > fileID->objectID))
-			break;
-	}
-
-	openFiles.insert(it, filePkg);
-
-	info->Context = (unsigned __int64)fileID;
-
-	if (!info->IsDirectory && (filePkg.inode.stMode & S_IFDIR))
-		info->IsDirectory = TRUE;
-
-	/* need to respect the desired access level, and lock the file based on shareMode */
-	printf("btrfsCreateFile: TOOD: handle desiredAccess and shareMode\n");
-	
-	printf("btrfsCreateFile: OK [%S]\n", fileName);
-	return ERROR_SUCCESS;
+	return btrfsCreateFileCommon(false, fileName, desiredAccess, shareMode,
+		creationDisposition, flagsAndAttributes, info);
 }
 
 int DOKAN_CALLBACK btrfsOpenDirectory(LPCWSTR fileName, PDOKAN_FILE_INFO info)
 {
-	char fileNameB[MAX_PATH];
-	FileID *fileID = (FileID *)malloc(sizeof(FileID));
-	FilePkg filePkg;
-	
-	printf("btrfsOpenDirectory: TODO: merge this function with btrfsCreateFile\n");
-
-	size_t result = wcstombs(fileNameB, fileName, MAX_PATH);
-	assert(result == wcslen(fileName));
-
-	/* just in case */
-	info->Context = 0x0;
-	
-	if (WaitForSingleObject(hBigDokanLock, 10000) != WAIT_OBJECT_0)
-	{
-		printf("btrfsOpenDirectory: couldn't get ownership of the Big Dokan Lock! [%S]\n", fileName);
-		return -ERROR_SEM_TIMEOUT; // error code looks sketchy
-	}
-
-	if (getPathID(fileNameB, fileID) != 0)
-	{
-		ReleaseMutex(hBigDokanLock);
-		printf("btrfsOpenDirectory: getPathID failed! [%S]\n", fileName);
-		return -ERROR_FILE_NOT_FOUND;
-	}
-
-	int result2;
-	if ((result2 = parseFSTree(fileID->treeID, FSOP_GET_FILE_PKG, &fileID->objectID, NULL, NULL, &filePkg, NULL)) != 0)
-	{
-		ReleaseMutex(hBigDokanLock);
-		printf("btrfsOpenDirectory: parseFSTree with FSOP_GET_FILE_PKG returned %d! [%S]\n", result2, fileName);
-		return -ERROR_FILE_NOT_FOUND;
-	}
-	
-	ReleaseMutex(hBigDokanLock);
-
-	std::list<FilePkg>::iterator it = openFiles.begin(), end = openFiles.end();
-	for ( ; it != end; ++it)
-	{
-		/* there should not be any duplicate records in this array! */
-		//assert(it->objectID != objectID);
-		/* actually, that's a *terrible* assumption. for now, we'll allow dupes under the knowledge that they will
-			contain exactly the same information, so it doesn't matter which one gets cleared up later. this should
-			be totally cleared up when we move over to a multimap container instead of the current linked list. */
-		
-		/* sort the list in ascending treeID/objectID order */
-		if (it->fileID.treeID > fileID->treeID ||
-			(it->fileID.treeID == fileID->treeID && it->fileID.objectID > fileID->objectID))
-			break;
-	}
-
-	openFiles.insert(it, filePkg);
-
-	info->Context = (unsigned __int64)fileID;
-
-	if (!info->IsDirectory && (filePkg.inode.stMode & S_IFDIR))
-		info->IsDirectory = TRUE;
-	
-	printf("btrfsOpenDirectory: OK [%S]\n", fileName);
-	return ERROR_SUCCESS;
+	return btrfsCreateFileCommon(true, fileName, 0, 0, 0, 0, info);
 }
 
 int DOKAN_CALLBACK btrfsCreateDirectory(LPCWSTR fileName, PDOKAN_FILE_INFO info)
