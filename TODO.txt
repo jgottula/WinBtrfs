@@ -28,6 +28,7 @@ Test weird node/sector/leaf sizes
 Check for endianness errors by reversing byte orders on disk or running on a BE architecture (Wine on PPC Linux??)
 Determine if, when a subvolume (B) is created within another subvolume (A), the ROOT_REFs have 0x5->A, and A->B, thwarting tree dumping,
 	possibly among other things that assume that these trees will have tree 0x5 as their parent
+Write an fopen (or Win32) test to determine if CREATE_ALWAYS or OPEN_ALWAYS will ever get passed to btrfsCreateFile
 
 Bugs:
 Mounting btrfs_symlinks.img to C:\mount and dirlisting C:\mount\dir results in a getPathID failure
@@ -63,3 +64,7 @@ Add optimizations for FS tree parsing: use the rules of sorting within the tree 
 	highly effective to skip right to the INODE_ITEM for the parent directory and then resume parsing like usual
 Be extra precise with filename strs due to overflow concerns: char foo[bar], strcpy, str conversions
 Get rid of atoi!
+Remove the chunk/root tree arrays and simply use CTOPs and RTOPs to get at their items
+Add all function prototypes to header files (even intra-module ones)
+Use the DIY-filter version of the FindFiles callback and do filtering as the dirlist FSOP happens so we don't create dirlist entries
+	that just get removed later by the post-hoc filtering process
