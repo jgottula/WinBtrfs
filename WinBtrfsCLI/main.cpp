@@ -260,9 +260,9 @@ int main(int argc, char **argv)
 	{
 		if (strcmp(argv[i], "--no-dump") == 0)
 			noDump = true;
-		else if (strncmp(argv[i], "--subvol=", 9) == 0)
+		else if (strncmp(argv[i], "--subvol", 8) == 0)
 		{
-			if (strlen(argv[i]) > 9)
+			if (argv[i][8] == '=' && strlen(argv[i]) > 9)
 			{
 				if (!useSubvolID && !useSubvolName)
 				{
@@ -281,9 +281,9 @@ int main(int argc, char **argv)
 				usage();
 			}
 		}
-		else if (strncmp(argv[i], "--subvol-id=", 12) == 0)
+		else if (strncmp(argv[i], "--subvol-id", 11) == 0)
 		{
-			if (strlen(argv[i]) > 12)
+			if (argv[i][11] == '=' && strlen(argv[i]) > 12)
 			{
 				if (!useSubvolID && !useSubvolName)
 				{
