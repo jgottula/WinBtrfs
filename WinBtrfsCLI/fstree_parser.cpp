@@ -289,7 +289,7 @@ void parseFSTreeRec(unsigned __int64 addr, BtrfsObjID tree, FSOperation operatio
 				{
 					BtrfsInodeItem *inodeItem = (BtrfsInodeItem *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset));
 
-					for (int j = 2; j < dirList->numEntries; j++) // try to find a matching entry, skip '.' and '..'
+					for (int j = (*root ? 0 : 2); j < dirList->numEntries; j++) // try to find a matching entry, skip '.' and '..'
 					{
 						if (tree == dirList->entries[j].fileID.treeID &&
 							endian64(item->key.objectID) == dirList->entries[j].fileID.objectID)
@@ -500,7 +500,6 @@ int parseFSTree(BtrfsObjID tree, FSOperation operation, void *input1, void *inpu
 	}
 	else if (operation == FSOP_DIR_LIST)
 	{
-		/*const FilePkg *filePkg = (const FilePkg *)input1;*/
 		const bool *root = (const bool *)input2;
 		DirList *dirList = (DirList *)output1;
 
