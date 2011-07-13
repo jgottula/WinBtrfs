@@ -238,7 +238,7 @@ void parseRootTreeRec(unsigned __int64 addr, RTOperation operation, void *input1
 				{
 					BtrfsRootRef *rootRef = (BtrfsRootRef *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset));
 					
-					if (strncmp(name, rootRef->name, endian16(rootRef->n)) == 0)
+					if (strlen(name) == endian16(rootRef->n) && strncmp(name, rootRef->name, endian16(rootRef->n)) == 0)
 					{
 						*subvolID = (BtrfsObjID)endian64(item->key.offset);
 
