@@ -17,6 +17,7 @@
 BlockReader::BlockReader(const wchar_t *devicePath)
 {
 	hPhysical = CreateFile(devicePath, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
+	/* this is NOT fatal; return an error based on GetLastError (file not found is most common) */
 	assert(hPhysical != INVALID_HANDLE_VALUE);
 	hReadMutex = CreateMutex(NULL, FALSE, NULL);
 	assert(hReadMutex != INVALID_HANDLE_VALUE);
