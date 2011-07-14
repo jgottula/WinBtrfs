@@ -178,13 +178,14 @@ int validateSB(BtrfsSuperblock *s)
 
 void loadSBChunks(bool dump)
 {
-	unsigned char *sbPtr = super.chunkData, *sbMax = super.chunkData + endian32(super.n);
+	/* using the first device's superblock here; it doesn't really matter */
+	unsigned char *sbPtr = supers[0].chunkData, *sbMax = sbPtr + endian32(supers[0].n);
 	BtrfsDiskKey *key;
 	BtrfsSBChunk *sbChunk;
 	unsigned short *numStripes;
 
 	if (dump)
-		printf("[SBChunks] n = 0x%03lx\n", endian32(super.n));
+		printf("[SBChunks] n = 0x%03lx\n", endian32(supers[0].n));
 
 	while (sbPtr < sbMax)
 	{

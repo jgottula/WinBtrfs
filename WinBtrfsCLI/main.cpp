@@ -95,17 +95,17 @@ void firstTasks()
 	/* aesthetic line break */
 	if (!noDump)
 		printf("\n");
-
-	loadSBChunks(!noDump);
-
-	if (!noDump) parseChunkTree(CTOP_DUMP_TREE);
-	parseChunkTree(CTOP_LOAD);
 	
 	if (verifyDevices() != 0)
 	{
 		cleanUp();
 		exit(1);
 	}
+
+	loadSBChunks(!noDump);
+
+	if (!noDump) parseChunkTree(CTOP_DUMP_TREE);
+	parseChunkTree(CTOP_LOAD);
 
 	if (!noDump) parseRootTree(RTOP_DUMP_TREE, NULL, NULL);
 	parseRootTree(RTOP_LOAD, NULL, NULL);
