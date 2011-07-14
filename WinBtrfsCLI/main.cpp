@@ -348,6 +348,12 @@ int main(int argc, char **argv)
 
 	dokanResult = DokanMain(dokanOptions, &btrfsOperations);
 
+	/* if DokanMain fails the first time complaining of a mount error,
+		it will sometimes fix itself the second time (presumably by
+		unmounting whatever was using the mount point in question) */
+	if (dokanResult == DOKAN_MOUNT_ERROR)
+		dokanResult = DokanMain(dokanOptions, &btrfsOperations);
+
 	cleanUp();
 	dokanError(dokanResult);
 	
