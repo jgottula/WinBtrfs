@@ -19,7 +19,6 @@ UI translations
 OS testing: Win9x and ReactOS (provided Dokan supports these)
 
 Tests:
-Snapshots!
 Symlinks to files and directories
 Cross-subvolume symlinks
 Verify that unicode path strings don't result in a crash
