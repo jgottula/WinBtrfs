@@ -15,8 +15,8 @@
 #include <cassert>
 #include <list>
 #include <vector>
-#include "block_reader.h"
 #include "btrfs_operations.h"
+#include "btrfs_system.h"
 #include "compression.h"
 #include "constants.h"
 #include "endian.h"
@@ -303,7 +303,10 @@ int DOKAN_CALLBACK btrfsReadFile(LPCWSTR fileName, LPVOID buffer, DWORD numberOf
 							printf("btrfsReadFile: warning: assuming first device!\n");
 							
 							compressed = (unsigned char *)malloc(endian64(nonInlinePart->extSize));
-							DWORD result = blockReaders[0]->directRead(endian64(nonInlinePart->extAddr), ADDR_LOGICAL,
+
+							PhysAddr physAddr = logiToPhys(endian64(nonInlinePart->extAddr),
+								endian64(nonInlinePart->extSize));
+							DWORD result = getBlockReader(physAddr.devID)->directRead(physAddr.offset,
 								endian64(nonInlinePart->extSize), compressed);
 							assert(result == 0);
 

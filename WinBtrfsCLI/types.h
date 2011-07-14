@@ -36,7 +36,6 @@ enum BtrfsObjID : unsigned __int64
 	OBJID_MULTIPLE = (unsigned __int64)-0x100
 };
 
-
 enum BtrfsItemType : unsigned char
 {
 	TYPE_INODE_ITEM = 0x01,
@@ -98,12 +97,6 @@ enum EncryptionType : unsigned char
 enum EncodingType : unsigned char
 {
 	ENCODING_NONE = 0
-};
-
-enum AddrType
-{
-	ADDR_PHYSICAL,
-	ADDR_LOGICAL
 };
 
 /* chunk tree operations */
@@ -392,6 +385,14 @@ struct DirList
 	size_t					numEntries;
 	FilePkg					*entries;
 };
+
+struct PhysAddr
+{
+	unsigned __int64		devID;
+	unsigned __int64		offset;
+};
+
+typedef unsigned __int64 LogiAddr;
 
 /* size checks for on-disk types and structs */
 static_assert(sizeof(BtrfsObjID) == sizeof(unsigned __int64), "BtrfsObjID has an unexpected size!");

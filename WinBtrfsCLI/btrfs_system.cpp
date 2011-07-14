@@ -11,9 +11,9 @@
  * any later version.
  */
 
+#include <cassert>
 #include <vector>
 #include "btrfs_system.h"
-#include "block_reader.h"
 #include "constants.h"
 #include "crc32c.h"
 #include "endian.h"
@@ -52,8 +52,10 @@ void cleanUp()
 	}
 }
 
-unsigned __int64 logiToPhys(unsigned __int64 logiAddr, unsigned __int64 len)
+PhysAddr logiToPhys(LogiAddr logiAddr, unsigned __int64 len)
 {
+	PhysAddr physAddr = { 0, 0 };
+	
 	/* try superblock chunks first */
 	size_t size = sbChunks.size();
 	for (size_t i = 0; i < size; i++)
@@ -61,9 +63,14 @@ unsigned __int64 logiToPhys(unsigned __int64 logiAddr, unsigned __int64 len)
 		BtrfsSBChunk *chunk = sbChunks.at(i);
 		
 		if (logiAddr >= chunk->key.offset && logiAddr + len <= chunk->key.offset + chunk->chunkItem.chunkSize)
-			/* always using the zeroth stripe for now */
-			/* also assuming that everything is on the first device */
-			return (logiAddr - chunk->key.offset) + chunk->chunkItem.stripes[0].offset;
+		{
+			PhysAddr physAddr = { chunk->chunkItem.stripes[0].devID,
+				(logiAddr - chunk->key.offset) + chunk->chunkItem.stripes[0].offset };
+
+			printf("logiToPhys: currently using stripe 0 every time!\n");
+
+			return physAddr;
+		}
 	}
 
 	/* next try the chunk tree */
@@ -77,13 +84,18 @@ unsigned __int64 logiToPhys(unsigned __int64 logiAddr, unsigned __int64 len)
 			BtrfsChunkItem *chunkItem = (BtrfsChunkItem *)kItem.data;
 
 			if (logiAddr >= kItem.key.offset && logiAddr + len <= kItem.key.offset + chunkItem->chunkSize)
-				/* always using the zeroth stripe for now */
-				/* also assuming that everything is on the first device */
-				return (logiAddr - kItem.key.offset) + chunkItem->stripes[0].offset;
+			{
+				PhysAddr physAddr = { chunkItem->stripes[0].devID,
+					(logiAddr - kItem.key.offset) + chunkItem->stripes[0].offset };
+
+				printf("logiToPhys: currently using stripe 0 every time!\n");
+
+				return physAddr;
+			}
 		}
 	}
 
-	/* if flow gets here, it means we failed */
+	/* if flow gets here, it means we failed to find an appropriate chunk */
 	assert(0);
 }
 
@@ -99,7 +111,7 @@ int loadSBs()
 		/* big structs on the stack; non-recursive so this shouldn't be a problem */
 		BtrfsSuperblock sb1, sb2, sb3, sb4, *sbBest = &sb1;
 
-		if ((error = blockReader->directRead(SUPERBLOCK_1_PADDR, ADDR_PHYSICAL,
+		if ((error = blockReader->directRead(SUPERBLOCK_1_PADDR,
 			sizeof(BtrfsSuperblock), (unsigned char *)&sb1)) != ERROR_SUCCESS)
 		{
 			printf("readSBs: could not read a device's primary superblock!\n(Windows error code: %d)\n", error);
@@ -124,19 +136,19 @@ int loadSBs()
 
 		/* try to find more a recent secondary superblock (SSD usage pattern) */
 
-		if (blockReader->directRead(SUPERBLOCK_2_PADDR, ADDR_PHYSICAL,
-			sizeof(BtrfsSuperblock), (unsigned char *)&sb2) == ERROR_SUCCESS &&
-			validateSB(&sb2) == 0 && endian64(sb2.generation) > endian64(sbBest->generation))
+		if (blockReader->directRead(SUPERBLOCK_2_PADDR, sizeof(BtrfsSuperblock),
+			(unsigned char *)&sb2) == ERROR_SUCCESS && validateSB(&sb2) == 0 &&
+			endian64(sb2.generation) > endian64(sbBest->generation))
 			sbBest = &sb2;
 
-		if (blockReader->directRead(SUPERBLOCK_3_PADDR, ADDR_PHYSICAL,
-			sizeof(BtrfsSuperblock), (unsigned char *)&sb3) == ERROR_SUCCESS &&
-			validateSB(&sb3) == 0 && endian64(sb3.generation) > endian64(sbBest->generation))
+		if (blockReader->directRead(SUPERBLOCK_3_PADDR, sizeof(BtrfsSuperblock),
+			(unsigned char *)&sb3) == ERROR_SUCCESS && validateSB(&sb3) == 0 &&
+			endian64(sb3.generation) > endian64(sbBest->generation))
 			sbBest = &sb3;
 
-		if (blockReader->directRead(SUPERBLOCK_4_PADDR, ADDR_PHYSICAL,
-			sizeof(BtrfsSuperblock), (unsigned char *)&sb4) == ERROR_SUCCESS &&
-			validateSB(&sb4) == 0 && endian64(sb4.generation) > endian64(sbBest->generation))
+		if (blockReader->directRead(SUPERBLOCK_4_PADDR, sizeof(BtrfsSuperblock),
+			(unsigned char *)&sb4) == ERROR_SUCCESS && validateSB(&sb4) == 0 &&
+			endian64(sb4.generation) > endian64(sbBest->generation))
 			sbBest = &sb4;
 
 		/* add the most recent superblock to the array */
@@ -209,16 +221,14 @@ void loadSBChunks(bool dump)
 	}
 }
 
-unsigned char *loadNode(unsigned __int64 blockAddr, AddrType type, BtrfsHeader **header)
+unsigned char *loadNode(PhysAddr addr, BtrfsHeader **header)
 {
 	/* seems to be a safe assumption that all devices share the same node size */
 	unsigned int blockSize = endian32(supers[0].nodeSize);
 	unsigned char *nodeBlock = (unsigned char *)malloc(blockSize);
 	
-	printf("loadNode: warning: assuming first device!\n");
-
 	/* this might not always be fatal, so in the future an assertion may be inappropriate */
-	assert(blockReaders[0]->directRead(blockAddr, type, blockSize, nodeBlock) == 0);
+	assert(getBlockReader(addr.devID)->directRead(addr.offset, blockSize, nodeBlock) == 0);
 
 	*header = (BtrfsHeader *)nodeBlock;
 
@@ -229,9 +239,16 @@ unsigned char *loadNode(unsigned __int64 blockAddr, AddrType type, BtrfsHeader *
 	return nodeBlock;
 }
 
-unsigned __int64 getTreeRootAddr(BtrfsObjID tree)
+unsigned char *loadNode(LogiAddr addr, BtrfsHeader **header)
 {
-	unsigned __int64 addr;
+	unsigned int blockSize = endian32(supers[0].nodeSize);
+
+	return loadNode(logiToPhys(addr, blockSize), header);
+}
+
+LogiAddr getTreeRootAddr(BtrfsObjID tree)
+{
+	LogiAddr addr;
 
 	assert(parseRootTree(RTOP_GET_ADDR, &tree, &addr) == 0);
 
@@ -311,4 +328,17 @@ int verifyDevices()
 	}
 
 	return 0;
+}
+
+BlockReader *getBlockReader(unsigned __int64 devID)
+{
+	std::vector<BtrfsSuperblock>::iterator it = supers.begin(), end = supers.end();
+	for (int i = 0; it != end; ++it, i++)
+	{
+		if (it->devItem.devID == devID)
+			return blockReaders[i];
+	}
+
+	/* getting here means we failed to find a block reader for the requested device */
+	assert(0);
 }

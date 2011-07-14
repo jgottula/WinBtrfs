@@ -27,7 +27,7 @@ RTOP_GET_ADDR: Returns the address of the root node of a given tree
 Inputs:
 [0] const BtrfsObjID *		tree ID
 Outputs:
-[0] unsigned __int64 *		logical address
+[0] LogiAddr *				logical address
 
 FS tree ops
 

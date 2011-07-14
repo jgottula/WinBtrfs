@@ -23,7 +23,7 @@ extern BtrfsObjID mountedSubvol;
 
 std::vector<KeyedItem> rootTree;
 
-void parseRootTreeRec(unsigned __int64 addr, RTOperation operation, void *input0, void *output0,
+void parseRootTreeRec(LogiAddr addr, RTOperation operation, void *input0, void *output0,
 	int *returnCode, bool *shortCircuit)
 {
 	unsigned char *nodeBlock, *nodePtr;
@@ -31,7 +31,7 @@ void parseRootTreeRec(unsigned __int64 addr, RTOperation operation, void *input0
 	BtrfsItem *item;
 	KeyedItem kItem;
 
-	nodeBlock = loadNode(addr, ADDR_LOGICAL, &header);
+	nodeBlock = loadNode(addr, &header);
 
 	assert(header->tree == OBJID_ROOT_TREE);
 	
@@ -268,13 +268,13 @@ void parseRootTreeRec(unsigned __int64 addr, RTOperation operation, void *input0
 			else if (operation == RTOP_GET_ADDR)
 			{
 				const BtrfsObjID *treeID = (const BtrfsObjID *)input0;
-				unsigned __int64 *addr = (unsigned __int64 *)output0;
+				LogiAddr *rootAddr = (unsigned __int64 *)output0;
 
 				if (item->key.type == TYPE_ROOT_ITEM && endian64(item->key.objectID) == *treeID)
 				{
 					BtrfsRootItem *rootItem = (BtrfsRootItem *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset));
 
-					*addr = endian64(rootItem->rootNodeBlockNum);
+					*rootAddr = endian64(rootItem->rootNodeBlockNum);
 
 					*returnCode = 0;
 					*shortCircuit = true;

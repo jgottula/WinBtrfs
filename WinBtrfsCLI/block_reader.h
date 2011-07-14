@@ -14,6 +14,9 @@
 #include <Windows.h>
 #include "types.h"
 
+#ifndef WINBTRFS_BLOCK_READER_H
+#define WINBTRFS_BLOCK_READER_H
+
 class BlockReader
 {
 public:
@@ -25,3 +28,5 @@ public:
 private:
 	HANDLE hPhysical, hReadMutex;
 };
+
+#endif

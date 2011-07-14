@@ -12,14 +12,17 @@
  */
 
 #include <Windows.h>
+#include "block_reader.h"
 #include "types.h"
 
 DWORD init();
 void cleanUp();
-unsigned __int64 logiToPhys(unsigned __int64 logiAddr, unsigned __int64 len);
+PhysAddr logiToPhys(LogiAddr logiAddr, unsigned __int64 len);
 int loadSBs();
 int validateSB(BtrfsSuperblock *s);
 void loadSBChunks(bool dump);
-unsigned char *loadNode(unsigned __int64 blockAddr, AddrType type, BtrfsHeader **header);
-unsigned __int64 getTreeRootAddr(BtrfsObjID tree);
+unsigned char *loadNode(PhysAddr addr, BtrfsHeader **header);
+unsigned char *loadNode(LogiAddr addr, BtrfsHeader **header);
+LogiAddr getTreeRootAddr(BtrfsObjID tree);
 int verifyDevices();
+BlockReader *getBlockReader(unsigned __int64 devID);

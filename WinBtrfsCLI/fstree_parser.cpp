@@ -19,14 +19,14 @@
 #include "endian.h"
 #include "util.h"
 
-void parseFSTreeRec(unsigned __int64 addr, BtrfsObjID tree, FSOperation operation, void *input0, void *input1, void *input2,
+void parseFSTreeRec(LogiAddr addr, BtrfsObjID tree, FSOperation operation, void *input0, void *input1, void *input2,
 	void *output0, void *output1, int *returnCode, bool *shortCircuit)
 {
 	unsigned char *nodeBlock, *nodePtr;
 	BtrfsHeader *header;
 	BtrfsItem *item;
 
-	nodeBlock = loadNode(addr, ADDR_LOGICAL, &header);
+	nodeBlock = loadNode(addr, &header);
 	
 	nodePtr = nodeBlock + sizeof(BtrfsHeader);
 

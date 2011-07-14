@@ -22,7 +22,7 @@ extern std::vector<BtrfsSuperblock> supers;
 
 std::vector<KeyedItem> chunkTree;
 
-void parseChunkTreeRec(unsigned __int64 addr, CTOperation operation)
+void parseChunkTreeRec(LogiAddr addr, CTOperation operation)
 {
 	unsigned char *nodeBlock, *nodePtr;
 	BtrfsHeader *header;
@@ -30,7 +30,7 @@ void parseChunkTreeRec(unsigned __int64 addr, CTOperation operation)
 	KeyedItem kItem;
 	unsigned short *temp;
 	
-	nodeBlock = loadNode(addr, ADDR_LOGICAL, &header);
+	nodeBlock = loadNode(addr, &header);
 
 	assert(header->tree == OBJID_CHUNK_TREE);
 	
