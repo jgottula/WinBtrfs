@@ -13,3 +13,5 @@
 
 void lzoDecompress(const unsigned char *compressed, unsigned char *decompressed,
 	unsigned __int64 cSize, unsigned __int64 dSize);
+void zlibDecompress(const unsigned char *compressed, unsigned char *decompressed,
+	unsigned __int64 cSize, unsigned __int64 dSize);

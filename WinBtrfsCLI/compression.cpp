@@ -13,6 +13,7 @@
 
 #include <cassert>
 #include "minilzo/minilzo.h"
+#include "zlib/zlib.h"
 #include "endian.h"
 
 void lzoDecompress(const unsigned char *compressed, unsigned char *decompressed,
@@ -34,6 +35,7 @@ void lzoDecompress(const unsigned char *compressed, unsigned char *decompressed,
 
 		int result = lzo1x_decompress_safe(compressed, lzoInLen,
 			decompressed, &lzoOutLen, NULL);
+		/* this should not always be fatal */
 		assert(result == LZO_E_OK);
 
 		lzoBytesRead += lzoInLen + 4;
@@ -44,4 +46,35 @@ void lzoDecompress(const unsigned char *compressed, unsigned char *decompressed,
 	}
 
 	assert(lzoBytesWritten <= dSize);
+}
+
+void zlibDecompress(const unsigned char *compressed, unsigned char *decompressed,
+	unsigned __int64 cSize, unsigned __int64 dSize)
+{
+	z_stream zStream;
+
+	zStream.zalloc = NULL;
+	zStream.zfree = NULL;
+	zStream.opaque = NULL;
+	zStream.next_in = const_cast<unsigned char *>(compressed); // why does zlib want mutable input?
+	zStream.avail_in = 0;
+	zStream.next_out = decompressed;
+
+	/* this should not always be fatal */
+	assert(inflateInit(&zStream) == Z_OK);
+
+	while (zStream.total_in < cSize && zStream.total_out < dSize)
+	{
+		/* look this up */
+		zStream.avail_in = zStream.avail_out = 1;
+
+		int err = inflate(&zStream, Z_NO_FLUSH);
+		if (err == Z_STREAM_END)
+			break;
+		/* this should not always be fatal */
+		assert(err == Z_OK);
+	}
+	
+	/* this should not always be fatal */
+	assert(inflateEnd(&zStream) == Z_OK);
 }

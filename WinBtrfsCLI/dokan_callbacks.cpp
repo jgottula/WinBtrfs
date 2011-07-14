@@ -314,8 +314,8 @@ int DOKAN_CALLBACK btrfsReadFile(LPCWSTR fileName, LPVOID buffer, DWORD numberOf
 								break;
 							case COMPRESSION_ZLIB:
 								decompressed = (unsigned char *)malloc(endian64(nonInlinePart->bytesInFile));
-								printf("btrfsReadFile: not actually decompressing ZLIB!\n");
-								memcpy(decompressed, compressed, endian64(nonInlinePart->extSize));
+								zlibDecompress(compressed, decompressed, endian64(nonInlinePart->extSize),
+									endian64(nonInlinePart->bytesInFile));
 								free(compressed);
 								break;
 							case COMPRESSION_LZO:
