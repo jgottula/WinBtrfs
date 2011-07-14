@@ -69,7 +69,7 @@ void firstTasks()
 	printf("firstTasks: warning: support for non-little-endian architectures is untested!\n");
 #endif
 
-	if ((error = init(devicePaths)) != 0)
+	if ((error = init()) != 0)
 	{
 		printf("firstTasks: failed to get a handle on the partition! (GetLastError: %d)\n", error);
 

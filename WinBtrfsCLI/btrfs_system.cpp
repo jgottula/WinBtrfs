@@ -11,6 +11,7 @@
  * any later version.
  */
 
+#include <vector>
 #include "btrfs_system.h"
 #include "block_reader.h"
 #include "crc32c.h"
@@ -18,6 +19,7 @@
 #include "roottree_parser.h"
 #include "util.h"
 
+extern std::vector<const wchar_t *> devicePaths;
 extern std::vector<KeyedItem> chunkTree, rootTree;
 
 std::vector<BlockReader *> blockReaders;
@@ -26,7 +28,7 @@ BtrfsSuperblock super; // REMOVE ME REMOVE ME
 std::vector<BtrfsSBChunk *> sbChunks; // using an array of ptrs because BtrfsSBChunk is variably sized
 BtrfsObjID mountedSubvol = (BtrfsObjID)0;
 
-DWORD init(std::vector<const wchar_t *>& devicePaths)
+DWORD init()
 {
 	/* allocate a block reader for each device */
 	std::vector<const wchar_t *>::iterator it = devicePaths.begin(), end = devicePaths.end();
@@ -35,13 +37,6 @@ DWORD init(std::vector<const wchar_t *>& devicePaths)
 		BlockReader *blockReader = new BlockReader(*it);
 
 		blockReaders.push_back(blockReader);
-	}
-	
-	/* iterate backwards thru the device paths and free them up, as they are no longer needed */
-	for (size_t i = devicePaths.size(); i > 0; --i)
-	{
-		delete[] devicePaths.back();
-		devicePaths.pop_back();
 	}
 	
 	return 0;
@@ -249,9 +244,20 @@ unsigned __int64 getTreeRootAddr(BtrfsObjID tree)
 
 int verifyDevices()
 {
-	printf("verifyDevices: TODO: finish these checks!\n");
+	char fsUUID[0x10];
 	
-	// check that all the FS UUIDs agree, error if not
+	/* check that all the devices' FS UUIDs are identical */
+	std::vector<BtrfsSuperblock>::iterator it = supers.begin(), end = supers.end();
+	memcpy(fsUUID, (it++)->fsUUID, 0x10);
+	for (int i = 1; it != end; ++it, i++)
+	{
+		if (memcmp(fsUUID, it->fsUUID, 0x10) != 0)
+		{
+			printf("verifyDevices: the following device is not part of this Btrfs volume!\n%S\n",
+				devicePaths[i]);
+			return 1;
+		}
+	}
 
 	// check that all the numDevices numbers agree, error if not
 	
@@ -259,6 +265,6 @@ int verifyDevices()
 	{
 		// be more specific about how many more/less are needed
 		printf("verifyDevices: wrong number of devices given!\n");
-		return 1;
+		return 3;
 	}
 }
