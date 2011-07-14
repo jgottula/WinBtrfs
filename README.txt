@@ -23,7 +23,7 @@ Justin Gottula began development on WinBtrfs in May 2011 as a result of the obse
 
 [03] In its current version, what can WinBtrfs do? What can't it do?
 
-As of 2011.07.13, WinBtrfs can load a single-device Btrfs volume (from the command line), display information such as the drive label and free space in the Drive Properties dialog, perform both command-line and GUI directory listings, report file information (such as file size and attributes), and read file contents. WinBtrfs will automatically detect which subvolume is the default one and mount it as the root directory, or you can manually specify a subvolume name or ID to mount. Subvolumes should be fully functional at this time; however, bugs are highly likely at this time, as many code changes were necessary to enable subvolumes to work. There is no installer or GUI at this time. Multi-drive volumes do not currently work, but work is being done to add support soon. (Incidentally, volumes consisting entirely of mirrored drives will probably work fine at this time.) Compression has not yet been implemented. Brtfs volumes that were converted from ext4 work perfectly. Any and all features of WinBtrfs may be buggy, especially those most recently implemented. Also, the more unusual your particular situation, the more likely you will encounter a bug that the developer has not run across. Most errors related to user input currently manifest themselves as scary-looking assertion failures and other sorts of cryptic messages; in the future, these warnings will become easier to understand.
+As of 2011.07.13, WinBtrfs can load a single-device Btrfs volume (from the command line), display information such as the drive label and free space in the Drive Properties dialog, perform both command-line and GUI directory listings, report file information (such as file size and attributes), and read file contents. WinBtrfs will automatically detect which subvolume is the default one and mount it as the root directory, or you can manually specify a subvolume name or ID to mount. Subvolumes should be fully functional at this time; however, bugs are highly likely at this time, as many code changes were necessary to enable subvolumes to work. There is no installer or GUI at this time. Multi-drive volumes do not currently work, but work is being done to add support soon. (Incidentally, volumes consisting entirely of mirrored drives will probably work fine at this time.) Compression is halfway done: lzo will work, zlib hasn't been worked on yet. Brtfs volumes that were converted from ext4 work perfectly. Any and all features of WinBtrfs may be buggy, especially those most recently implemented. Also, the more unusual your particular situation, the more likely you will encounter a bug that the developer has not run across. Most errors related to user input currently manifest themselves as scary-looking assertion failures and other sorts of cryptic messages; in the future, these warnings will become easier to understand.
 
 
 [04] What dependencies are required for WinBtrfs?
@@ -56,7 +56,7 @@ where <device> is either the path to an image file, or a physical partition in t
 
 The following items will be developed in approximately this order:
 — Multi-drive volumes
-— Data compression
+— Data compression (zlib)
 — GUI
 — Installer
 — Multithreading
