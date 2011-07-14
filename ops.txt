@@ -29,6 +29,8 @@ Inputs:
 Outputs:
 [0] LogiAddr *				logical address
 
+RTOP_DUMP_SUBVOLS: Finds each subvolume and runs an FSOP_DUMP_TREE on each
+
 FS tree ops
 
 FSOP_NAME_TO_ID: Finds the object ID for a named file or dir

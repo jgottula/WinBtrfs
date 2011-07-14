@@ -16,12 +16,11 @@
 #include <vector>
 #include "btrfs_system.h"
 #include "endian.h"
+#include "fstree_parser.h"
 #include "util.h"
 
 extern std::vector<BtrfsSuperblock> supers;
 extern BtrfsObjID mountedSubvol;
-
-std::vector<KeyedItem> rootTree;
 
 void parseRootTreeRec(LogiAddr addr, RTOperation operation, void *input0, void *output0,
 	int *returnCode, bool *shortCircuit)
@@ -46,71 +45,8 @@ void parseRootTreeRec(LogiAddr addr, RTOperation operation, void *input0, void *
 		for (unsigned int i = 0; i < endian32(header->nrItems); i++)
 		{
 			item = (BtrfsItem *)nodePtr;
-
-			if (operation == RTOP_LOAD)
-			{
-				switch (item->key.type)
-				{
-				case TYPE_INODE_ITEM:
-					assert(endian32(item->size) == sizeof(BtrfsInodeItem)); // ensure proper size
-
-					memcpy(&kItem.key, &item->key, sizeof(BtrfsDiskKey));
-					kItem.data = malloc(endian32(item->size));
-					memcpy(kItem.data, nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset), endian32(item->size));
-
-					rootTree.push_back(kItem);
-					break;
-				case TYPE_INODE_REF:
-					assert(endian32(item->size) >= sizeof(BtrfsInodeRef)); // ensure proper size range
-
-					memcpy(&kItem.key, &item->key, sizeof(BtrfsDiskKey));
-					kItem.data = malloc(endian32(item->size));
-					memcpy(kItem.data, nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset), endian32(item->size));
-
-					rootTree.push_back(kItem);
-					break;
-				case TYPE_DIR_ITEM:
-					assert(endian32(item->size) >= sizeof(BtrfsDirItem)); // ensure proper size range
-
-					memcpy(&kItem.key, &item->key, sizeof(BtrfsDiskKey));
-					kItem.data = malloc(endian32(item->size));
-					memcpy(kItem.data, nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset), endian32(item->size));
-
-					rootTree.push_back(kItem);
-					break;
-				case TYPE_ROOT_ITEM:
-					assert(endian32(item->size) == sizeof(BtrfsRootItem)); // ensure proper size
-
-					memcpy(&kItem.key, &item->key, sizeof(BtrfsDiskKey));
-					kItem.data = malloc(endian32(item->size));
-					memcpy(kItem.data, nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset), endian32(item->size));
-
-					rootTree.push_back(kItem);
-					break;
-				case TYPE_ROOT_BACKREF:
-					assert(endian32(item->size) >= sizeof(BtrfsRootBackref)); // ensure proper size range
-
-					memcpy(&kItem.key, &item->key, sizeof(BtrfsDiskKey));
-					kItem.data = malloc(endian32(item->size));
-					memcpy(kItem.data, nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset), endian32(item->size));
-
-					rootTree.push_back(kItem);
-					break;
-				case TYPE_ROOT_REF:
-					assert(endian32(item->size) >= sizeof(BtrfsRootRef)); // ensure proper size range
-
-					memcpy(&kItem.key, &item->key, sizeof(BtrfsDiskKey));
-					kItem.data = malloc(endian32(item->size));
-					memcpy(kItem.data, nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset), endian32(item->size));
-
-					rootTree.push_back(kItem);
-					break;
-				default:
-					printf("parseRootTreeRec: don't know how to load item of type 0x%02x!\n", item->key.type);
-					break;
-				}
-			}
-			else if (operation == RTOP_DUMP_TREE)
+			
+			if (operation == RTOP_DUMP_TREE)
 			{
 				switch (item->key.type)
 				{
@@ -280,6 +216,14 @@ void parseRootTreeRec(LogiAddr addr, RTOperation operation, void *input0, void *
 					*shortCircuit = true;
 				}
 			}
+			else if (operation == RTOP_DUMP_SUBVOLS)
+			{
+				/* this code assumes that all trees from 0x100 to -0x100 could only possibly be subvol trees */
+				if (item->key.type == TYPE_ROOT_REF && endian64(item->key.offset) >= 0x100 &&
+					endian64(item->key.offset) < OBJID_MULTIPLE)
+					parseFSTree((BtrfsObjID)endian64(item->key.offset), FSOP_DUMP_TREE,
+						NULL, NULL, NULL, NULL, NULL);
+			}
 			else
 				printf("parseRootTreeRec: unknown operation (0x%02x)!\n", operation);
 
@@ -328,9 +272,9 @@ int parseRootTree(RTOperation operation, void *input0, void *output0)
 	
 	switch (operation)
 	{
-	case RTOP_LOAD:				// always succeeds
 	case RTOP_DUMP_TREE:		// always succeeds
 	case RTOP_SUBVOL_EXISTS:	// always succeeds
+	case RTOP_DUMP_SUBVOLS:		// always succeeds
 		returnCode = 0;
 		break;
 	default:

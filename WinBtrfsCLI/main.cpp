@@ -50,7 +50,6 @@ DOKAN_OPERATIONS btrfsOperations = {
 };
 
 extern BtrfsObjID mountedSubvol;
-extern std::vector<KeyedItem> rootTree;
 
 wchar_t mountPoint[MAX_PATH];
 std::vector<const wchar_t *> devicePaths;
@@ -100,25 +99,11 @@ void firstTasks()
 	parseChunkTree(CTOP_LOAD);
 
 	if (!noDump) parseRootTree(RTOP_DUMP_TREE, NULL, NULL);
-	parseRootTree(RTOP_LOAD, NULL, NULL);
 
 	if (!noDump)
 	{
 		parseFSTree(OBJID_FS_TREE, FSOP_DUMP_TREE, NULL, NULL, NULL, NULL, NULL);
-
-		/* dump FS subtrees */
-		size_t size = rootTree.size();
-		for (size_t i = 0; i < size; i++)
-		{
-			KeyedItem& kItem = rootTree.at(i);
-
-			/* this old code only dumped root-level (i.e. non-nested) subvolumes */
-			/*if (kItem.key.type == TYPE_ROOT_REF && endian64(kItem.key.objectID) == OBJID_FS_TREE)*/
-			if (kItem.key.type == TYPE_ROOT_REF && endian64(kItem.key.offset) >= 0x100 &&
-				endian64(kItem.key.offset) < OBJID_MULTIPLE)
-				parseFSTree((BtrfsObjID)endian64(kItem.key.offset), FSOP_DUMP_TREE,
-					NULL, NULL, NULL, NULL, NULL);
-		}
+		parseRootTree(RTOP_DUMP_SUBVOLS, NULL, NULL);
 	}
 
 	if (dumpOnly)

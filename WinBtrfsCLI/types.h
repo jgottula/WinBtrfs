@@ -109,12 +109,12 @@ enum CTOperation
 /* root tree operations */
 enum RTOperation
 {
-	RTOP_LOAD,
 	RTOP_DUMP_TREE,
 	RTOP_DEFAULT_SUBVOL,
 	RTOP_GET_SUBVOL_ID,
 	RTOP_SUBVOL_EXISTS,
-	RTOP_GET_ADDR
+	RTOP_GET_ADDR,
+	RTOP_DUMP_SUBVOLS
 };
 
 /* FS tree operations */
