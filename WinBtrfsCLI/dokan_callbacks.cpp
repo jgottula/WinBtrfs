@@ -373,7 +373,9 @@ int DOKAN_CALLBACK btrfsReadFile(LPCWSTR fileName, LPVOID buffer, DWORD numberOf
 					{
 						memcpy((char *)buffer + *numberOfBytesRead, decompressed + from, len);
 
-						if (extentData->type != FILEDATA_INLINE)
+						if (extentData->type == FILEDATA_INLINE)
+							*numberOfBytesRead = numberOfBytesToRead - len;
+						else
 							free(decompressed);
 					}
 					
