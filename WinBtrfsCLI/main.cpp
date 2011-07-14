@@ -155,14 +155,37 @@ void firstTasks()
 			int result;
 			if ((result = parseRootTree(RTOP_GET_SUBVOL_ID, subvolName, &mountedSubvol)) != 0)
 			{
-				printf("firstTasks: could not find the requested subvolume to mount!\n");
+				printf("firstTasks: could not find the subvolume named '%s'!\n", subvolName);
 				cleanUp();
 				exit(1);
 			}
 		}
 	}
 	else
+	{
+		bool subvolExists;
+		
+		/* we can be fairly certain that these constraints will always hold */
+		/* not enforcing these would allow the user to mount non-FS-type trees, which is definitely bad */
+		if ((subvolID > (BtrfsObjID)0 && subvolID < (BtrfsObjID)0x100) ||
+			(subvolID > (BtrfsObjID)-0x100 && subvolID < (BtrfsObjID)-1))
+		{
+			printf("firstTasks: %I64u is an impossible subvolume ID!\n", (unsigned __int64)subvolID);
+			cleanUp();
+			exit(1);
+		}
+		
+		parseRootTree(RTOP_SUBVOL_EXISTS, &subvolID, &subvolExists);
+
+		if (!subvolExists)
+		{
+			printf("firstTasks: could not find the subvolume with ID %I64u!\n", (unsigned __int64)subvolID);
+			cleanUp();
+			exit(1);
+		}
+
 		mountedSubvol = (subvolID == (BtrfsObjID)0 ? OBJID_FS_TREE : subvolID);
+	}
 }
 
 void dokanError(int dokanResult)

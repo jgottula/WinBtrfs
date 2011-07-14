@@ -247,6 +247,18 @@ void parseRootTreeRec(unsigned __int64 addr, RTOperation operation, void *input1
 					}
 				}
 			}
+			else if (operation == RTOP_SUBVOL_EXISTS)
+			{
+				const BtrfsObjID *subvolID = (const BtrfsObjID *)input1;
+				bool *exists = (bool *)output1;
+
+				if (item->key.type == TYPE_ROOT_BACKREF && endian64(item->key.offset) == *subvolID)
+				{
+					*exists = true;
+
+					*shortCircuit = true;
+				}
+			}
 			else
 				printf("parseRootTreeRec: unknown operation (0x%02x)!\n", operation);
 
@@ -295,12 +307,21 @@ int parseRootTree(RTOperation operation, void *input1, void *output1)
 	
 	switch (operation)
 	{
-	case RTOP_LOAD:			// always succeeds
-	case RTOP_DUMP_TREE:	// always succeeds
+	case RTOP_LOAD:				// always succeeds
+	case RTOP_DUMP_TREE:		// always succeeds
+	case RTOP_SUBVOL_EXISTS:	// always succeeds
 		returnCode = 0;
 		break;
 	default:
 		returnCode = 0x1;	// 1 bit = 1 part MUST be fulfilled
+	}
+
+	if (operation == RTOP_SUBVOL_EXISTS)
+	{
+		bool *exists = (bool *)output1;
+
+		/* default to nonexistence */
+		*exists = false;
 	}
 	
 	parseRootTreeRec(endian64(super.rootTreeLAddr), operation, input1, output1,
