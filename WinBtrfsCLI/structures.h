@@ -161,23 +161,6 @@ struct BtrfsRootRef
 
 typedef BtrfsRootRef BtrfsRootBackref;
 
-/*struct BtrfsExtentItem
-{
-	unsigned __int64		refCount;
-	unsigned __int64		generation;
-	unsigned __int64		flags;
-	BtrfsDiskKey			firstEntryKey;
-	unsigned char			nodeLevel;
-	// ...
-};*/
-
-struct BtrfsBlockGroupItem
-{
-	unsigned __int64		usedAmount;
-	BtrfsObjID				chunkTreeID;
-	BlockGroupFlags			flags;
-};
-
 struct BtrfsDevItem
 {
 	unsigned __int64		devID;
@@ -309,7 +292,6 @@ static_assert(sizeof(BtrfsExtentDataNonInline) == 0x20, "BtrfsExtentDataNonInlin
 static_assert(sizeof(BtrfsRootItem) == 0xef, "BtrfsRootItem has an unexpected size!");
 static_assert(sizeof(BtrfsRootBackref) == 0x12, "BtrfsRootBackref has an unexpected size!");
 static_assert(sizeof(BtrfsRootRef) == 0x12, "BtrfsRootRef has an unexpected size!");
-static_assert(sizeof(BtrfsBlockGroupItem) == 0x18, "BtrfsBlockGroupItem has an unexpected size!");
 static_assert(sizeof(BtrfsChunkItem) == 0x30, "BtrfsChunkItem has an unexpected size!");
 static_assert(sizeof(BtrfsChunkItemStripe) == 0x20, "BtrfsChunkItemStripe has an unexpected size!");
 static_assert(sizeof(BtrfsDevItem) == 0x62, "BtrfsDevItem has an unexpected size!");
