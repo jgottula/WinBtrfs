@@ -30,7 +30,7 @@ BlockReader::~BlockReader()
 	CloseHandle(hReadMutex);
 }
 
-DWORD BlockReader::directRead(unsigned __int64 *addr, unsigned __int64 len, unsigned char *dest)
+DWORD BlockReader::directRead(unsigned __int64 addr, unsigned __int64 len, unsigned char *dest)
 {
 	LARGE_INTEGER li;
 	DWORD bytesRead;
