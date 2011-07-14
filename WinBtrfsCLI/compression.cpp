@@ -55,8 +55,6 @@ int zlibDecompress(const unsigned char *compressed, unsigned char *decompressed,
 	int error;
 	z_stream zStream;
 
-	return 1;
-
 	zStream.zalloc = NULL;
 	zStream.zfree = NULL;
 	zStream.opaque = NULL;
