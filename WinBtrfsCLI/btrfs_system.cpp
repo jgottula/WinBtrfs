@@ -260,10 +260,23 @@ int verifyDevices()
 		}
 	}
 
-	// check for duplicate devices (devices w/ same dev ID)
+	it = supers.begin();
+	for ( ; it != end; ++it)
+	{
+		std::vector<BtrfsSuperblock>::iterator it2 = supers.begin();
+		for (int i = 0; it2 != it; ++it2, i++)
+		{
+			if (memcmp(it->devItem.devUUID, it2->devItem.devUUID, 0x10) == 0)
+			{
+				printf("verifyDevices: the following device is specified more than once!\n%S\n",
+					devicePaths[i]);
+				return 2;
+			}
+		}
+	}
 
 	it = supers.begin();
-	numDevices = (it++)->numDevices;
+	numDevices = endian64((it++)->numDevices);
 	for ( ; it != end; ++it)
 	{
 		if (it->numDevices != numDevices)
