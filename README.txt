@@ -3,7 +3,7 @@ WinBtrfs — Readme/FAQ
 Last updated 2011.07.13
 
 
-NOTE: WinBtrfs is in NO WAY a finished product and is NOT ready for general use. At this time, it should only really be used by people interested in testing, experimentation, or development. See [03] below for details.
+NOTE: WinBtrfs is in NO WAY a finished product and is NOT ready for general use. At this time, it should only really be used by people interested in testing, experimentation, or development. See [03] below for details on which features have been implemented.
 
 
 [00] What is WinBtrfs?
@@ -55,7 +55,6 @@ where <device> is either the path to an image file, or a physical partition in t
 [07] What does the project roadmap look like?
 
 The following items will be developed in approximately this order:
-— Snapshots
 — Multi-drive volumes
 — Data compression
 — GUI
