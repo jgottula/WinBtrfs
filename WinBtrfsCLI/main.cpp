@@ -260,9 +260,35 @@ int main(int argc, char **argv)
 	{
 		if (strcmp(argv[i], "--no-dump") == 0)
 			noDump = true;
-		else if (strncmp(argv[i], "--subvol", 8) == 0)
+		else if (strncmp(argv[i], "--subvol-id=", 12) == 0)
 		{
-			if (argv[i][8] == '=' && strlen(argv[i]) > 9)
+			if (strlen(argv[i]) > 12)
+			{
+				if (!useSubvolID && !useSubvolName)
+				{
+					if (sscanf(argv[i] + 12, "%I64u ", &subvolID) == 1)
+						useSubvolID = true;
+					else
+					{
+						printf("You entered an indecipherable subvolume object ID!\n\n");
+						usage();
+					}
+				}
+				else
+				{
+					printf("You specified more than one subvolume to mount!\n\n");
+					usage();
+				}
+			}
+			else
+			{
+				printf("You didn't specify a subvolume object ID!\n\n");
+				usage();
+			}
+		}
+		else if (strncmp(argv[i], "--subvol=", 9) == 0)
+		{
+			if (strlen(argv[i]) > 9)
 			{
 				if (!useSubvolID && !useSubvolName)
 				{
@@ -278,27 +304,6 @@ int main(int argc, char **argv)
 			else
 			{
 				printf("You didn't specify a subvolume name!\n\n");
-				usage();
-			}
-		}
-		else if (strncmp(argv[i], "--subvol-id", 11) == 0)
-		{
-			if (argv[i][11] == '=' && strlen(argv[i]) > 12)
-			{
-				if (!useSubvolID && !useSubvolName)
-				{
-					subvolID = (BtrfsObjID)atoi(argv[i] + 12);
-					useSubvolID = true;
-				}
-				else
-				{
-					printf("You specified more than one subvolume to mount!\n\n");
-					usage();
-				}
-			}
-			else
-			{
-				printf("You didn't specify a subvolume object ID!\n\n");
 				usage();
 			}
 		}
