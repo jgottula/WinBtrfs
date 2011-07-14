@@ -219,7 +219,7 @@ void parseRootTreeRec(LogiAddr addr, RTOperation operation, void *input0, void *
 			}
 			else if (operation == RTOP_DEFAULT_SUBVOL)
 			{
-				if (item->key.type == TYPE_DIR_ITEM && endian64(item->key.objectID) == OBJID_ROOT_TREE_DIR)
+				if (item->key.type == TYPE_DIR_ITEM && endian64(item->key.objectID) == supers[0].rootDirObjectID)
 				{
 					BtrfsDirItem *dirItem = (BtrfsDirItem *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset));
 					
