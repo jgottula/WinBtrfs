@@ -70,7 +70,6 @@ int zlibDecompress(const unsigned char *compressed, unsigned char *decompressed,
 		/* one byte at a time */
 		zStream.avail_in = zStream.avail_out = 1;
 
-		error = inflate(&zStream, Z_NO_FLUSH);
 		if ((error = inflate(&zStream, Z_NO_FLUSH)) == Z_STREAM_END)
 			break;
 		else if (error != Z_OK)
