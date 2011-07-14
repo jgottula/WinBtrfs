@@ -27,7 +27,7 @@ struct CacheNode
 class BlockReader
 {
 public:
-	BlockReader();
+	BlockReader(const wchar_t *devicePath);
 	~BlockReader();
 
 	DWORD cachedRead(unsigned __int64 addr, AddrType type, unsigned __int64 len, boost::shared_array<unsigned char> *out);

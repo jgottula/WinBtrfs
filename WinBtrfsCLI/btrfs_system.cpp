@@ -12,7 +12,6 @@
  */
 
 #include "btrfs_system.h"
-#include <vector>
 #include "block_reader.h"
 #include "crc32c.h"
 #include "endian.h"
@@ -21,21 +20,40 @@
 
 extern std::vector<KeyedItem> chunkTree, rootTree;
 
-BlockReader *blockReader;
+std::vector<BlockReader *> blockReaders;
 BtrfsSuperblock super;
 std::vector<BtrfsSBChunk *> sbChunks; // using an array of ptrs because BtrfsSBChunk is variably sized
 BtrfsObjID mountedSubvol = (BtrfsObjID)0;
 
-DWORD init()
+DWORD init(std::vector<const wchar_t *>& devicePaths)
 {
-	blockReader = new BlockReader();
+	/* allocate a block reader for each device */
+	std::vector<const wchar_t *>::iterator it = devicePaths.begin(), end = devicePaths.end();
+	for ( ; it != end; ++it)
+	{
+		BlockReader *blockReader = new BlockReader(*it);
+
+		blockReaders.push_back(blockReader);
+	}
+	
+	/* iterate backwards thru the device paths and free them up, as they are no longer needed */
+	for (size_t i = devicePaths.size(); i > 0; --i)
+	{
+		delete[] devicePaths.back();
+		devicePaths.pop_back();
+	}
 	
 	return 0;
 }
 
 void cleanUp()
 {
-	delete blockReader;
+	/* iterate backwards thru the block readers and destroy them */
+	for (size_t i = blockReaders.size(); i > 0; --i)
+	{
+		delete blockReaders.back();
+		blockReaders.pop_back();
+	}
 }
 
 unsigned __int64 logiToPhys(unsigned __int64 logiAddr, unsigned __int64 len)
@@ -75,7 +93,8 @@ unsigned __int64 logiToPhys(unsigned __int64 logiAddr, unsigned __int64 len)
 
 DWORD readPrimarySB()
 {
-	return blockReader->directRead(SUPERBLOCK_1_PADDR, ADDR_PHYSICAL, sizeof(BtrfsSuperblock), (unsigned char *)&super);
+	printf("readPrimarySB: warning: assuming first device!\n");
+	return blockReaders[0]->directRead(SUPERBLOCK_1_PADDR, ADDR_PHYSICAL, sizeof(BtrfsSuperblock), (unsigned char *)&super);
 }
 
 int validateSB(BtrfsSuperblock *s)
@@ -108,16 +127,18 @@ int findSecondarySBs()
 	unsigned __int64 bestGen = endian64(super.generation);
 
 	/* read each superblock (if present) and validate */
+	
+	printf("readSecondarySBs: warning: assuming first device!\n");
 
-	if (blockReader->directRead(SUPERBLOCK_2_PADDR, ADDR_PHYSICAL, sizeof(BtrfsSuperblock), (unsigned char *)&s2) == 0 &&
+	if (blockReaders[0]->directRead(SUPERBLOCK_2_PADDR, ADDR_PHYSICAL, sizeof(BtrfsSuperblock), (unsigned char *)&s2) == 0 &&
 		validateSB(&s2) == 0 && endian64(s2.generation) > bestGen)
 		best = 2, sBest = &s2, bestGen = endian64(s2.generation);
 
-	if (blockReader->directRead(SUPERBLOCK_2_PADDR, ADDR_PHYSICAL, sizeof(BtrfsSuperblock), (unsigned char *)&s3) == 0 &&
+	if (blockReaders[0]->directRead(SUPERBLOCK_2_PADDR, ADDR_PHYSICAL, sizeof(BtrfsSuperblock), (unsigned char *)&s3) == 0 &&
 		validateSB(&s3) == 0 && endian64(s3.generation) > bestGen)
 		best = 3, sBest = &s3, bestGen = endian64(s3.generation);
 
-	if (blockReader->directRead(SUPERBLOCK_2_PADDR, ADDR_PHYSICAL, sizeof(BtrfsSuperblock), (unsigned char *)&s4) == 0 &&
+	if (blockReaders[0]->directRead(SUPERBLOCK_2_PADDR, ADDR_PHYSICAL, sizeof(BtrfsSuperblock), (unsigned char *)&s4) == 0 &&
 		validateSB(&s4) == 0 && endian64(s4.generation) > bestGen)
 		best = 4, sBest = &s4, bestGen = endian64(s4.generation);
 
@@ -176,9 +197,11 @@ unsigned char *loadNode(unsigned __int64 blockAddr, AddrType type, BtrfsHeader *
 {
 	unsigned int blockSize = endian32(super.nodeSize);
 	unsigned char *nodeBlock = (unsigned char *)malloc(blockSize);
+	
+	printf("loadNode: warning: assuming first device!\n");
 
 	/* this might not always be fatal, so in the future an assertion may be inappropriate */
-	assert(blockReader->directRead(blockAddr, type, blockSize, nodeBlock) == 0);
+	assert(blockReaders[0]->directRead(blockAddr, type, blockSize, nodeBlock) == 0);
 
 	*header = (BtrfsHeader *)nodeBlock;
 

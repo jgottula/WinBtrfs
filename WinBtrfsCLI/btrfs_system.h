@@ -11,10 +11,11 @@
  * any later version.
  */
 
+#include <vector>
 #include <Windows.h>
 #include "structures.h"
 
-DWORD init();
+DWORD init(std::vector<const wchar_t *>& devicePaths);
 void cleanUp();
 unsigned __int64 logiToPhys(unsigned __int64 logiAddr, unsigned __int64 len);
 DWORD readPrimarySB();

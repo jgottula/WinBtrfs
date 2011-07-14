@@ -14,9 +14,7 @@
 #include "block_reader.h"
 #include "btrfs_system.h"
 
-extern WCHAR devicePath[MAX_PATH];
-
-BlockReader::BlockReader()
+BlockReader::BlockReader(const wchar_t *devicePath)
 {
 	hPhysical = CreateFile(devicePath, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
 	assert(hPhysical != INVALID_HANDLE_VALUE);

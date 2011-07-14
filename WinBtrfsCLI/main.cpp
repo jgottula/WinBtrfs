@@ -21,7 +21,6 @@
 #include "fstree_parser.h"
 #include "roottree_parser.h"
 
-WCHAR devicePath[MAX_PATH], mountPoint[MAX_PATH];
 DOKAN_OPERATIONS btrfsOperations = {
 	&btrfsCreateFile,
 	&btrfsOpenDirectory,
@@ -54,6 +53,8 @@ extern BtrfsObjID mountedSubvol;
 extern BtrfsSuperblock super;
 extern std::vector<KeyedItem> rootTree;
 
+wchar_t mountPoint[MAX_PATH];
+std::vector<const wchar_t *> devicePaths;
 bool useSubvolID = false, useSubvolName = false;
 BtrfsObjID subvolID;
 char *subvolName;
@@ -68,7 +69,7 @@ void firstTasks()
 	printf("firstTasks: warning: support for non-little-endian architectures is untested!\n");
 #endif
 
-	if ((errorCode = init()) != 0)
+	if ((errorCode = init(devicePaths)) != 0)
 	{
 		printf("firstTasks: failed to get a handle on the partition! (GetLastError: %d)\n", errorCode);
 
@@ -234,7 +235,7 @@ void dokanError(int dokanResult)
 
 void usage()
 {
-	printf("Usage: WinBtrfsCLI.exe <device> <mount point> [options]\n\n"
+	printf("Usage: WinBtrfsCLI.exe [options] <mount point> <device> [<device> ...]\n\n"
 		"For the device argument, try something like \\\\.\\HarddiskXPartitionY.\n"
 		"Disks are indexed from zero; partitions are indexed from one.\n"
 		"Example: /dev/sda1 = \\\\.\\Harddisk0Partition1\n\n"
@@ -251,74 +252,104 @@ void usage()
 int main(int argc, char **argv)
 {
 	PDOKAN_OPTIONS dokanOptions;
-	int dokanResult;
+	int argState = 0, dokanResult;
 
 	printf("WinBtrfs Command Line Interface\nCopyright (c) 2011 Justin Gottula\n\n");
 
-	if (argc < 3)
-		usage();
+	/* Need MAX_PATH checking for buffer overruns */
 
-	/* Need argument validity checking, MAX_PATH checking for buffer overruns */
-	
-	mbstowcs_s(NULL, devicePath, MAX_PATH, argv[1], strlen(argv[1]));
-	mbstowcs_s(NULL, mountPoint, MAX_PATH, argv[2], strlen(argv[2]));
-
-	for (int i = 3; i < argc; i++)
+	for (int i = 1; i < argc; i++)
 	{
-		if (strcmp(argv[i], "--no-dump") == 0)
-			noDump = true;
-		else if (strncmp(argv[i], "--subvol-id=", 12) == 0)
+		if (argv[i][0] == '-')
 		{
-			if (strlen(argv[i]) > 12)
+			if (strcmp(argv[i], "--no-dump") == 0)
+				noDump = true;
+			else if (strncmp(argv[i], "--subvol-id=", 12) == 0)
 			{
-				if (!useSubvolID && !useSubvolName)
+				if (strlen(argv[i]) > 12)
 				{
-					if (sscanf(argv[i] + 12, "%I64u ", &subvolID) == 1)
-						useSubvolID = true;
+					if (!useSubvolID && !useSubvolName)
+					{
+						if (sscanf(argv[i] + 12, "%I64u ", &subvolID) == 1)
+							useSubvolID = true;
+						else
+						{
+							printf("You entered an indecipherable subvolume object ID!\n\n");
+							usage();
+						}
+					}
 					else
 					{
-						printf("You entered an indecipherable subvolume object ID!\n\n");
+						printf("You specified more than one subvolume to mount!\n\n");
 						usage();
 					}
 				}
 				else
 				{
-					printf("You specified more than one subvolume to mount!\n\n");
+					printf("You didn't specify a subvolume object ID!\n\n");
 					usage();
 				}
 			}
-			else
+			else if (strncmp(argv[i], "--subvol=", 9) == 0)
 			{
-				printf("You didn't specify a subvolume object ID!\n\n");
-				usage();
-			}
-		}
-		else if (strncmp(argv[i], "--subvol=", 9) == 0)
-		{
-			if (strlen(argv[i]) > 9)
-			{
-				if (!useSubvolID && !useSubvolName)
+				if (strlen(argv[i]) > 9)
 				{
-					subvolName = argv[i] + 9;
-					useSubvolName = true;
+					if (!useSubvolID && !useSubvolName)
+					{
+						subvolName = argv[i] + 9;
+						useSubvolName = true;
+					}
+					else
+					{
+						printf("You specified more than one subvolume to mount!\n\n");
+						usage();
+					}
 				}
 				else
 				{
-					printf("You specified more than one subvolume to mount!\n\n");
+					printf("You didn't specify a subvolume name!\n\n");
 					usage();
 				}
 			}
 			else
 			{
-				printf("You didn't specify a subvolume name!\n\n");
+				printf("'%s' is not a recognized command-line option!\n\n", argv[i]);
 				usage();
 			}
 		}
 		else
 		{
-			printf("'%s' is not a recognized command-line option!\n\n", argv[i]);
-			usage();
+			if (argState == 0)
+			{
+				/* isn't fatal, shouldn't be an assertion really */
+				assert(mbstowcs_s(NULL, mountPoint, MAX_PATH, argv[i], strlen(argv[i])) == 0);
+
+				argState++;
+			}
+			else
+			{
+				wchar_t *devicePath = new wchar_t[MAX_PATH];
+
+				/* isn't fatal, shouldn't be an assertion really */
+				assert(mbstowcs_s(NULL, devicePath, MAX_PATH, argv[i], strlen(argv[i])) == 0);
+
+				devicePaths.push_back(devicePath);
+			}
 		}
+
+		assert(argState == 0 || argState == 1);
+	}
+
+	if (argState == 0)
+	{
+		printf("You didn't specify a mount point or devices to load!\n\n");
+		usage();
+	}
+
+	if (devicePaths.size() == 0)
+	{
+		printf("You didn't specify one or more devices to load!\n\n");
+		usage();
 	}
 
 	dokanOptions = (PDOKAN_OPTIONS)malloc(sizeof(DOKAN_OPTIONS));

@@ -14,13 +14,14 @@
 #include "dokan_callbacks.h"
 #include <cassert>
 #include <list>
+#include <vector>
 #include "block_reader.h"
 #include "btrfs_operations.h"
 #include "endian.h"
 #include "fstree_parser.h"
 #include "util.h"
 
-extern BlockReader *blockReader;
+extern std::vector<BlockReader *> blockReaders;
 extern BtrfsSuperblock super;
 extern BtrfsObjID mountedSubvol;
 
@@ -287,8 +288,10 @@ int DOKAN_CALLBACK btrfsReadFile(LPCWSTR fileName, LPVOID buffer, DWORD numberOf
 						skipCopy = true;
 					else
 					{
+						printf("btrfsReadFile: warning: assuming first device!\n");
+						
 						data = (unsigned char *)malloc(endian64(nonInlinePart->extSize));
-						DWORD result = blockReader->directRead(endian64(nonInlinePart->extAddr), ADDR_LOGICAL,
+						DWORD result = blockReaders[0]->directRead(endian64(nonInlinePart->extAddr), ADDR_LOGICAL,
 							endian64(nonInlinePart->extSize), data);
 						assert(result == 0);
 					}
