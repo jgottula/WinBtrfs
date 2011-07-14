@@ -33,6 +33,7 @@ enum BtrfsObjID : unsigned __int64
 	OBJID_MULTIPLE = (unsigned __int64)-0x100
 };
 
+
 enum BtrfsItemType : unsigned char
 {
 	TYPE_INODE_ITEM = 0x01,
@@ -143,5 +144,10 @@ const unsigned int S_IRWXO = 00007;		// mask for others' permissions
 const unsigned int S_IROTH = 00004;		// others have read permission
 const unsigned int S_IWOTH = 00002;		// others have write permission
 const unsigned int S_IXOTH = 00001;		// others have execute permission
+
+static_assert(sizeof(BtrfsObjID) == sizeof(unsigned __int64), "BtrfsObjID has an unexpected size!");
+static_assert(sizeof(BtrfsItemType) == sizeof(unsigned char), "BtrfsItemType has an unexpected size!");
+static_assert(sizeof(BlockGroupFlags) == sizeof(unsigned __int64), "BlockGroupFlags has an unexpected size!");
+static_assert(sizeof(FileDataType) == sizeof(unsigned char), "FileDataType has an unexpected size!");
 
 #endif

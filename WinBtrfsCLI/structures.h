@@ -295,4 +295,25 @@ struct DirList
 	FilePkg					*entries;
 };
 
+static_assert(sizeof(BtrfsTime) == 0x0c, "BtrfsTime has an unexpected size!");
+static_assert(sizeof(BtrfsHeader) == 0x65, "BtrfsHeader has an unexpected size!");
+static_assert(sizeof(BtrfsDiskKey) == 0x11, "BtrfsDiskKey has an unexpected size!");
+static_assert(sizeof(BtrfsKeyPtr) == 0x21, "BtrfsKeyPtr has an unexpected size!");
+static_assert(sizeof(BtrfsItem) == 0x19, "BtrfsItem has an unexpected size!");
+static_assert(sizeof(BtrfsInodeItem) == 0xa0, "BtrfsInodeItem has an unexpected size!");
+static_assert(sizeof(BtrfsInodeRef) == 0x0a, "BtrfsInodeRef has an unexpected size!");
+static_assert(sizeof(BtrfsDirItem) == 0x1e, "BtrfsDirItem has an unexpected size!");
+static_assert(sizeof(BtrfsDirIndex) == 0x1e, "BtrfsDirIndex has an unexpected size!");
+static_assert(sizeof(BtrfsExtentData) == 0x15, "BtrfsExtentData has an unexpected size!");
+static_assert(sizeof(BtrfsExtentDataNonInline) == 0x20, "BtrfsExtentDataNonInline has an unexpected size!");
+static_assert(sizeof(BtrfsRootItem) == 0xef, "BtrfsRootItem has an unexpected size!");
+static_assert(sizeof(BtrfsRootBackref) == 0x12, "BtrfsRootBackref has an unexpected size!");
+static_assert(sizeof(BtrfsRootRef) == 0x12, "BtrfsRootRef has an unexpected size!");
+static_assert(sizeof(BtrfsBlockGroupItem) == 0x18, "BtrfsBlockGroupItem has an unexpected size!");
+static_assert(sizeof(BtrfsChunkItem) == 0x30, "BtrfsChunkItem has an unexpected size!");
+static_assert(sizeof(BtrfsChunkItemStripe) == 0x20, "BtrfsChunkItemStripe has an unexpected size!");
+static_assert(sizeof(BtrfsDevItem) == 0x62, "BtrfsDevItem has an unexpected size!");
+static_assert(sizeof(BtrfsSBChunk) == 0x41, "BtrfsSBChunk has an unexpected size!");
+static_assert(sizeof(BtrfsSuperblock) == 0x1000, "BtrfsSuperblock has an unexpected size!");
+
 #endif

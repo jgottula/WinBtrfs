@@ -247,43 +247,12 @@ void usage()
 	exit(1);
 }
 
-void runtimeSizeChecks()
-{
-	/* these should really be static assertions */
-	
-	/* verify sizes of important on-disk structures */
-	assert(sizeof(BtrfsTime) == 0x0c);
-	assert(sizeof(BtrfsHeader) == 0x65);
-	assert(sizeof(BtrfsDiskKey) == 0x11);
-	assert(sizeof(BtrfsKeyPtr) == 0x21);
-	assert(sizeof(BtrfsItem) == 0x19);
-	assert(sizeof(BtrfsInodeItem) == 0xa0);
-	assert(sizeof(BtrfsInodeRef) == 0x0a);
-	assert(sizeof(BtrfsDirItem) == 0x1e);
-	assert(sizeof(BtrfsDirIndex) == 0x1e);
-	assert(sizeof(BtrfsExtentData) == 0x15);
-	assert(sizeof(BtrfsExtentDataNonInline) == 0x20);
-	assert(sizeof(BtrfsRootItem) == 0xef);
-	assert(sizeof(BtrfsRootBackref) == 0x12);
-	assert(sizeof(BtrfsRootRef) == 0x12);
-	assert(sizeof(BtrfsBlockGroupItem) == 0x18);
-	assert(sizeof(BtrfsChunkItem) == 0x30);
-	assert(sizeof(BtrfsChunkItemStripe) == 0x20);
-	assert(sizeof(BtrfsDevItem) == 0x62);
-	assert(sizeof(BtrfsSuperblock) == 0x1000);
-
-	/* ensure that enums are sized properly */
-	assert(sizeof(BtrfsObjID) == sizeof(unsigned __int64));
-}
-
 int main(int argc, char **argv)
 {
 	PDOKAN_OPTIONS dokanOptions;
 	int dokanResult;
 
 	printf("WinBtrfs Command Line Interface\nCopyright (c) 2011 Justin Gottula\n\n");
-
-	runtimeSizeChecks();
 
 	if (argc < 3)
 		usage();
