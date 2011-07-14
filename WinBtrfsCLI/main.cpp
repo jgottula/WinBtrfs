@@ -51,6 +51,7 @@ DOKAN_OPERATIONS btrfsOperations = {
 };
 
 extern BtrfsObjID mountedSubvol;
+extern BtrfsSuperblock super;
 extern std::vector<KeyedItem> rootTree;
 
 bool useSubvolID = false, useSubvolName = false;
@@ -108,6 +109,9 @@ void firstTasks()
 	}
 
 	findSecondarySBs();
+
+	if (super.numDevices > 1)
+		printf("firstTasks: this volume consists of more than one device!\n");
 	
 	loadSBChunks(!noDump);
 
