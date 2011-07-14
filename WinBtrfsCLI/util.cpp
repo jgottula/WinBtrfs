@@ -14,9 +14,10 @@
 #include "util.h"
 #include <cassert>
 #include <cstdio>
+#include <vector>
 #include "endian.h"
 
-extern BtrfsSuperblock super;
+extern std::vector<BtrfsSuperblock> supers;
 
 void convertTime(const BtrfsTime *bTime, PFILETIME wTime)
 {
@@ -81,8 +82,8 @@ void convertMetadata(const FilePkg *input, void *output, bool dirList)
 	if (!dirList)
 	{
 		/* using the least significant 4 bytes of the UUID */
-		fileInfo->dwVolumeSerialNumber = super.fsUUID[0] + (super.fsUUID[1] << 8) +
-			(super.fsUUID[2] << 16) + (super.fsUUID[3] << 24);
+		fileInfo->dwVolumeSerialNumber = supers[0].fsUUID[0] + (supers[0].fsUUID[1] << 8) +
+			(supers[0].fsUUID[2] << 16) + (supers[0].fsUUID[3] << 24);
 	}
 
 	if (!dirList)

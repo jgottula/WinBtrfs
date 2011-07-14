@@ -50,7 +50,6 @@ DOKAN_OPERATIONS btrfsOperations = {
 };
 
 extern BtrfsObjID mountedSubvol;
-extern BtrfsSuperblock super;
 extern std::vector<KeyedItem> rootTree;
 
 wchar_t mountPoint[MAX_PATH];
@@ -88,9 +87,6 @@ void firstTasks()
 		cleanUp();
 		exit(1);
 	}
-
-	if (super.numDevices > 1)
-		printf("firstTasks: this volume consists of more than one device!\n");
 	
 	/* aesthetic line break */
 	if (!noDump)

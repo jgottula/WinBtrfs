@@ -18,7 +18,7 @@
 #include "endian.h"
 #include "util.h"
 
-extern BtrfsSuperblock super;
+extern std::vector<BtrfsSuperblock> supers;
 extern BtrfsObjID mountedSubvol;
 
 std::vector<KeyedItem> rootTree;
@@ -345,7 +345,7 @@ int parseRootTree(RTOperation operation, void *input0, void *output0)
 		*exists = false;
 	}
 	
-	parseRootTreeRec(endian64(super.rootTreeLAddr), operation, input0, output0,
+	parseRootTreeRec(endian64(supers[0].rootTreeLAddr), operation, input0, output0,
 		&returnCode, &shortCircuit);
 
 	return returnCode;

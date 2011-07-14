@@ -18,7 +18,7 @@
 #include "endian.h"
 #include "util.h"
 
-extern BtrfsSuperblock super;
+extern std::vector<BtrfsSuperblock> supers;
 
 std::vector<KeyedItem> chunkTree;
 
@@ -149,5 +149,5 @@ void parseChunkTreeRec(unsigned __int64 addr, CTOperation operation)
 
 void parseChunkTree(CTOperation operation)
 {
-	parseChunkTreeRec(endian64(super.chunkTreeLAddr), operation);
+	parseChunkTreeRec(endian64(supers[0].chunkTreeLAddr), operation);
 }

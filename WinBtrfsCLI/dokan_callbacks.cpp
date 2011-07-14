@@ -23,7 +23,7 @@
 #include "util.h"
 
 extern std::vector<BlockReader *> blockReaders;
-extern BtrfsSuperblock super;
+extern std::vector<BtrfsSuperblock> supers;
 extern BtrfsObjID mountedSubvol;
 
 std::list<FilePkg> openFiles, cleanedUpFiles;
@@ -591,8 +591,8 @@ int DOKAN_CALLBACK btrfsGetDiskFreeSpace(PULONGLONG freeBytesAvailable, PULONGLO
 
 	/* Big Dokan Lock not needed here */
 
-	total = endian64(super.totalBytes);
-	free =  total - endian64(super.bytesUsed);
+	total = endian64(supers[0].totalBytes);
+	free =  total - endian64(supers[0].bytesUsed);
 	
 	*freeBytesAvailable = free;
 	*totalNumberOfBytes = total;
@@ -615,11 +615,12 @@ int DOKAN_CALLBACK btrfsGetVolumeInformation(LPWSTR volumeNameBuffer, DWORD volu
 		the *_s functions are systematically preventing by padding with 0xfefefefe etc. */
 	printf("btrfsGetVolumeInformation: TODO: use secure string functions (1/2)\n");
 
-	strcpy(labelS, super.label);
+	strcpy(labelS, supers[0].label);
 	mbstowcs(volumeNameBuffer, labelS, volumeNameSize);
 
 	/* using the last 4 bytes of the FS UUID */
-	*volumeSerialNumber = super.fsUUID[0] + (super.fsUUID[1] << 8) + (super.fsUUID[2] << 16) + (super.fsUUID[3] << 24);
+	*volumeSerialNumber = supers[0].fsUUID[0] + (supers[0].fsUUID[1] << 8) +
+		(supers[0].fsUUID[2] << 16) + (supers[0].fsUUID[3] << 24);
 
 	*maximumComponentLength = 255;
 

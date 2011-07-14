@@ -24,7 +24,6 @@ extern std::vector<KeyedItem> chunkTree, rootTree;
 
 std::vector<BlockReader *> blockReaders;
 std::vector<BtrfsSuperblock> supers;
-BtrfsSuperblock super; // REMOVE ME REMOVE ME
 std::vector<BtrfsSBChunk *> sbChunks; // using an array of ptrs because BtrfsSBChunk is variably sized
 BtrfsObjID mountedSubvol = (BtrfsObjID)0;
 
@@ -142,10 +141,6 @@ int loadSBs()
 		/* add the most recent superblock to the array */
 		supers.push_back(*sbBest);
 	}
-
-	/* remove this as well as 'super' above */
-	printf("REMOVE ME REMOVE ME\n");
-	memcpy(&super, &supers[0], sizeof(BtrfsSuperblock));
 
 	return 0;
 }
