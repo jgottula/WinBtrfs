@@ -64,7 +64,8 @@ void firstTasks()
 	DWORD errorCode;
 
 #ifndef BOOST_LITTLE_ENDIAN
-		printf("firstTasks: warning, support for non-little-endian architectures is untested!\n");
+#pragma message("Warning: support for non-little-endian architectures is untested!")
+	printf("firstTasks: warning: support for non-little-endian architectures is untested!\n");
 #endif
 
 	if ((errorCode = init()) != 0)
