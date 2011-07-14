@@ -245,6 +245,7 @@ unsigned __int64 getTreeRootAddr(BtrfsObjID tree)
 int verifyDevices()
 {
 	char fsUUID[0x10];
+	unsigned __int64 numDevices;
 	
 	/* check that all the devices' FS UUIDs are identical */
 	std::vector<BtrfsSuperblock>::iterator it = supers.begin(), end = supers.end();
@@ -259,12 +260,25 @@ int verifyDevices()
 		}
 	}
 
-	// check that all the numDevices numbers agree, error if not
+	// check for duplicate devices (devices w/ same dev ID)
+
+	it = supers.begin();
+	numDevices = (it++)->numDevices;
+	for ( ; it != end; ++it)
+	{
+		if (it->numDevices != numDevices)
+		{
+			printf("verifyDevices: there is disagreement on the number of devices in the volume!\n");
+			return 3;
+		}
+	}
 	
 	if (blockReaders.size() != supers[0].numDevices)
 	{
-		// be more specific about how many more/less are needed
-		printf("verifyDevices: wrong number of devices given!\n");
-		return 3;
+		/* be more specific about how many more/less are needed */
+		printf("verifyDevices: wrong number of devices given!\nTODO: be more specific\n");
+		return 4;
 	}
+
+	return 0;
 }
