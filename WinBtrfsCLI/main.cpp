@@ -58,7 +58,7 @@ std::vector<const wchar_t *> devicePaths;
 bool useSubvolID = false, useSubvolName = false;
 BtrfsObjID subvolID;
 char *subvolName;
-bool noDump = false;
+bool noDump = false, dumpOnly = false;
 
 void firstTasks()
 {
@@ -144,6 +144,12 @@ void firstTasks()
 				parseFSTree((BtrfsObjID)endian64(kItem.key.offset), FSOP_DUMP_TREE,
 					NULL, NULL, NULL, NULL, NULL);
 		}
+	}
+
+	if (dumpOnly)
+	{
+		cleanUp();
+		exit(0);
 	}
 	
 	/* aesthetic line break */
@@ -264,6 +270,8 @@ int main(int argc, char **argv)
 		{
 			if (strcmp(argv[i], "--no-dump") == 0)
 				noDump = true;
+			else if (strcmp(argv[i], "--dump-only") == 0)
+				dumpOnly = true;
 			else if (strncmp(argv[i], "--subvol-id=", 12) == 0)
 			{
 				if (strlen(argv[i]) > 12)
@@ -338,6 +346,12 @@ int main(int argc, char **argv)
 		}
 
 		assert(argState == 0 || argState == 1);
+	}
+
+	if (noDump && dumpOnly)
+	{
+		printf("You cannot specify both --no-dump and --dump-only on a single run!\n\n");
+		usage();
 	}
 
 	if (argState == 0)
