@@ -17,6 +17,12 @@ Inputs:
 Outputs:
 [1] BtrfsObjID *			ptr to subvol's object ID
 
+RTOP_SUBVOL_EXISTS: Returns a boolean indicating whether the given subvolume ID exists
+Inputs:
+[1] const BtrfsObjID *		subvolume ID
+Outputs:
+[1] bool *					whether it exists
+
 FS tree ops
 
 FSOP_NAME_TO_ID: Finds the object ID for a named file or dir
