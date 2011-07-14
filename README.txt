@@ -1,6 +1,6 @@
 WinBtrfs — Readme/FAQ
 
-Last updated 2011.06.22
+Last updated 2011.07.13
 
 
 NOTE: WinBtrfs is in NO WAY a finished product and is NOT ready for general use. At this time, it should only really be used by people interested in testing, experimentation, or development. See [03] below for details.
@@ -23,7 +23,7 @@ Justin Gottula began development on WinBtrfs in May 2011 as a result of the obse
 
 [03] In its current version, what can WinBtrfs do? What can't it do?
 
-As of 2011.06.22, WinBtrfs can load a single-device Btrfs volume (from the command line), display information such as the drive label and free space in the Drive Properties dialog, perform both command-line and GUI directory listings, report file information (such as file size and attributes), and read file contents. WinBtrfs will also automatically detect which subvolume is the default one and mount it as the root directory. However, if subvolumes are mounted below the root directory, directory listings are known to fail, as development concerning subvolumes is ongoing. There is no installer or GUI at this time. Multi-drive volumes currently will not work. Compression won't work either. Brtfs volumes that were converted from ext4 will work as soon as subvolumes are fully supported. Any and all features of WinBtrfs may be buggy, especially those most recently implemented. Also, the more unusual your particular situation, the more likely you will encounter a bug that the developer has not run across.
+As of 2011.07.13, WinBtrfs can load a single-device Btrfs volume (from the command line), display information such as the drive label and free space in the Drive Properties dialog, perform both command-line and GUI directory listings, report file information (such as file size and attributes), and read file contents. WinBtrfs will automatically detect which subvolume is the default one and mount it as the root directory, or you can manually specify a subvolume name or ID to mount. Subvolumes should be fully functional at this time; however, bugs are highly likely at this time, as many code changes were necessary to enable subvolumes to work. There is no installer or GUI at this time. Multi-drive volumes do not currently work, but work is being done to add support soon. (Incidentally, volumes consisting entirely of mirrored drives will probably work fine at this time.) Compression has not yet been implemented. Brtfs volumes that were converted from ext4 work perfectly. Any and all features of WinBtrfs may be buggy, especially those most recently implemented. Also, the more unusual your particular situation, the more likely you will encounter a bug that the developer has not run across. Most errors related to user input currently manifest themselves as scary-looking assertion failures and other sorts of cryptic messages; in the future, these warnings will become easier to understand.
 
 
 [04] What dependencies are required for WinBtrfs?
@@ -47,22 +47,21 @@ If you are using a non-Microsoft compiler to build WinBtrfs, you are pretty much
 
 Run WinBtrfsCLI.exe without any options to see usage information. Essentially, run the command in this manner:
 
-WinBtrfsCLI.exe <device> <mount point>
+WinBtrfsCLI.exe [options] <mount point> <device>
 
-where <device> is either the path to an image file, or a physical partition in the format \\.\HarddiskAPartitionB, where A is the hard drive (numbered from zero) and B is the partition within that drive (numbered from one); and where <mount point> is either a drive letter (e.g. "C:") or an empty directory on an NTFS drive. To figure out what the physical disk and partition numbers are for your system, open the Disk Management console in Windows and take a look at how the disks and their partitions are numbered; use these numbers when invoking WinBtrfsCLI. For Linux users, it may be helpful to know that /dev/sda1 is equivalent to \\.\Harddisk0Partition1; /dev/sdb2 is equivalent to \\.\Harddisk1Partition2; and so forth. These steps will become much easier in the future, once a GUI is implemented.
+where <device> is either the path to an image file, or a physical partition in the format \\.\HarddiskAPartitionB, where A is the hard drive (numbered from zero) and B is the partition within that drive (numbered from one); and where <mount point> is either a drive letter (e.g. "C:") or an empty directory on an NTFS drive. To figure out what the physical disk and partition numbers are for your system, open the Disk Management console in Windows and take a look at how the disks and their partitions are numbered; use these numbers when invoking WinBtrfsCLI. For Linux users, it may be helpful to know that /dev/sda1 is equivalent to \\.\Harddisk0Partition1; /dev/sdb2 is equivalent to \\.\Harddisk1Partition2; and so forth. For multi-drive volumes, you may specify multiple devices, one after the other. These steps will become much easier in the future, once a GUI is implemented.
 
 
 [07] What does the project roadmap look like?
 
 The following items will be developed in approximately this order:
-— Subvolume handling
-— Snapshot handling
-— Data compression support
-— Multi-drive volume support
+— Snapshots
+— Multi-drive volumes
+— Data compression
 — GUI
 — Installer
 — Multithreading
-— Official support for alternate compilers (MinGW, Cygwin)
+— Non-Microsoft compiler support (MinGW, Cygwin)
 — UI Translations
 — Old OS support
 
