@@ -234,13 +234,13 @@ void parseRootTreeRec(unsigned __int64 addr, RTOperation operation, void *input1
 				const char *name = (const char *)input1;
 				BtrfsObjID *subvolID = (BtrfsObjID *)output1;
 				
-				if (item->key.type == TYPE_ROOT_REF && endian64(item->key.objectID) == OBJID_FS_TREE)
+				if (item->key.type == TYPE_ROOT_BACKREF && endian64(item->key.offset) == OBJID_FS_TREE)
 				{
 					BtrfsRootRef *rootRef = (BtrfsRootRef *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset));
 					
 					if (strlen(name) == endian16(rootRef->n) && strncmp(name, rootRef->name, endian16(rootRef->n)) == 0)
 					{
-						*subvolID = (BtrfsObjID)endian64(item->key.offset);
+						*subvolID = (BtrfsObjID)endian64(item->key.objectID);
 
 						*returnCode = 0;
 						*shortCircuit = true;
