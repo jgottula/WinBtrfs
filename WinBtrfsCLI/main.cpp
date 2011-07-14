@@ -62,55 +62,32 @@ bool noDump = false, dumpOnly = false;
 
 void firstTasks()
 {
-	DWORD errorCode;
+	DWORD error;
 
 #ifndef BOOST_LITTLE_ENDIAN
 #pragma message("Warning: support for non-little-endian architectures is untested!")
 	printf("firstTasks: warning: support for non-little-endian architectures is untested!\n");
 #endif
 
-	if ((errorCode = init(devicePaths)) != 0)
+	if ((error = init(devicePaths)) != 0)
 	{
-		printf("firstTasks: failed to get a handle on the partition! (GetLastError: %d)\n", errorCode);
+		printf("firstTasks: failed to get a handle on the partition! (GetLastError: %d)\n", error);
 
 		exit(1);
 	}
 
-	if ((errorCode = setupBigDokanLock()) != 0)
+	if ((error = setupBigDokanLock()) != 0)
 	{
-		printf("firstTasks: failed to setup the Big Dokan Lock! (GetLastError: %d)\n", errorCode);
+		printf("firstTasks: failed to setup the Big Dokan Lock! (GetLastError: %d)\n", error);
 
 		exit(1);
 	}
 
-	if ((errorCode = readPrimarySB()) != 0)
+	if ((error = loadSBs()) != 0)
 	{
-		printf("firstTasks: failed to read the primary superblock! (GetLastError: %d)\n", errorCode);
-
 		cleanUp();
 		exit(1);
 	}
-
-	switch (validateSB(NULL))
-	{
-	case 0:
-		/* quiet on successful SB validation */
-		break;
-	case 1:
-		printf("firstTasks: superblock is missing or invalid!\n");
-		cleanUp();
-		exit(1);
-	case 2:
-		printf("firstTasks: superblock checksum failed!\n");
-		cleanUp();
-		exit(1);
-	default:
-		printf("firstTasks: superblock failed to validate for an unknown reason!\n");
-		cleanUp();
-		exit(1);
-	}
-
-	findSecondarySBs();
 
 	if (super.numDevices > 1)
 		printf("firstTasks: this volume consists of more than one device!\n");
@@ -124,6 +101,12 @@ void firstTasks()
 	if (!noDump) parseChunkTree(CTOP_DUMP_TREE);
 	parseChunkTree(CTOP_LOAD);
 	
+	if (verifyDevices() != 0)
+	{
+		cleanUp();
+		exit(1);
+	}
+
 	if (!noDump) parseRootTree(RTOP_DUMP_TREE, NULL, NULL);
 	parseRootTree(RTOP_LOAD, NULL, NULL);
 

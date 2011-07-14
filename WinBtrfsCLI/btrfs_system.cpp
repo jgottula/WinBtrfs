@@ -21,7 +21,8 @@
 extern std::vector<KeyedItem> chunkTree, rootTree;
 
 std::vector<BlockReader *> blockReaders;
-BtrfsSuperblock super;
+std::vector<BtrfsSuperblock> supers;
+BtrfsSuperblock super; // REMOVE ME REMOVE ME
 std::vector<BtrfsSBChunk *> sbChunks; // using an array of ptrs because BtrfsSBChunk is variably sized
 BtrfsObjID mountedSubvol = (BtrfsObjID)0;
 
@@ -91,10 +92,67 @@ unsigned __int64 logiToPhys(unsigned __int64 logiAddr, unsigned __int64 len)
 	assert(0);
 }
 
-DWORD readPrimarySB()
+int loadSBs()
 {
-	printf("readPrimarySB: warning: assuming first device!\n");
-	return blockReaders[0]->directRead(SUPERBLOCK_1_PADDR, ADDR_PHYSICAL, sizeof(BtrfsSuperblock), (unsigned char *)&super);
+	int error;
+	
+	/* load the superblock for each device */
+	std::vector<BlockReader *>::iterator it = blockReaders.begin(), end = blockReaders.end();
+	for ( ; it != end; ++it)
+	{
+		BlockReader *blockReader = *it;
+		/* big structs on the stack; non-recursive so this shouldn't be a problem */
+		BtrfsSuperblock sb1, sb2, sb3, sb4, *sbBest = &sb1;
+
+		if ((error = blockReader->directRead(SUPERBLOCK_1_PADDR, ADDR_PHYSICAL,
+			sizeof(BtrfsSuperblock), (unsigned char *)&sb1)) != ERROR_SUCCESS)
+		{
+			printf("readSBs: could not read a device's primary superblock!\n(Windows error code: %d)\n", error);
+			return error;
+		}
+
+		/* each device's primary superblock MUST validate */
+		switch ((error = validateSB(&sb1)))
+		{
+		case 0:
+			break;
+		case 1:
+			printf("readSBs: a device's primary superblock is missing or invalid!\n");
+			return error;
+		case 2:
+			printf("readSBs: a device's primary superblock checksum failed!\n");
+			return error;
+		default:
+			printf("readSBs: a device's primary superblock failed to validate for unknown reasons!\n");
+			return error;
+		}
+
+		/* try to find more a recent secondary superblock (SSD usage pattern) */
+
+		if (blockReader->directRead(SUPERBLOCK_2_PADDR, ADDR_PHYSICAL,
+			sizeof(BtrfsSuperblock), (unsigned char *)&sb2) == ERROR_SUCCESS &&
+			validateSB(&sb2) == 0 && endian64(sb2.generation) > endian64(sbBest->generation))
+			sbBest = &sb2;
+
+		if (blockReader->directRead(SUPERBLOCK_3_PADDR, ADDR_PHYSICAL,
+			sizeof(BtrfsSuperblock), (unsigned char *)&sb3) == ERROR_SUCCESS &&
+			validateSB(&sb3) == 0 && endian64(sb3.generation) > endian64(sbBest->generation))
+			sbBest = &sb3;
+
+		if (blockReader->directRead(SUPERBLOCK_4_PADDR, ADDR_PHYSICAL,
+			sizeof(BtrfsSuperblock), (unsigned char *)&sb4) == ERROR_SUCCESS &&
+			validateSB(&sb4) == 0 && endian64(sb4.generation) > endian64(sbBest->generation))
+			sbBest = &sb4;
+
+		/* add the most recent superblock to the array */
+		supers.push_back(*sbBest);
+	}
+
+	/* remove this as well as 'super' above */
+	printf("REMOVE ME REMOVE ME\n");
+	memcpy(&super, &supers[0], sizeof(BtrfsSuperblock));
+
+	return 0;
 }
 
 int validateSB(BtrfsSuperblock *s)
@@ -104,9 +162,7 @@ int validateSB(BtrfsSuperblock *s)
 		'_', 'B', 'H', 'R', 'f', 'S', '_', 'M'
 	};
 
-	/* if no superblock is provided, use the primary one */
-	if (s == NULL)
-		s = &super;
+	assert(s != NULL);
 
 	/* magic check */
 	if (memcmp(magic, s->magic, 8) != 0)
@@ -118,38 +174,6 @@ int validateSB(BtrfsSuperblock *s)
 		return 2;
 
 	return 0;
-}
-
-int findSecondarySBs()
-{
-	BtrfsSuperblock s2, s3, s4, *sBest = &super;
-	int best = 1;
-	unsigned __int64 bestGen = endian64(super.generation);
-
-	/* read each superblock (if present) and validate */
-	
-	printf("readSecondarySBs: warning: assuming first device!\n");
-
-	if (blockReaders[0]->directRead(SUPERBLOCK_2_PADDR, ADDR_PHYSICAL, sizeof(BtrfsSuperblock), (unsigned char *)&s2) == 0 &&
-		validateSB(&s2) == 0 && endian64(s2.generation) > bestGen)
-		best = 2, sBest = &s2, bestGen = endian64(s2.generation);
-
-	if (blockReaders[0]->directRead(SUPERBLOCK_2_PADDR, ADDR_PHYSICAL, sizeof(BtrfsSuperblock), (unsigned char *)&s3) == 0 &&
-		validateSB(&s3) == 0 && endian64(s3.generation) > bestGen)
-		best = 3, sBest = &s3, bestGen = endian64(s3.generation);
-
-	if (blockReaders[0]->directRead(SUPERBLOCK_2_PADDR, ADDR_PHYSICAL, sizeof(BtrfsSuperblock), (unsigned char *)&s4) == 0 &&
-		validateSB(&s4) == 0 && endian64(s4.generation) > bestGen)
-		best = 4, sBest = &s4, bestGen = endian64(s4.generation);
-
-	/* replace the superblock in memory with the most up-to-date on-disk copy */
-	if (best != 1)
-	{
-		printf("findSecondarySBs: found a better superblock (#%d).\n", best);
-		memcpy(&super, sBest, sizeof(BtrfsSuperblock));
-	}
-
-	return best;
 }
 
 void loadSBChunks(bool dump)
@@ -219,4 +243,20 @@ unsigned __int64 getTreeRootAddr(BtrfsObjID tree)
 	assert(parseRootTree(RTOP_GET_ADDR, &tree, &addr) == 0);
 
 	return addr;
+}
+
+int verifyDevices()
+{
+	printf("verifyDevices: TODO: finish these checks!\n");
+	
+	// check that all the FS UUIDs agree, error if not
+
+	// check that all the numDevices numbers agree, error if not
+	
+	if (blockReaders.size() != supers[0].numDevices)
+	{
+		// be more specific about how many more/less are needed
+		printf("verifyDevices: wrong number of devices given!\n");
+		return 1;
+	}
 }
