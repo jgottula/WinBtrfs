@@ -304,9 +304,7 @@ int DOKAN_CALLBACK btrfsReadFile(LPCWSTR fileName, LPVOID buffer, DWORD numberOf
 							
 							compressed = (unsigned char *)malloc(endian64(nonInlinePart->extSize));
 
-							PhysAddr physAddr = logiToPhys(endian64(nonInlinePart->extAddr),
-								endian64(nonInlinePart->extSize));
-							DWORD result = getBlockReader(physAddr.devID)->directRead(physAddr.offset,
+							DWORD result = readLogical(endian64(nonInlinePart->extAddr),
 								endian64(nonInlinePart->extSize), compressed);
 							assert(result == 0);
 

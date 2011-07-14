@@ -52,10 +52,8 @@ void cleanUp()
 	}
 }
 
-PhysAddr logiToPhys(LogiAddr logiAddr, unsigned __int64 len)
+PhysAddr *logiToPhys(LogiAddr logiAddr, unsigned __int64 len)
 {
-	PhysAddr physAddr = { 0, 0 };
-	
 	/* try superblock chunks first */
 	size_t size = sbChunks.size();
 	for (size_t i = 0; i < size; i++)
@@ -64,10 +62,13 @@ PhysAddr logiToPhys(LogiAddr logiAddr, unsigned __int64 len)
 		
 		if (logiAddr >= chunk->key.offset && logiAddr + len <= chunk->key.offset + chunk->chunkItem.chunkSize)
 		{
-			PhysAddr physAddr = { chunk->chunkItem.stripes[0].devID,
-				(logiAddr - chunk->key.offset) + chunk->chunkItem.stripes[0].offset };
-
-			printf("logiToPhys: currently using stripe 0 every time!\n");
+			PhysAddr *physAddr = (PhysAddr *)malloc(sizeof(PhysAddr) +
+				(chunk->chunkItem.numStripes * sizeof(BtrfsChunkItemStripe)));
+			
+			physAddr->offset = logiAddr - chunk->key.offset;
+			physAddr->len = len;
+			memcpy(&physAddr->chunkItem, &chunk->chunkItem, sizeof(BtrfsChunkItem) +
+				(chunk->chunkItem.numStripes * sizeof(BtrfsChunkItemStripe)));
 
 			return physAddr;
 		}
@@ -85,10 +86,13 @@ PhysAddr logiToPhys(LogiAddr logiAddr, unsigned __int64 len)
 
 			if (logiAddr >= kItem.key.offset && logiAddr + len <= kItem.key.offset + chunkItem->chunkSize)
 			{
-				PhysAddr physAddr = { chunkItem->stripes[0].devID,
-					(logiAddr - kItem.key.offset) + chunkItem->stripes[0].offset };
-
-				printf("logiToPhys: currently using stripe 0 every time!\n");
+				PhysAddr *physAddr = (PhysAddr *)malloc(sizeof(PhysAddr) +
+					(chunkItem->numStripes * sizeof(BtrfsChunkItemStripe)));
+			
+				physAddr->offset = logiAddr - kItem.key.offset;
+				physAddr->len = len;
+				memcpy(&physAddr->chunkItem, chunkItem, sizeof(BtrfsChunkItem) +
+					(chunkItem->numStripes * sizeof(BtrfsChunkItemStripe)));
 
 				return physAddr;
 			}
@@ -276,14 +280,14 @@ void loadSBChunks(bool dump)
 	}
 }
 
-unsigned char *loadNode(PhysAddr addr, BtrfsHeader **header)
+unsigned char *loadNode(LogiAddr addr, BtrfsHeader **header)
 {
 	/* seems to be a safe assumption that all devices share the same node size */
 	unsigned int blockSize = endian32(supers[0].nodeSize);
 	unsigned char *nodeBlock = (unsigned char *)malloc(blockSize);
 	
 	/* this might not always be fatal, so in the future an assertion may be inappropriate */
-	assert(getBlockReader(addr.devID)->directRead(addr.offset, blockSize, nodeBlock) == 0);
+	assert(readLogical(addr, blockSize, nodeBlock) == 0);
 
 	*header = (BtrfsHeader *)nodeBlock;
 
@@ -292,13 +296,6 @@ unsigned char *loadNode(PhysAddr addr, BtrfsHeader **header)
 		blockSize - sizeof(BtrfsChecksum)) == endian32((*header)->csum.crc32c));
 
 	return nodeBlock;
-}
-
-unsigned char *loadNode(LogiAddr addr, BtrfsHeader **header)
-{
-	unsigned int blockSize = endian32(supers[0].nodeSize);
-
-	return loadNode(logiToPhys(addr, blockSize), header);
 }
 
 LogiAddr getTreeRootAddr(BtrfsObjID tree)
@@ -396,4 +393,23 @@ BlockReader *getBlockReader(unsigned __int64 devID)
 
 	/* getting here means we failed to find a block reader for the requested device */
 	assert(0);
+}
+
+DWORD readLogical(LogiAddr addr, unsigned __int64 len, unsigned char *dest)
+{
+	PhysAddr *physAddr;
+	BlockReader *blockReader;
+
+	/* TODO: actually interpret the chunk's block group flags and handle striping properly */
+	printf("readLogical: reading straight off stripe 0 for now!\n");
+
+	physAddr = logiToPhys(addr, len);
+	blockReader = getBlockReader(physAddr->chunkItem.stripes[0].devID);
+
+	DWORD rtnVal = blockReader->directRead(physAddr->offset +
+		physAddr->chunkItem.stripes[0].offset, len, dest);
+
+	free(physAddr);
+
+	return rtnVal;
 }

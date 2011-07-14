@@ -388,8 +388,9 @@ struct DirList
 
 struct PhysAddr
 {
-	unsigned __int64		devID;
 	unsigned __int64		offset;
+	unsigned __int64		len;
+	BtrfsChunkItem			chunkItem;
 };
 
 typedef unsigned __int64 LogiAddr;

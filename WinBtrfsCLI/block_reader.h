@@ -22,7 +22,7 @@ class BlockReader
 public:
 	BlockReader(const wchar_t *devicePath);
 	~BlockReader();
-
+	
 	DWORD directRead(unsigned __int64 addr, unsigned __int64 len, unsigned char *dest);
 
 private:
