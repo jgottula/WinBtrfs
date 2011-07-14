@@ -220,7 +220,8 @@ void loadSBChunks(bool dump)
 
 unsigned char *loadNode(unsigned __int64 blockAddr, AddrType type, BtrfsHeader **header)
 {
-	unsigned int blockSize = endian32(super.nodeSize);
+	/* seems to be a safe assumption that all devices share the same node size */
+	unsigned int blockSize = endian32(supers[0].nodeSize);
 	unsigned char *nodeBlock = (unsigned char *)malloc(blockSize);
 	
 	printf("loadNode: warning: assuming first device!\n");
