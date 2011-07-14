@@ -81,8 +81,8 @@ void convertMetadata(const FilePkg *input, void *output, bool dirList)
 	if (!dirList)
 	{
 		/* using the least significant 4 bytes of the UUID */
-		fileInfo->dwVolumeSerialNumber = super.uuid[0] + (super.uuid[1] << 8) +
-			(super.uuid[2] << 16) + (super.uuid[3] << 24);
+		fileInfo->dwVolumeSerialNumber = super.fsUUID[0] + (super.fsUUID[1] << 8) +
+			(super.fsUUID[2] << 16) + (super.fsUUID[3] << 24);
 	}
 
 	if (!dirList)

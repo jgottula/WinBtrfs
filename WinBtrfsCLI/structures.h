@@ -209,7 +209,7 @@ struct BtrfsSBChunk
 struct BtrfsSuperblock
 {
 	BtrfsChecksum			csum;
-	unsigned char			uuid				[0x10];
+	unsigned char			fsUUID				[0x10];
 	unsigned __int64		physAddr;
 	unsigned __int64		flags;
 	char					magic				[0x08];

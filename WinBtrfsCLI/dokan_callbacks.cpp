@@ -618,8 +618,8 @@ int DOKAN_CALLBACK btrfsGetVolumeInformation(LPWSTR volumeNameBuffer, DWORD volu
 	strcpy(labelS, super.label);
 	mbstowcs(volumeNameBuffer, labelS, volumeNameSize);
 
-	/* using the last 4 bytes of the UUID */
-	*volumeSerialNumber = super.uuid[0] + (super.uuid[1] << 8) + (super.uuid[2] << 16) + (super.uuid[3] << 24);
+	/* using the last 4 bytes of the FS UUID */
+	*volumeSerialNumber = super.fsUUID[0] + (super.fsUUID[1] << 8) + (super.fsUUID[2] << 16) + (super.fsUUID[3] << 24);
 
 	*maximumComponentLength = 255;
 
