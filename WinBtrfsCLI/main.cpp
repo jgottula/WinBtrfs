@@ -234,7 +234,7 @@ void dokanError(int dokanResult)
 void usage()
 {
 	printf("Usage: WinBtrfsCLI.exe <device> <mount point> [options]\n\n"
-		"For the device argument, try something like \\Device\\HarddiskX\\PartitionY.\n"
+		"For the device argument, try something like \\\\.\\HarddiskXPartitionY.\n"
 		"Disks are indexed from zero; partitions are indexed from one.\n"
 		"Example: /dev/sda1 = \\\\.\\Harddisk0Partition1\n\n"
 		"You can also specify an image file to mount.\n\n"
