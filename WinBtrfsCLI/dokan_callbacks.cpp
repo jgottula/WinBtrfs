@@ -216,6 +216,7 @@ int DOKAN_CALLBACK btrfsReadFile(LPCWSTR fileName, LPVOID buffer, DWORD numberOf
 	LONGLONG offset, PDOKAN_FILE_INFO info)
 {
 	FileID *fileID = (FileID *)info->Context;
+	FilePkg *filePkg;
 	
 	/* Big Dokan Lock not needed here */
 
@@ -239,8 +240,10 @@ int DOKAN_CALLBACK btrfsReadFile(LPCWSTR fileName, LPVOID buffer, DWORD numberOf
 		assert(it != end);
 	}
 
-	size_t numExtents = it->numExtents;
-	KeyedItem *extents = it->extents;
+	filePkg = &(*it);
+
+	size_t numExtents = filePkg->numExtents;
+	KeyedItem *extents = filePkg->extents;
 
 	/* zero out the areas that don't get read in */
 	memset(buffer, 0, numberOfBytesToRead);
@@ -248,128 +251,164 @@ int DOKAN_CALLBACK btrfsReadFile(LPCWSTR fileName, LPVOID buffer, DWORD numberOf
 	/* we'll read from this, so to be safe we'll set it first */
 	*numberOfBytesRead = 0;
 
-	for (size_t i = 0; i < numExtents; i++)
+	unsigned __int64 readBegin = offset, readEnd = offset + numberOfBytesToRead;
+	
+	if (readBegin < filePkg->inode.stSize)
 	{
-		BtrfsExtentData *extentData = (BtrfsExtentData *)extents[i].data;
-
-		/* does the requested range include the first byte of this extent? */
-		bool a = (endian64(extents[i].key.offset) >= offset &&
-			endian64(extents[i].key.offset) < offset + numberOfBytesToRead);
-		/* does the requested range include the last byte of this extent? */
-		bool b = (endian64(extents[i].key.offset) + endian64(extentData->n) - 1 >= offset &&
-			endian64(extents[i].key.offset) + endian64(extentData->n) - 1 < offset + numberOfBytesToRead);
-		
-		/* does the requested range start inside this extent? */
-		bool first = !a && b;
-		/* does the requested range end inside this extent? */
-		bool last = a && !b;
-		/* does the requested range take up the entirety of this extent? */
-		bool span = a && b;
-		/* does the requested range fit entirely within this extent? */
-		bool within = (offset >= endian64(extents[i].key.offset) &&
-			offset + numberOfBytesToRead <= endian64(extents[i].key.offset) + endian64(extentData->n));
-
-		if (first || last || span || within)
+		for (size_t i = 0; i < numExtents; i++)
 		{
-			assert(extentData->encryption == ENCRYPTION_NONE);
-			assert(extentData->otherEncoding == ENCODING_NONE);
-			
-			if (extentData->compression <= COMPRESSION_LZO)
+			BtrfsExtentData *extentData = (BtrfsExtentData *)extents[i].data;
+
+			/* does the requested range include the first byte of this extent? */
+			bool a = (endian64(extents[i].key.offset) >= offset &&
+				endian64(extents[i].key.offset) < offset + numberOfBytesToRead);
+			/* does the requested range include the last byte of this extent? */
+			bool b = (endian64(extents[i].key.offset) + endian64(extentData->n) - 1 >= offset &&
+				endian64(extents[i].key.offset) + endian64(extentData->n) - 1 < offset + numberOfBytesToRead);
+		
+			/* does the requested range start inside this extent? */
+			bool first = !a && b;
+			/* does the requested range end inside this extent? */
+			bool last = a && !b;
+			/* does the requested range take up the entirety of this extent? */
+			bool span = a && b;
+			/* does the requested range fit entirely within this extent? */
+			bool within = (offset >= endian64(extents[i].key.offset) &&
+				offset + numberOfBytesToRead <= endian64(extents[i].key.offset) + endian64(extentData->n));
+
+			if (first || last || span || within)
 			{
-				BtrfsExtentDataNonInline *nonInlinePart = NULL;
-				unsigned char *compressed, *decompressed;
-				size_t from, len;
-				bool skipCopy = false;
-
-				if (extentData->type == FILEDATA_INLINE)
-					decompressed = extentData->inlineData;
-				else
+				assert(extentData->encryption == ENCRYPTION_NONE);
+				assert(extentData->otherEncoding == ENCODING_NONE);
+			
+				if (extentData->compression <= COMPRESSION_LZO)
 				{
-					nonInlinePart = (BtrfsExtentDataNonInline *)extentData->inlineData;
+					BtrfsExtentDataNonInline *nonInlinePart = NULL;
+					unsigned char *compressed, *decompressed;
+					size_t from, len;
+					bool skipCopy = false;
 
-					/* an address of zero indicates a sparse extent (i.e. all zeroes) */
-					if (endian64(nonInlinePart->extAddr) == 0)
-						skipCopy = true;
+					if (extentData->type == FILEDATA_INLINE)
+						decompressed = extentData->inlineData;
 					else
 					{
-						lzo_uint realDecompressedSize;
-						
-						printf("btrfsReadFile: warning: assuming first device!\n");
-						
-						compressed = (unsigned char *)malloc(endian64(nonInlinePart->extSize));
-						DWORD result = blockReaders[0]->directRead(endian64(nonInlinePart->extAddr), ADDR_LOGICAL,
-							endian64(nonInlinePart->extSize), compressed);
-						assert(result == 0);
+						nonInlinePart = (BtrfsExtentDataNonInline *)extentData->inlineData;
 
-						switch (extentData->compression)
+						/* an address of zero indicates a sparse extent (i.e. all zeroes) */
+						if (endian64(nonInlinePart->extAddr) == 0)
+							skipCopy = true;
+						else
 						{
-						case COMPRESSION_NONE:
-							/* transitive property: data is already decompressed! */
-							decompressed = compressed;
-							break;
-						case COMPRESSION_ZLIB:
-							decompressed = (unsigned char *)malloc(endian64(nonInlinePart->bytesInFile));
+							printf("btrfsReadFile: warning: assuming first device!\n");
+						
+							compressed = (unsigned char *)malloc(endian64(nonInlinePart->extSize));
+							DWORD result = blockReaders[0]->directRead(endian64(nonInlinePart->extAddr), ADDR_LOGICAL,
+								endian64(nonInlinePart->extSize), compressed);
+							assert(result == 0);
+
+							switch (extentData->compression)
+							{
+							case COMPRESSION_NONE:
+								/* transitive property: data is already decompressed! */
+								decompressed = compressed;
+								break;
+							case COMPRESSION_ZLIB:
+								decompressed = (unsigned char *)malloc(endian64(nonInlinePart->bytesInFile));
 							
-							printf("btrfsReadFile: not actually decompressing ZLIB!\n");
-							memcpy(decompressed, compressed, endian64(nonInlinePart->extSize));
+								printf("btrfsReadFile: not actually decompressing ZLIB!\n");
+								memcpy(decompressed, compressed, endian64(nonInlinePart->extSize));
 
-							free(compressed);
-							break;
-						case COMPRESSION_LZO:
-							decompressed = (unsigned char *)malloc(endian64(nonInlinePart->bytesInFile));
+								free(compressed);
+								break;
+							case COMPRESSION_LZO:
+								lzo_uint lzoTotLen, lzoInLen, lzoOutLen, lzoBytesRead = 0, lzoBytesWritten = 0;
+								unsigned char *cPtr, *dPtr;
 							
-							lzo1x_decompress(compressed, endian64(nonInlinePart->extSize),
-								decompressed, &realDecompressedSize, NULL);
+								decompressed = (unsigned char *)malloc(endian64(nonInlinePart->bytesInFile));
+							
+								/* must at least contain the 32-bit total size header */
+								assert(endian64(nonInlinePart->extSize) >= 4);
 
-							assert(realDecompressedSize == endian64(nonInlinePart->bytesInFile));
+								/* total number of compressed bytes in the extent */
+								lzoTotLen = endian32(*((unsigned int *)compressed));
 
-							free(compressed);
-							break;
+								cPtr = compressed + 4;
+								dPtr = decompressed;
+
+								while (lzoBytesRead < lzoTotLen - 4)
+								{
+									lzoInLen = endian32(*((unsigned int *)cPtr));
+									cPtr += 4;
+
+									int result = lzo1x_decompress_safe(cPtr, lzoInLen,
+										dPtr, &lzoOutLen, NULL);
+									assert(result == LZO_E_OK);
+
+									lzoBytesRead += lzoInLen + 4;
+									lzoBytesWritten += lzoOutLen;
+
+									cPtr += lzoInLen;
+									dPtr += lzoOutLen;
+								}
+
+								assert(lzoBytesWritten <= endian64(nonInlinePart->bytesInFile));
+
+								free(compressed);
+								break;
+							}
 						}
 					}
-				}
 
-				if (span)
-				{
-					from = 0;
-					len = extentData->n;
-				}
-				else if (within)
-				{
-					from = offset - endian64(extents[i].key.offset);
-					len = numberOfBytesToRead;
-				}
-				else if (first)
-				{
-					from = offset - endian64(extents[i].key.offset);
-					len = extentData->n - (offset - endian64(extents[i].key.offset));
-				}
-				else if (last)
-				{
-					from = 0;
-					len = (offset + numberOfBytesToRead) - endian64(extents[i].key.offset);
-				}
+					if (span)
+					{
+						from = 0;
+						len = extentData->n;
+					}
+					else if (within)
+					{
+						from = offset - endian64(extents[i].key.offset);
+						len = numberOfBytesToRead;
+					}
+					else if (first)
+					{
+						from = offset - endian64(extents[i].key.offset);
+						len = extentData->n - (offset - endian64(extents[i].key.offset));
+					}
+					else if (last)
+					{
+						from = 0;
+						len = (offset + numberOfBytesToRead) - endian64(extents[i].key.offset);
+					}
 
-				if (!skipCopy)
-				{
-					memcpy((char *)buffer + *numberOfBytesRead, decompressed + from, len);
+					if (!skipCopy)
+					{
+						memcpy((char *)buffer + *numberOfBytesRead, decompressed + from, len);
 
-					if (extentData->type != FILEDATA_INLINE)
-						free(decompressed);
-				}
+						if (extentData->type != FILEDATA_INLINE)
+							free(decompressed);
+					}
 				
-				numberOfBytesToRead -= len;
-				*numberOfBytesRead += len;
-				offset += len;
+					numberOfBytesToRead -= len;
+					*numberOfBytesRead += len;
+					offset += len;
 
-				/* that was the last extent (this assumes correct ordering of extents by offset) */
-				if (last || within)
-					break;
+					/* that was the last extent (this assumes correct ordering of extents by offset) */
+					if (last || within)
+						break;
+				}
+				else
+					printf("btrfsReadFile: data is compressed with an unsupported algorithm!\n");
 			}
-			else
-				printf("btrfsReadFile: data is compressed with an unsupported algorithm!\n");
 		}
+
+		/* if the moronic application requested more data than the file contains,
+			report a smaller read size to correct them */
+		if (readEnd > filePkg->inode.stSize)
+			*numberOfBytesRead -= readEnd - filePkg->inode.stSize;
 	}
+	else
+		/* this idiotic fix courtesy of WordPad */
+		*numberOfBytesRead = 0;
 
 	printf("btrfsReadFile: OK [%s]\n", fileName);
 	return ERROR_SUCCESS;
