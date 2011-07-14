@@ -1,5 +1,5 @@
 /* main.cpp
- * CLI processing and Dokan stuff
+ * the CLI frontend
  *
  * WinBtrfs
  *
