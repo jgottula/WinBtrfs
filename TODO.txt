@@ -29,6 +29,7 @@ Determine if, when a subvolume (B) is created within another subvolume (A), the 
 Write an fopen (or Win32) test to determine if CREATE_ALWAYS or OPEN_ALWAYS will ever get passed to btrfsCreateFile
 Try different Win32 apis (specifically ones that correspond with callbacks that should NEVER BE CALLED) and see if eliciting a crash
 	is possible
+Mount a test image in SSD mode and then see if WinBtrfs uses a secondary superblock
 
 Bugs:
 Mounting btrfs_symlinks.img to C:\mount and dirlisting C:\mount\dir results in a getPathID failure
@@ -69,7 +70,9 @@ Add all function prototypes to header files (even intra-module ones)
 Use the DIY-filter version of the FindFiles callback and do filtering as the dirlist FSOP happens so we don't create dirlist entries
 	that just get removed later by the post-hoc filtering process
 When reading from mirrored chunks, alternate the stripe from which we read so as to boost performance (basically read striping)
+Implement fully striped reading for RAID0/striped or RAID1/mirrored chunks for max performance
 Use fprintf(stderr, ...) for error messages
 Add a Ctrl+C handler to unmount and clean up gracefully
 Decompress only the nodes of an extent that are going to be read in part or in whole; skip those that won't be read
 Find better Windows error codes for failure conditions in Dokan callbacks
+Be more consistent about whether error output is in the caller or the callee (currently they are both, somewhat randomly)
