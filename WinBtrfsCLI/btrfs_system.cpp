@@ -16,6 +16,7 @@
 #include "block_reader.h"
 #include "crc32c.h"
 #include "endian.h"
+#include "roottree_parser.h"
 #include "util.h"
 
 extern std::vector<KeyedItem> chunkTree, rootTree;
@@ -190,22 +191,9 @@ unsigned char *loadNode(unsigned __int64 blockAddr, AddrType type, BtrfsHeader *
 
 unsigned __int64 getTreeRootAddr(BtrfsObjID tree)
 {
-	/* the root tree MUST be loaded */
-	assert(rootTree.size() > 0);
-	
-	size_t size = rootTree.size();
-	for (size_t i = 0; i < size; i++)
-	{
-		KeyedItem& kItem = rootTree.at(i);
+	unsigned __int64 addr;
 
-		if (kItem.key.type == TYPE_ROOT_ITEM && endian64(kItem.key.objectID) == tree)
-		{
-			BtrfsRootItem *rootItem = (BtrfsRootItem *)kItem.data;
+	assert(parseRootTree(RTOP_GET_ADDR, &tree, &addr) == 0);
 
-			return endian64(rootItem->rootNodeBlockNum);
-		}
-	}
-
-	/* getting here means we couldn't find it */
-	assert(0);
+	return addr;
 }

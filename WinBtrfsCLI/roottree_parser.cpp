@@ -265,6 +265,21 @@ void parseRootTreeRec(unsigned __int64 addr, RTOperation operation, void *input0
 					*shortCircuit = true;
 				}
 			}
+			else if (operation == RTOP_GET_ADDR)
+			{
+				const BtrfsObjID *treeID = (const BtrfsObjID *)input0;
+				unsigned __int64 *addr = (unsigned __int64 *)output0;
+
+				if (item->key.type == TYPE_ROOT_ITEM && endian64(item->key.objectID) == *treeID)
+				{
+					BtrfsRootItem *rootItem = (BtrfsRootItem *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset));
+
+					*addr = endian64(rootItem->rootNodeBlockNum);
+
+					*returnCode = 0;
+					*shortCircuit = true;
+				}
+			}
 			else
 				printf("parseRootTreeRec: unknown operation (0x%02x)!\n", operation);
 

@@ -23,6 +23,12 @@ Inputs:
 Outputs:
 [0] bool *					whether it exists
 
+RTOP_GET_ADDR: Returns the address of the root node of a given tree
+Inputs:
+[0] const BtrfsObjID *		tree ID
+Outputs:
+[0] unsigned __int64 *		logical address
+
 FS tree ops
 
 FSOP_NAME_TO_ID: Finds the object ID for a named file or dir
