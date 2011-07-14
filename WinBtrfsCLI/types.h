@@ -322,9 +322,9 @@ struct BtrfsSuperblock
 	unsigned __int64		flags;
 	char					magic				[0x08];
 	unsigned __int64		generation;
-	unsigned __int64		rootTreeLAddr;
-	unsigned __int64		chunkTreeLAddr;
-	unsigned __int64		logTreeLAddr;
+	unsigned __int64		rtRoot;
+	unsigned __int64		ctRoot;
+	unsigned __int64		ltRoot;
 	unsigned __int64		logRootTransID;
 	unsigned __int64		totalBytes;
 	unsigned __int64		bytesUsed;

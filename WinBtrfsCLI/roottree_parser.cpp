@@ -345,7 +345,7 @@ int parseRootTree(RTOperation operation, void *input0, void *output0)
 		*exists = false;
 	}
 	
-	parseRootTreeRec(endian64(supers[0].rootTreeLAddr), operation, input0, output0,
+	parseRootTreeRec(endian64(supers[0].rtRoot), operation, input0, output0,
 		&returnCode, &shortCircuit);
 
 	return returnCode;

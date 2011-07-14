@@ -149,5 +149,5 @@ void parseChunkTreeRec(LogiAddr addr, CTOperation operation)
 
 void parseChunkTree(CTOperation operation)
 {
-	parseChunkTreeRec(endian64(supers[0].chunkTreeLAddr), operation);
+	parseChunkTreeRec(endian64(supers[0].ctRoot), operation);
 }
