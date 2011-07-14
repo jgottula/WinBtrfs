@@ -113,6 +113,10 @@ void firstTasks()
 	if (super.numDevices > 1)
 		printf("firstTasks: this volume consists of more than one device!\n");
 	
+	/* aesthetic line break */
+	if (!noDump)
+		printf("\n");
+
 	loadSBChunks(!noDump);
 
 	if (!noDump) parseChunkTree(CTOP_DUMP_TREE);
@@ -139,6 +143,10 @@ void firstTasks()
 					NULL, NULL, NULL, NULL, NULL);
 		}
 	}
+	
+	/* aesthetic line break */
+	if (!noDump)
+		printf("\n");
 
 	if (!useSubvolID && !useSubvolName)
 	{
