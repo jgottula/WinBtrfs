@@ -13,6 +13,12 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Source Files\minilzo">
+      <UniqueIdentifier>{77c8f54e-ccf8-420d-9895-a0b012ec010f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\minilzo">
+      <UniqueIdentifier>{f5864917-1f45-4f60-a007-8808f7cda25e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="btrfs_operations.cpp">
@@ -44,6 +50,9 @@
     </ClCompile>
     <ClCompile Include="chunktree_parser.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="minilzo\minilzo.c">
+      <Filter>Source Files\minilzo</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -82,6 +91,15 @@
     </ClInclude>
     <ClInclude Include="fstree_parser.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="minilzo\minilzo.h">
+      <Filter>Header Files\minilzo</Filter>
+    </ClInclude>
+    <ClInclude Include="minilzo\lzodefs.h">
+      <Filter>Header Files\minilzo</Filter>
+    </ClInclude>
+    <ClInclude Include="minilzo\lzoconf.h">
+      <Filter>Header Files\minilzo</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

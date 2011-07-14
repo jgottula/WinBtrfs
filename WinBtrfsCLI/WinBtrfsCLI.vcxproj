@@ -103,6 +103,7 @@
     <ClCompile Include="chunktree_parser.cpp" />
     <ClCompile Include="fstree_parser.cpp" />
     <ClCompile Include="btrfs_operations.cpp" />
+    <ClCompile Include="minilzo\minilzo.c" />
     <ClCompile Include="roottree_parser.cpp" />
     <ClCompile Include="btrfs_system.cpp" />
     <ClCompile Include="dokan_callbacks.cpp" />
@@ -120,6 +121,9 @@
     <ClInclude Include="crc32c.h" />
     <ClInclude Include="endian.h" />
     <ClInclude Include="fstree_parser.h" />
+    <ClInclude Include="minilzo\lzoconf.h" />
+    <ClInclude Include="minilzo\lzodefs.h" />
+    <ClInclude Include="minilzo\minilzo.h" />
     <ClInclude Include="roottree_parser.h" />
     <ClInclude Include="structures.h" />
     <ClInclude Include="util.h" />
