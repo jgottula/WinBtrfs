@@ -89,7 +89,7 @@ void parseChunkTreeRec(LogiAddr addr, CTOperation operation)
 
 					uuidToStr(devItem->devUUID, uuid);
 					printf("  [%02x] DEV_ITEM devID: 0x%I64x uuid: %s\n"
-						"                devGroup: 0x%lx offset: 0x%I64x size: 0x%I64x\n", i,
+						"                devGroup: 0x%x offset: 0x%I64x size: 0x%I64x\n", i,
 						endian64(item->key.offset), uuid, endian32(devItem->devGroup),
 						endian64(devItem->startOffset), endian64(devItem->numBytes));
 					break;

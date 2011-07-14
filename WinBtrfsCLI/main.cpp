@@ -82,15 +82,11 @@ void firstTasks()
 		exit(1);
 	}
 
-	if ((error = loadSBs()) != 0)
+	if ((error = loadSBs(!noDump)) != 0)
 	{
 		cleanUp();
 		exit(1);
 	}
-	
-	/* aesthetic line break */
-	if (!noDump)
-		printf("\n");
 	
 	if (verifyDevices() != 0)
 	{

@@ -18,7 +18,7 @@
 DWORD init();
 void cleanUp();
 PhysAddr logiToPhys(LogiAddr logiAddr, unsigned __int64 len);
-int loadSBs();
+int loadSBs(bool dump);
 int validateSB(BtrfsSuperblock *s);
 void loadSBChunks(bool dump);
 unsigned char *loadNode(PhysAddr addr, BtrfsHeader **header);

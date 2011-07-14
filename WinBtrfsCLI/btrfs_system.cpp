@@ -99,22 +99,24 @@ PhysAddr logiToPhys(LogiAddr logiAddr, unsigned __int64 len)
 	assert(0);
 }
 
-int loadSBs()
+int loadSBs(bool dump)
 {
 	int error;
 	
 	/* load the superblock for each device */
 	std::vector<BlockReader *>::iterator it = blockReaders.begin(), end = blockReaders.end();
-	for ( ; it != end; ++it)
+	for (int i = 0; it != end; ++it, i++)
 	{
 		BlockReader *blockReader = *it;
 		/* big structs on the stack; non-recursive so this shouldn't be a problem */
 		BtrfsSuperblock sb1, sb2, sb3, sb4, *sbBest = &sb1;
+		int sbBestIdx = 1;
 
 		if ((error = blockReader->directRead(SUPERBLOCK_1_PADDR,
 			sizeof(BtrfsSuperblock), (unsigned char *)&sb1)) != ERROR_SUCCESS)
 		{
-			printf("readSBs: could not read a device's primary superblock!\n(Windows error code: %d)\n", error);
+			printf("loadSBs: could not read a device's primary superblock!\n"
+				"Device: %S\nWindows error code: %d\n", devicePaths[i], error);
 			return error;
 		}
 
@@ -122,37 +124,90 @@ int loadSBs()
 		switch ((error = validateSB(&sb1)))
 		{
 		case 0:
+			/* silent on success */
 			break;
 		case 1:
-			printf("readSBs: a device's primary superblock is missing or invalid!\n");
+			printf("loadSBs: primary superblock is missing or invalid!\nDevice: %S\n",
+				devicePaths[i]);
 			return error;
 		case 2:
-			printf("readSBs: a device's primary superblock checksum failed!\n");
+			printf("loadSBs: primary superblock checksum failed!\nDevice: %S\n",
+				devicePaths[i]);
 			return error;
 		default:
-			printf("readSBs: a device's primary superblock failed to validate for unknown reasons!\n");
+			printf("loadSBs: primary superblock failed to validate for unknown reasons!\nDevice: %S\n",
+				devicePaths[i]);
 			return error;
 		}
 
-		/* try to find more a recent secondary superblock (SSD usage pattern) */
+		/* next, we try to find more a recent secondary superblock (SSD usage pattern) */
 
 		if (blockReader->directRead(SUPERBLOCK_2_PADDR, sizeof(BtrfsSuperblock),
 			(unsigned char *)&sb2) == ERROR_SUCCESS && validateSB(&sb2) == 0 &&
 			endian64(sb2.generation) > endian64(sbBest->generation))
+		{
 			sbBest = &sb2;
+			sbBestIdx = 2;
+		}
 
 		if (blockReader->directRead(SUPERBLOCK_3_PADDR, sizeof(BtrfsSuperblock),
 			(unsigned char *)&sb3) == ERROR_SUCCESS && validateSB(&sb3) == 0 &&
 			endian64(sb3.generation) > endian64(sbBest->generation))
+		{
 			sbBest = &sb3;
+			sbBestIdx = 3;
+		}
 
 		if (blockReader->directRead(SUPERBLOCK_4_PADDR, sizeof(BtrfsSuperblock),
 			(unsigned char *)&sb4) == ERROR_SUCCESS && validateSB(&sb4) == 0 &&
 			endian64(sb4.generation) > endian64(sbBest->generation))
+		{
 			sbBest = &sb4;
+			sbBestIdx = 4;
+		}
 
 		/* add the most recent superblock to the array */
 		supers.push_back(*sbBest);
+
+		if (dump)
+		{
+			char uuid[1024];
+
+			printf("\n[SB%d] from %S\n", sbBestIdx, devicePaths[i]);
+			uuidToStr(sbBest->fsUUID, uuid);
+			printf("  csum: 0x%04x csumType: %x fsUUID: %s\n", endian32(sbBest->csum.crc32c),
+				endian16(sbBest->csumType), uuid);
+			printf("  physAddr: 0x%I64x flags: 0x%I64x generation: 0x%I64x\n",
+				endian64(sbBest->physAddr), endian64(sbBest->flags), endian64(sbBest->generation));
+			printf("  ctRoot: 0x%I64x rtRoot: 0x%I64x ltRoot: 0x%I64x\n",
+				endian64(sbBest->ctRoot), endian64(sbBest->rtRoot), endian64(sbBest->ltRoot));
+			printf("  totalBytes: 0x%I64x bytesUsed: 0x%I64x numDevices: %d\n",
+				endian64(sbBest->totalBytes), endian64(sbBest->bytesUsed), endian64(sbBest->numDevices));
+			printf("  logRootTransID: 0x%I64x rootDirObjectID: 0x%I64x chunkRootGeneration: 0x%I64x\n",
+				endian64(sbBest->logRootTransID), endian64(sbBest->rootDirObjectID),
+				endian64(sbBest->chunkRootGeneration));
+			printf("  sectorSize: 0x%x nodeSize: 0x%x leafSize: 0x%x stripeSize: 0x%x\n",
+				endian32(sbBest->sectorSize), endian32(sbBest->nodeSize),
+				endian32(sbBest->leafSize), endian32(sbBest->stripeSize));
+			printf("  compatFlags: 0x%I64x compatROFlags: 0x%I64x incompatFlags: 0x%I64x\n",
+				endian64(sbBest->compatFlags), endian64(sbBest->compatROFlags),
+				endian64(sbBest->incompatFlags));
+			printf("  rootLevel: 0x%02x chunkRootLevel: 0x%02x logRootLevel: 0x%02x\n",
+				sbBest->rootLevel, sbBest->chunkRootLevel, sbBest->logRootLevel);
+			printf("  label: '%s'\n", sbBest->label);
+			uuidToStr(sbBest->devItem.devUUID, uuid);
+			printf("  DEV_ITEM devID: 0x%I64x devUUID: %s\n", endian64(sbBest->devItem.devID), uuid);
+			printf("           numBytes: 0x%I64x numBytesUsed: 0x%I64x\n",
+				endian64(sbBest->devItem.numBytes), endian64(sbBest->devItem.numBytesUsed));
+			printf("           bestIOAlign: 0x%x bestIOWidth: 0x%x minIOSize: 0x%x\n",
+				endian32(sbBest->devItem.bestIOAlign), endian32(sbBest->devItem.bestIOWidth),
+				endian32(sbBest->devItem.minIOSize));
+			printf("           type: 0x%I64x generation: 0x%I64x startOffset: 0x%I64x\n",
+				endian64(sbBest->devItem.type), endian64(sbBest->devItem.generation),
+				endian64(sbBest->devItem.startOffset));
+			printf("           devGroup: 0x%x seekSpeed: 0x%02x bandwidth: 0x%02x\n",
+				endian32(sbBest->devItem.devGroup), sbBest->devItem.seekSpeed, sbBest->devItem.bandwidth);
+		}
 	}
 
 	return 0;
@@ -188,7 +243,7 @@ void loadSBChunks(bool dump)
 	unsigned short *numStripes;
 
 	if (dump)
-		printf("[SBChunks] n = 0x%03lx\n", endian32(supers[0].n));
+		printf("\n[SBChunks] n = 0x%03x\n", endian32(supers[0].n));
 
 	while (sbPtr < sbMax)
 	{
