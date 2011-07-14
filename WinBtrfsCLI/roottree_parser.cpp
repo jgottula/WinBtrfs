@@ -233,12 +233,18 @@ void parseRootTreeRec(unsigned __int64 addr, RTOperation operation, void *input1
 			{
 				const char *name = (const char *)input1;
 				BtrfsObjID *subvolID = (BtrfsObjID *)output1;
-				
-				if (item->key.type == TYPE_ROOT_BACKREF && endian64(item->key.offset) == OBJID_FS_TREE)
+
+				if (item->key.type == TYPE_ROOT_BACKREF)
 				{
-					BtrfsRootRef *rootRef = (BtrfsRootRef *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset));
+					BtrfsRootBackref *rootBackref = (BtrfsRootBackref *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset));
 					
-					if (strlen(name) == endian16(rootRef->n) && strncmp(name, rootRef->name, endian16(rootRef->n)) == 0)
+					/* ideally, we would go back up the tree at this point and see if the chain of ROOT_REFs/ROOT_BACKREFs
+						leads back to the FS tree; however, this is awkward, and currently, subtrees appear to only occur
+						in the case of subvolumes, so it currently seems safe to assume that ANY subtree will be a valid subvolume.
+						it's conceivable that in the future, other ROOT_REF'd subtrees might exist for other things,
+						but for now, this solution seems fine */
+					
+					if (strlen(name) == endian16(rootBackref->n) && strncmp(name, rootBackref->name, endian16(rootBackref->n)) == 0)
 					{
 						*subvolID = (BtrfsObjID)endian64(item->key.objectID);
 
