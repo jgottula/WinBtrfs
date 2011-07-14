@@ -430,7 +430,7 @@ int DOKAN_CALLBACK btrfsFindFiles(LPCWSTR pathName, PFillFindData pFillFindData,
 
 	for (size_t i = 0; i < dirList.numEntries; i++)
 	{
-		convertMetadata(filePkg, &findData, true);
+		convertMetadata(&dirList.entries[i], &findData, true);
 
 		/* this function works OK if the same pointer (but different data) is passed in each time */
 		(*pFillFindData)(&findData, info);
