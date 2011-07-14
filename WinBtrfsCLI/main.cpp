@@ -228,7 +228,8 @@ void dokanError(int dokanResult)
 		printf("Dokan reported something is wrong with the driver!\n");
 		exit(1);
 	case DOKAN_MOUNT_ERROR:
-		printf("Dokan reported it couldn't assign a drive letter or mount point!\n");
+		printf("Dokan reported it couldn't assign a drive letter or mount point!\n"
+			"Sometimes this problem is resolved by running WinBtrfsCLI again.\n");
 		exit(1);
 	case DOKAN_MOUNT_POINT_ERROR:
 		printf("Dokan reported the mount point is invalid!\n");
@@ -376,12 +377,6 @@ int main(int argc, char **argv)
 	firstTasks();
 
 	dokanResult = DokanMain(dokanOptions, &btrfsOperations);
-
-	/* if DokanMain fails the first time complaining of a mount error,
-		it will sometimes fix itself the second time (presumably by
-		unmounting whatever was using the mount point in question) */
-	if (dokanResult == DOKAN_MOUNT_ERROR)
-		dokanResult = DokanMain(dokanOptions, &btrfsOperations);
 
 	cleanUp();
 	dokanError(dokanResult);
