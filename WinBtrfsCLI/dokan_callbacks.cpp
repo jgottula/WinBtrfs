@@ -265,7 +265,7 @@ int DOKAN_CALLBACK btrfsReadFile(LPCWSTR fileName, LPVOID buffer, DWORD numberOf
 			/* does the requested range include the last byte of this extent? */
 			bool b = (endian64(extents[i].key.offset) + endian64(extentData->n) - 1 >= offset &&
 				endian64(extents[i].key.offset) + endian64(extentData->n) - 1 < offset + numberOfBytesToRead);
-		
+			
 			/* does the requested range start inside this extent? */
 			bool first = !a && b;
 			/* does the requested range end inside this extent? */
@@ -280,7 +280,7 @@ int DOKAN_CALLBACK btrfsReadFile(LPCWSTR fileName, LPVOID buffer, DWORD numberOf
 			{
 				assert(extentData->encryption == ENCRYPTION_NONE);
 				assert(extentData->otherEncoding == ENCODING_NONE);
-			
+				
 				if (extentData->compression <= COMPRESSION_LZO)
 				{
 					BtrfsExtentDataNonInline *nonInlinePart = NULL;
@@ -300,7 +300,7 @@ int DOKAN_CALLBACK btrfsReadFile(LPCWSTR fileName, LPVOID buffer, DWORD numberOf
 						else
 						{
 							printf("btrfsReadFile: warning: assuming first device!\n");
-						
+							
 							compressed = (unsigned char *)malloc(endian64(nonInlinePart->extSize));
 							DWORD result = blockReaders[0]->directRead(endian64(nonInlinePart->extAddr), ADDR_LOGICAL,
 								endian64(nonInlinePart->extSize), compressed);
@@ -314,7 +314,7 @@ int DOKAN_CALLBACK btrfsReadFile(LPCWSTR fileName, LPVOID buffer, DWORD numberOf
 								break;
 							case COMPRESSION_ZLIB:
 								decompressed = (unsigned char *)malloc(endian64(nonInlinePart->bytesInFile));
-							
+								
 								printf("btrfsReadFile: not actually decompressing ZLIB!\n");
 								memcpy(decompressed, compressed, endian64(nonInlinePart->extSize));
 
@@ -323,9 +323,9 @@ int DOKAN_CALLBACK btrfsReadFile(LPCWSTR fileName, LPVOID buffer, DWORD numberOf
 							case COMPRESSION_LZO:
 								lzo_uint lzoTotLen, lzoInLen, lzoOutLen, lzoBytesRead = 0, lzoBytesWritten = 0;
 								unsigned char *cPtr, *dPtr;
-							
+								
 								decompressed = (unsigned char *)malloc(endian64(nonInlinePart->bytesInFile));
-							
+								
 								/* must at least contain the 32-bit total size header */
 								assert(endian64(nonInlinePart->extSize) >= 4);
 
@@ -387,7 +387,7 @@ int DOKAN_CALLBACK btrfsReadFile(LPCWSTR fileName, LPVOID buffer, DWORD numberOf
 						if (extentData->type != FILEDATA_INLINE)
 							free(decompressed);
 					}
-				
+					
 					numberOfBytesToRead -= len;
 					*numberOfBytesRead += len;
 					offset += len;
