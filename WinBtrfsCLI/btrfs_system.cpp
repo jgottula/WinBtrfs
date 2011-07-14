@@ -245,7 +245,7 @@ unsigned __int64 getTreeRootAddr(BtrfsObjID tree)
 int verifyDevices()
 {
 	char fsUUID[0x10];
-	unsigned __int64 numDevices;
+	unsigned __int64 numDevices, generation;
 	
 	/* check that all the devices' FS UUIDs are identical */
 	std::vector<BtrfsSuperblock>::iterator it = supers.begin(), end = supers.end();
@@ -260,6 +260,7 @@ int verifyDevices()
 		}
 	}
 
+	/* check for duplicate devices */
 	it = supers.begin();
 	for ( ; it != end; ++it)
 	{
@@ -275,6 +276,7 @@ int verifyDevices()
 		}
 	}
 
+	/* check for agreement on the number of devices in the volume */
 	it = supers.begin();
 	numDevices = endian64((it++)->numDevices);
 	for ( ; it != end; ++it)
@@ -286,6 +288,7 @@ int verifyDevices()
 		}
 	}
 	
+	/* check for the correct number of devices for the volume */
 	if (blockReaders.size() < endian64(supers[0].numDevices))
 	{
 		printf("verifyDevices: %d too few devices given!\n",
@@ -298,6 +301,17 @@ int verifyDevices()
 		printf("verifyDevices: %d too many devices given!\n",
 			blockReaders.size() - endian64(supers[0].numDevices));
 		return 5;
+	}
+
+	/* warn the user if the superblocks' generation numbers disagree */
+	it = supers.begin();
+	generation = (it++)->generation;
+	for ( ; it != end; ++it)
+	{
+		if (it->generation != generation)
+		{
+			printf("verifyDevices: superblock generations disagree; volume could be inconsistent!\n");
+		}
 	}
 
 	return 0;
