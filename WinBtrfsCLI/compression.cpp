@@ -16,13 +16,15 @@
 #include "zlib/zlib.h"
 #include "endian.h"
 
-void lzoDecompress(const unsigned char *compressed, unsigned char *decompressed,
+int lzoDecompress(const unsigned char *compressed, unsigned char *decompressed,
 	unsigned __int64 cSize, unsigned __int64 dSize)
 {
+	int error;
 	lzo_uint lzoTotLen, lzoInLen, lzoOutLen, lzoBytesRead = 0, lzoBytesWritten = 0;
 	
 	/* must at least contain the 32-bit total size header */
-	assert(cSize >= 4);
+	if (cSize < 4)
+		return 1;
 
 	/* total number of compressed bytes in the extent */
 	lzoTotLen = endian32(*((unsigned int *)compressed));
@@ -33,10 +35,9 @@ void lzoDecompress(const unsigned char *compressed, unsigned char *decompressed,
 		lzoInLen = endian32(*((unsigned int *)compressed));
 		compressed += 4;
 
-		int result = lzo1x_decompress_safe(compressed, lzoInLen,
-			decompressed, &lzoOutLen, NULL);
-		/* this should not always be fatal */
-		assert(result == LZO_E_OK);
+		if ((error = lzo1x_decompress_safe(compressed, lzoInLen,
+			decompressed, &lzoOutLen, NULL)) != LZO_E_OK)
+			return error;
 
 		lzoBytesRead += lzoInLen + 4;
 		lzoBytesWritten += lzoOutLen;
@@ -45,13 +46,16 @@ void lzoDecompress(const unsigned char *compressed, unsigned char *decompressed,
 		decompressed += lzoOutLen;
 	}
 
-	assert(lzoBytesWritten <= dSize);
+	return (lzoBytesWritten <= dSize ? 0 : 2);
 }
 
-void zlibDecompress(const unsigned char *compressed, unsigned char *decompressed,
+int zlibDecompress(const unsigned char *compressed, unsigned char *decompressed,
 	unsigned __int64 cSize, unsigned __int64 dSize)
 {
+	int error;
 	z_stream zStream;
+
+	return 1;
 
 	zStream.zalloc = NULL;
 	zStream.zfree = NULL;
@@ -60,21 +64,20 @@ void zlibDecompress(const unsigned char *compressed, unsigned char *decompressed
 	zStream.avail_in = 0;
 	zStream.next_out = decompressed;
 
-	/* this should not always be fatal */
-	assert(inflateInit(&zStream) == Z_OK);
+	if ((error = inflateInit(&zStream)) != Z_OK)
+		return error;
 
 	while (zStream.total_in < cSize && zStream.total_out < dSize)
 	{
-		/* look this up */
+		/* one byte at a time */
 		zStream.avail_in = zStream.avail_out = 1;
 
 		int err = inflate(&zStream, Z_NO_FLUSH);
-		if (err == Z_STREAM_END)
+		if ((error = inflate(&zStream, Z_NO_FLUSH)) == Z_STREAM_END)
 			break;
-		/* this should not always be fatal */
-		assert(err == Z_OK);
+		else if (error != Z_OK)
+			return error;
 	}
 	
-	/* this should not always be fatal */
-	assert(inflateEnd(&zStream) == Z_OK);
+	return inflateEnd(&zStream);
 }

@@ -314,14 +314,30 @@ int DOKAN_CALLBACK btrfsReadFile(LPCWSTR fileName, LPVOID buffer, DWORD numberOf
 								break;
 							case COMPRESSION_ZLIB:
 								decompressed = (unsigned char *)malloc(endian64(nonInlinePart->bytesInFile));
-								zlibDecompress(compressed, decompressed, endian64(nonInlinePart->extSize),
-									endian64(nonInlinePart->bytesInFile));
+								
+								if (zlibDecompress(compressed, decompressed, endian64(nonInlinePart->extSize),
+									endian64(nonInlinePart->bytesInFile)) != 0)
+								{
+									printf("btrfsReadFile: zlib decompression failed!\n");
+									free(compressed);
+									free(decompressed);
+									return PLA_E_CABAPI_FAILURE; // appopriate error code?
+								}
+								
 								free(compressed);
 								break;
 							case COMPRESSION_LZO:
 								decompressed = (unsigned char *)malloc(endian64(nonInlinePart->bytesInFile));
-								lzoDecompress(compressed, decompressed, endian64(nonInlinePart->extSize),
-									endian64(nonInlinePart->bytesInFile));
+								
+								if (lzoDecompress(compressed, decompressed, endian64(nonInlinePart->extSize),
+									endian64(nonInlinePart->bytesInFile)) != 0)
+								{
+									printf("btrfsReadFile: lzo decompression failed!\n");
+									free(compressed);
+									free(decompressed);
+									return PLA_E_CABAPI_FAILURE; // appopriate error code?
+								}
+								
 								free(compressed);
 								break;
 							}
@@ -366,7 +382,10 @@ int DOKAN_CALLBACK btrfsReadFile(LPCWSTR fileName, LPVOID buffer, DWORD numberOf
 						break;
 				}
 				else
+				{
 					printf("btrfsReadFile: data is compressed with an unsupported algorithm!\n");
+					return ERROR_UNSUPPORTED_COMPRESSION;
+				}
 			}
 		}
 
