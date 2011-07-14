@@ -80,6 +80,13 @@ enum FileDataType : unsigned char
 	FILEDATA_PREALLOC = 2
 };
 
+enum CompressionType : unsigned char
+{
+	COMPRESSION_NONE = 0,
+	COMPRESSION_ZLIB = 1,
+	COMPRESSION_LZO = 2
+};
+
 enum AddrType
 {
 	ADDR_PHYSICAL,
@@ -149,5 +156,6 @@ static_assert(sizeof(BtrfsObjID) == sizeof(unsigned __int64), "BtrfsObjID has an
 static_assert(sizeof(BtrfsItemType) == sizeof(unsigned char), "BtrfsItemType has an unexpected size!");
 static_assert(sizeof(BlockGroupFlags) == sizeof(unsigned __int64), "BlockGroupFlags has an unexpected size!");
 static_assert(sizeof(FileDataType) == sizeof(unsigned char), "FileDataType has an unexpected size!");
+static_assert(sizeof(CompressionType) == sizeof(unsigned char), "CompressionType has an unexpected size!");
 
 #endif

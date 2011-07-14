@@ -193,11 +193,14 @@ void parseFSTreeRec(unsigned __int64 addr, BtrfsObjID tree, FSOperation operatio
 				case TYPE_EXTENT_DATA:
 				{
 					BtrfsExtentData *extentData = (BtrfsExtentData *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset));
-					static const char fdTypeStrs[4][9] = { "inline", "regular", "prealloc", "unknown" };
+					static const char fdTypeStrs[4][9] = { "inline", "regular", "prealloc", "unknown" },
+						compStrs[4][8] = { "none", "zlib", "lzo", "unknown" };
 
-					printf("  [%02x] EXTENT_DATA 0x%I64x offset: 0x%I64x size: 0x%I64x type: %s\n", i,
+					printf("  [%02x] EXTENT_DATA 0x%I64x offset: 0x%I64x size: 0x%I64x\n"
+						"                   type: %s compression: %s\n", i,
 						endian64(item->key.objectID), endian64(item->key.offset), endian64(extentData->n),
-						fdTypeStrs[extentData->type]);
+						fdTypeStrs[extentData->type], compStrs[(extentData->compression <= COMPRESSION_LZO ?
+						extentData->compression : 3)]);
 					if (extentData->type != FILEDATA_INLINE)
 					{
 						BtrfsExtentDataNonInline *nonInlinePart =(BtrfsExtentDataNonInline *)(nodeBlock +
