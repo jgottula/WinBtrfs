@@ -7,7 +7,6 @@ File security callback
 XATTRs
 Remove Dokan callbacks that should never be called
 Esoteric Btrfs stuff (add a README faq for "which Btrfs features are supported")
-— Compression (zlib)
 — Multi-drive volumes
 — Extended attributes?
 — Preallocated files (torrents maybe)
@@ -73,3 +72,4 @@ When reading from mirrored chunks, alternate the stripe from which we read so as
 Use fprintf(stderr, ...) for error messages
 Add a Ctrl+C handler to unmount and clean up gracefully
 Decompress only the nodes of an extent that are going to be read in part or in whole; skip those that won't be read
+Find better Windows error codes for failure conditions in Dokan callbacks
