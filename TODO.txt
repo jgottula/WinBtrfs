@@ -29,6 +29,8 @@ Check for endianness errors by reversing byte orders on disk or running on a BE 
 Determine if, when a subvolume (B) is created within another subvolume (A), the ROOT_REFs have 0x5->A, and A->B, thwarting tree dumping,
 	possibly among other things that assume that these trees will have tree 0x5 as their parent
 Write an fopen (or Win32) test to determine if CREATE_ALWAYS or OPEN_ALWAYS will ever get passed to btrfsCreateFile
+Try different Win32 apis (specifically ones that correspond with callbacks that should NEVER BE CALLED) and see if eliciting a crash
+	is possible
 
 Bugs:
 Mounting btrfs_symlinks.img to C:\mount and dirlisting C:\mount\dir results in a getPathID failure
