@@ -8,7 +8,6 @@ XATTRs
 Remove Dokan callbacks that should never be called
 Esoteric Btrfs stuff (add a README faq for "which Btrfs features are supported")
 — Compression (zlib)
-— Subvolumes
 — Multi-drive volumes
 — Extended attributes?
 — Preallocated files (torrents maybe)
@@ -20,6 +19,7 @@ UI translations
 OS testing: Win9x and ReactOS (provided Dokan supports these)
 
 Tests:
+Snapshots!
 Symlinks to files and directories
 Cross-subvolume symlinks
 Verify that unicode path strings don't result in a crash
@@ -70,3 +70,5 @@ Remove the chunk/root tree arrays and simply use CTOPs and RTOPs to get at their
 Add all function prototypes to header files (even intra-module ones)
 Use the DIY-filter version of the FindFiles callback and do filtering as the dirlist FSOP happens so we don't create dirlist entries
 	that just get removed later by the post-hoc filtering process
+When reading from mirrored chunks, alternate the stripe from which we read so as to boost performance (basically read striping)
+Use fprintf(stderr, ...) for error messages
