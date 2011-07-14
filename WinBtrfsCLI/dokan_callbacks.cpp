@@ -15,6 +15,7 @@
 #include <cassert>
 #include <list>
 #include <vector>
+#include "minilzo/minilzo.h"
 #include "block_reader.h"
 #include "btrfs_operations.h"
 #include "endian.h"
@@ -270,15 +271,18 @@ int DOKAN_CALLBACK btrfsReadFile(LPCWSTR fileName, LPVOID buffer, DWORD numberOf
 
 		if (first || last || span || within)
 		{
-			if (extentData->compression == 0)
+			assert(extentData->encryption == ENCRYPTION_NONE);
+			assert(extentData->otherEncoding == ENCODING_NONE);
+			
+			if (extentData->compression <= COMPRESSION_LZO)
 			{
 				BtrfsExtentDataNonInline *nonInlinePart = NULL;
-				unsigned char *data;
+				unsigned char *compressed, *decompressed;
 				size_t from, len;
 				bool skipCopy = false;
 
 				if (extentData->type == FILEDATA_INLINE)
-					data = extentData->inlineData;
+					decompressed = extentData->inlineData;
 				else
 				{
 					nonInlinePart = (BtrfsExtentDataNonInline *)extentData->inlineData;
@@ -288,12 +292,40 @@ int DOKAN_CALLBACK btrfsReadFile(LPCWSTR fileName, LPVOID buffer, DWORD numberOf
 						skipCopy = true;
 					else
 					{
+						lzo_uint realDecompressedSize;
+						
 						printf("btrfsReadFile: warning: assuming first device!\n");
 						
-						data = (unsigned char *)malloc(endian64(nonInlinePart->extSize));
+						compressed = (unsigned char *)malloc(endian64(nonInlinePart->extSize));
 						DWORD result = blockReaders[0]->directRead(endian64(nonInlinePart->extAddr), ADDR_LOGICAL,
-							endian64(nonInlinePart->extSize), data);
+							endian64(nonInlinePart->extSize), compressed);
 						assert(result == 0);
+
+						switch (extentData->compression)
+						{
+						case COMPRESSION_NONE:
+							/* transitive property: data is already decompressed! */
+							decompressed = compressed;
+							break;
+						case COMPRESSION_ZLIB:
+							decompressed = (unsigned char *)malloc(endian64(nonInlinePart->bytesInFile));
+							
+							printf("btrfsReadFile: not actually decompressing ZLIB!\n");
+							memcpy(decompressed, compressed, endian64(nonInlinePart->extSize));
+
+							free(compressed);
+							break;
+						case COMPRESSION_LZO:
+							decompressed = (unsigned char *)malloc(endian64(nonInlinePart->bytesInFile));
+							
+							lzo1x_decompress(compressed, endian64(nonInlinePart->extSize),
+								decompressed, &realDecompressedSize, NULL);
+
+							assert(realDecompressedSize == endian64(nonInlinePart->bytesInFile));
+
+							free(compressed);
+							break;
+						}
 					}
 				}
 
@@ -320,10 +352,10 @@ int DOKAN_CALLBACK btrfsReadFile(LPCWSTR fileName, LPVOID buffer, DWORD numberOf
 
 				if (!skipCopy)
 				{
-					memcpy((char *)buffer + *numberOfBytesRead, data + from, len);
+					memcpy((char *)buffer + *numberOfBytesRead, decompressed + from, len);
 
 					if (extentData->type != FILEDATA_INLINE)
-						free(data);
+						free(decompressed);
 				}
 				
 				numberOfBytesToRead -= len;
@@ -335,7 +367,7 @@ int DOKAN_CALLBACK btrfsReadFile(LPCWSTR fileName, LPVOID buffer, DWORD numberOf
 					break;
 			}
 			else
-				printf("btrfsReadFile: can't read compressed data!\n");
+				printf("btrfsReadFile: data is compressed with an unsupported algorithm!\n");
 		}
 	}
 
