@@ -286,11 +286,18 @@ int verifyDevices()
 		}
 	}
 	
-	if (blockReaders.size() != supers[0].numDevices)
+	if (blockReaders.size() < endian64(supers[0].numDevices))
 	{
-		/* be more specific about how many more/less are needed */
-		printf("verifyDevices: wrong number of devices given!\nTODO: be more specific\n");
+		printf("verifyDevices: %d too few devices given!\n",
+			endian64(supers[0].numDevices) - blockReaders.size());
 		return 4;
+	}
+	else if (blockReaders.size() > endian64(supers[0].numDevices))
+	{
+		/* this shouldn't ever happen, but we have an error message for it anyway */
+		printf("verifyDevices: %d too many devices given!\n",
+			blockReaders.size() - endian64(supers[0].numDevices));
+		return 5;
 	}
 
 	return 0;
