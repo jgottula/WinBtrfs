@@ -247,8 +247,10 @@ void usage()
 	exit(1);
 }
 
-void unitTests()
+void runtimeSizeChecks()
 {
+	/* these should really be static assertions */
+	
 	/* verify sizes of important on-disk structures */
 	assert(sizeof(BtrfsTime) == 0x0c);
 	assert(sizeof(BtrfsHeader) == 0x65);
@@ -281,7 +283,7 @@ int main(int argc, char **argv)
 
 	printf("WinBtrfs Command Line Interface\nCopyright (c) 2011 Justin Gottula\n\n");
 
-	unitTests();
+	runtimeSizeChecks();
 
 	if (argc < 3)
 		usage();
