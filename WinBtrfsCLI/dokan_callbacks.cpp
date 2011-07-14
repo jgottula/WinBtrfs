@@ -227,9 +227,6 @@ int DOKAN_CALLBACK btrfsReadFile(LPCWSTR fileName, LPVOID buffer, DWORD numberOf
 			break;
 	}
 
-	/* failing to find the element is NOT an option */
-	assert(it != end);
-
 	if (it == end)
 	{
 		it = cleanedUpFiles.begin(), end = cleanedUpFiles.end();
