@@ -13,7 +13,7 @@ WinBtrfs is a Windows driver for the Btrfs filesystem. Specifically, it is a rea
 
 [01] What is Btrfs?
 
-Btrfs is a new Linux filesystem designed by Chris Mason that has been under development by Oracle and the Linux development community since 2007. Licensed under the GNU General Public License (GPL), it appears poised to become Linux's primary filesystem in the near future, providing such modern features as copy-on-write snapshots, subvolumes, RAID-like mirroring and striping, incredible scaling, and more. Btrfs is often compared to ZFS, another recent filesystem developed by Oracle, and in many respects they are similar, including their copy-on-write and multi-device capabilities.
+Btrfs is a new Linux filesystem designed by Chris Mason that has been under development by Oracle and the Linux development community since 2007. Licensed under the GNU General Public License (GPL), it appears poised to become Linux's primary filesystem in the near future, providing such modern features as 64-bit addressing, copy-on-write snapshots, subvolumes, fliesystem-level mirroring and striping, and transparent compression. Btrfs is often compared to ZFS, another recent filesystem developed by Oracle, and in many respects they are similar, including their copy-on-write and multi-device capabilities.
 
 
 [02] Why WinBtrfs?
