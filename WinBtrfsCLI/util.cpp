@@ -15,6 +15,7 @@
 #include <cassert>
 #include <cstdio>
 #include <vector>
+#include "constants.h"
 #include "endian.h"
 
 extern std::vector<BtrfsSuperblock> supers;

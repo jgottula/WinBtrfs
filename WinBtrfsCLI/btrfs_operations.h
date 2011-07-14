@@ -11,7 +11,7 @@
  * any later version.
  */
 
-#include "structures.h"
+#include "types.h"
 
 void validatePath(const char *input, char *output);
 unsigned int componentizePath(const char *path, char ***output);

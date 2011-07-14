@@ -141,7 +141,7 @@
     <ClInclude Include="minilzo\lzodefs.h" />
     <ClInclude Include="minilzo\minilzo.h" />
     <ClInclude Include="roottree_parser.h" />
-    <ClInclude Include="structures.h" />
+    <ClInclude Include="types.h" />
     <ClInclude Include="util.h" />
     <ClInclude Include="zlib\crc32.h" />
     <ClInclude Include="zlib\deflate.h" />

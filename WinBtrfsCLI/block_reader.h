@@ -14,7 +14,7 @@
 #include <list>
 #include <boost/shared_array.hpp>
 #include <Windows.h>
-#include "constants.h"
+#include "types.h"
 
 struct CacheNode
 {

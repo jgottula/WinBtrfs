@@ -12,7 +12,7 @@
  */
 
 #include <Windows.h>
-#include "structures.h"
+#include "types.h"
 
 void convertTime(const BtrfsTime *bTime, PFILETIME wTime);
 void convertMetadata(const FilePkg *input, void *output, bool dirList);

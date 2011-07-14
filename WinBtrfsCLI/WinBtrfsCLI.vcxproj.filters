@@ -113,9 +113,6 @@
     <ClInclude Include="endian.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="structures.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="constants.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -186,6 +183,9 @@
       <Filter>Header Files\zlib</Filter>
     </ClInclude>
     <ClInclude Include="compression.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="types.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

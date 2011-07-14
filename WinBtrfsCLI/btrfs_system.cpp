@@ -14,6 +14,7 @@
 #include <vector>
 #include "btrfs_system.h"
 #include "block_reader.h"
+#include "constants.h"
 #include "crc32c.h"
 #include "endian.h"
 #include "roottree_parser.h"

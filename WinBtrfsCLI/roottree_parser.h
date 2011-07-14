@@ -11,6 +11,6 @@
  * any later version.
  */
 
-#include "structures.h"
+#include "types.h"
 
 int parseRootTree(RTOperation operation, void *input0, void *output0);

@@ -18,6 +18,7 @@
 #include "block_reader.h"
 #include "btrfs_operations.h"
 #include "compression.h"
+#include "constants.h"
 #include "endian.h"
 #include "fstree_parser.h"
 #include "util.h"

@@ -11,6 +11,6 @@
  * any later version.
  */
 
-#include "structures.h"
+#include "types.h"
 
 void parseChunkTree(CTOperation operation);

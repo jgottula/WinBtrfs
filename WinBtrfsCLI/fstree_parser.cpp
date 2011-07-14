@@ -15,6 +15,7 @@
 #include <cassert>
 #include <cstdio>
 #include "btrfs_system.h"
+#include "constants.h"
 #include "endian.h"
 #include "util.h"
 

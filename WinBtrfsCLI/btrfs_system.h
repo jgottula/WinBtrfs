@@ -12,7 +12,7 @@
  */
 
 #include <Windows.h>
-#include "structures.h"
+#include "types.h"
 
 DWORD init();
 void cleanUp();
