@@ -15,9 +15,9 @@
 #include <cassert>
 #include <list>
 #include <vector>
-#include "minilzo/minilzo.h"
 #include "block_reader.h"
 #include "btrfs_operations.h"
+#include "compression.h"
 #include "endian.h"
 #include "fstree_parser.h"
 #include "util.h"
@@ -314,45 +314,14 @@ int DOKAN_CALLBACK btrfsReadFile(LPCWSTR fileName, LPVOID buffer, DWORD numberOf
 								break;
 							case COMPRESSION_ZLIB:
 								decompressed = (unsigned char *)malloc(endian64(nonInlinePart->bytesInFile));
-								
 								printf("btrfsReadFile: not actually decompressing ZLIB!\n");
 								memcpy(decompressed, compressed, endian64(nonInlinePart->extSize));
-
 								free(compressed);
 								break;
 							case COMPRESSION_LZO:
-								lzo_uint lzoTotLen, lzoInLen, lzoOutLen, lzoBytesRead = 0, lzoBytesWritten = 0;
-								unsigned char *cPtr, *dPtr;
-								
 								decompressed = (unsigned char *)malloc(endian64(nonInlinePart->bytesInFile));
-								
-								/* must at least contain the 32-bit total size header */
-								assert(endian64(nonInlinePart->extSize) >= 4);
-
-								/* total number of compressed bytes in the extent */
-								lzoTotLen = endian32(*((unsigned int *)compressed));
-
-								cPtr = compressed + 4;
-								dPtr = decompressed;
-
-								while (lzoBytesRead < lzoTotLen - 4)
-								{
-									lzoInLen = endian32(*((unsigned int *)cPtr));
-									cPtr += 4;
-
-									int result = lzo1x_decompress_safe(cPtr, lzoInLen,
-										dPtr, &lzoOutLen, NULL);
-									assert(result == LZO_E_OK);
-
-									lzoBytesRead += lzoInLen + 4;
-									lzoBytesWritten += lzoOutLen;
-
-									cPtr += lzoInLen;
-									dPtr += lzoOutLen;
-								}
-
-								assert(lzoBytesWritten <= endian64(nonInlinePart->bytesInFile));
-
+								lzoDecompress(compressed, decompressed, endian64(nonInlinePart->extSize),
+									endian64(nonInlinePart->bytesInFile));
 								free(compressed);
 								break;
 							}
