@@ -18,8 +18,8 @@
 #include "endian.h"
 #include "util.h"
 
-void parseFSTreeRec(unsigned __int64 addr, BtrfsObjID tree, FSOperation operation, void *input1, void *input2, void *input3,
-	void *output1, void *output2, int *returnCode, bool *shortCircuit)
+void parseFSTreeRec(unsigned __int64 addr, BtrfsObjID tree, FSOperation operation, void *input0, void *input1, void *input2,
+	void *output0, void *output1, int *returnCode, bool *shortCircuit)
 {
 	unsigned char *nodeBlock, *nodePtr;
 	BtrfsHeader *header;
@@ -41,11 +41,11 @@ void parseFSTreeRec(unsigned __int64 addr, BtrfsObjID tree, FSOperation operatio
 
 			if (operation == FSOP_NAME_TO_ID)
 			{
-				const BtrfsObjID *parentID = (const BtrfsObjID *)input1;
-				const unsigned int *hash = (const unsigned int *)input2;
-				const char *name = (const char *)input3;
-				BtrfsObjID *childID = (BtrfsObjID *)output1;
-				bool *isSubvolume = (bool *)output2;
+				const BtrfsObjID *parentID = (const BtrfsObjID *)input0;
+				const unsigned int *hash = (const unsigned int *)input1;
+				const char *name = (const char *)input2;
+				BtrfsObjID *childID = (BtrfsObjID *)output0;
+				bool *isSubvolume = (bool *)output1;
 				
 				if (item->key.type == TYPE_DIR_ITEM && endian64(item->key.objectID) == *parentID &&
 					(unsigned int)(endian64(item->key.offset)) == *hash)
@@ -217,8 +217,8 @@ void parseFSTreeRec(unsigned __int64 addr, BtrfsObjID tree, FSOperation operatio
 			}
 			else if (operation == FSOP_GET_FILE_PKG)
 			{
-				const BtrfsObjID *objectID = (const BtrfsObjID *)input1;
-				FilePkg *filePkg = (FilePkg *)output1;
+				const BtrfsObjID *objectID = (const BtrfsObjID *)input0;
+				FilePkg *filePkg = (FilePkg *)output0;
 				
 				/* it's safe to jump out once we pass the object ID in question */
 				if (item->key.objectID > *objectID)
@@ -281,9 +281,9 @@ void parseFSTreeRec(unsigned __int64 addr, BtrfsObjID tree, FSOperation operatio
 			}
 			else if (operation == FSOP_DIR_LIST)
 			{
-				const FilePkg *filePkg = (const FilePkg *)input1;
-				const bool *root = (const bool *)input2;
-				DirList *dirList = (DirList *)output1;
+				const FilePkg *filePkg = (const FilePkg *)input0;
+				const bool *root = (const bool *)input1;
+				DirList *dirList = (DirList *)output0;
 				
 				if (item->key.type == TYPE_INODE_ITEM) // inode
 				{
@@ -354,8 +354,8 @@ void parseFSTreeRec(unsigned __int64 addr, BtrfsObjID tree, FSOperation operatio
 			}
 			else if (operation == FSOP_GET_INODE)
 			{
-				const BtrfsObjID *objectID = (const BtrfsObjID *)input1;
-				BtrfsInodeItem *inode = (BtrfsInodeItem *)output1;
+				const BtrfsObjID *objectID = (const BtrfsObjID *)input0;
+				BtrfsInodeItem *inode = (BtrfsInodeItem *)output0;
 				
 				/* abort once we pass the object ID in question */
 				if (item->key.objectID > *objectID)
@@ -403,8 +403,8 @@ void parseFSTreeRec(unsigned __int64 addr, BtrfsObjID tree, FSOperation operatio
 			BtrfsKeyPtr *keyPtr = (BtrfsKeyPtr *)nodePtr;
 
 			/* recurse down one level of the tree */
-			parseFSTreeRec(endian64(keyPtr->blockNum), tree, operation, input1, input2, input3,
-				output1, output2, returnCode, shortCircuit);
+			parseFSTreeRec(endian64(keyPtr->blockNum), tree, operation, input0, input1, input2,
+				output0, output1, returnCode, shortCircuit);
 
 			if (*shortCircuit)
 				break;
@@ -416,7 +416,7 @@ void parseFSTreeRec(unsigned __int64 addr, BtrfsObjID tree, FSOperation operatio
 	free(nodeBlock);
 }
 
-int parseFSTree(BtrfsObjID tree, FSOperation operation, void *input1, void *input2, void *input3, void *output1, void *output2)
+int parseFSTree(BtrfsObjID tree, FSOperation operation, void *input0, void *input1, void *input2, void *output0, void *output1)
 {
 	int returnCode;
 	bool shortCircuit = false;
@@ -429,7 +429,7 @@ int parseFSTree(BtrfsObjID tree, FSOperation operation, void *input1, void *inpu
 		break;
 	case FSOP_GET_FILE_PKG:
 		returnCode = 0x1; // always need the inode
-		if (*((BtrfsObjID *)input1) != OBJID_ROOT_DIR)
+		if (*((BtrfsObjID *)input0) != OBJID_ROOT_DIR)
 			returnCode |= 0x2; // needs name for all except the root dir
 		break;
 	default:
@@ -439,8 +439,8 @@ int parseFSTree(BtrfsObjID tree, FSOperation operation, void *input1, void *inpu
 	/* pre tasks */
 	if (operation == FSOP_GET_FILE_PKG)
 	{
-		const BtrfsObjID *objectID = (const BtrfsObjID *)input1;
-		FilePkg *filePkg = (FilePkg *)output1;
+		const BtrfsObjID *objectID = (const BtrfsObjID *)input0;
+		FilePkg *filePkg = (FilePkg *)output0;
 
 		filePkg->fileID.treeID = tree;
 		filePkg->fileID.objectID = *objectID;
@@ -457,9 +457,9 @@ int parseFSTree(BtrfsObjID tree, FSOperation operation, void *input1, void *inpu
 	}
 	else if (operation == FSOP_DIR_LIST)
 	{
-		const FilePkg *filePkg = (const FilePkg *)input1;
-		const bool *root = (const bool *)input2;
-		DirList *dirList = (DirList *)output1;
+		const FilePkg *filePkg = (const FilePkg *)input0;
+		const bool *root = (const bool *)input1;
+		DirList *dirList = (DirList *)output0;
 
 		if (!(*root))
 		{
@@ -483,12 +483,12 @@ int parseFSTree(BtrfsObjID tree, FSOperation operation, void *input1, void *inpu
 		}
 	}
 
-	parseFSTreeRec(getTreeRootAddr(tree), tree, operation, input1, input2, input3, output1, output2,
+	parseFSTreeRec(getTreeRootAddr(tree), tree, operation, input0, input1, input2, output0, output1,
 		&returnCode, &shortCircuit);
 
 	if (operation == FSOP_GET_FILE_PKG)
 	{
-		FilePkg *filePkg = (FilePkg *)output1;
+		FilePkg *filePkg = (FilePkg *)output0;
 
 		if (returnCode == 0)
 		{
@@ -500,8 +500,8 @@ int parseFSTree(BtrfsObjID tree, FSOperation operation, void *input1, void *inpu
 	}
 	else if (operation == FSOP_DIR_LIST)
 	{
-		const bool *root = (const bool *)input2;
-		DirList *dirList = (DirList *)output1;
+		const bool *root = (const bool *)input1;
+		DirList *dirList = (DirList *)output0;
 
 		for (size_t i = (*root ? 0 : 2); i < dirList->numEntries; i++) // skip '.' and '..'
 		{

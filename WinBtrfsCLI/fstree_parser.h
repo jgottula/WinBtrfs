@@ -13,5 +13,5 @@
 
 #include "structures.h"
 
-int parseFSTree(BtrfsObjID tree, FSOperation operation, void *input1, void *input2, void *input3,
-	void *output1, void *output2);
+int parseFSTree(BtrfsObjID tree, FSOperation operation, void *input0, void *input1, void *input2,
+	void *output0, void *output1);

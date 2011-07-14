@@ -23,7 +23,7 @@ extern BtrfsObjID mountedSubvol;
 
 std::vector<KeyedItem> rootTree;
 
-void parseRootTreeRec(unsigned __int64 addr, RTOperation operation, void *input1, void *output1,
+void parseRootTreeRec(unsigned __int64 addr, RTOperation operation, void *input0, void *output0,
 	int *returnCode, bool *shortCircuit)
 {
 	unsigned char *nodeBlock, *nodePtr;
@@ -231,8 +231,8 @@ void parseRootTreeRec(unsigned __int64 addr, RTOperation operation, void *input1
 			}
 			else if (operation == RTOP_GET_SUBVOL_ID)
 			{
-				const char *name = (const char *)input1;
-				BtrfsObjID *subvolID = (BtrfsObjID *)output1;
+				const char *name = (const char *)input0;
+				BtrfsObjID *subvolID = (BtrfsObjID *)output0;
 
 				if (item->key.type == TYPE_ROOT_BACKREF)
 				{
@@ -255,8 +255,8 @@ void parseRootTreeRec(unsigned __int64 addr, RTOperation operation, void *input1
 			}
 			else if (operation == RTOP_SUBVOL_EXISTS)
 			{
-				const BtrfsObjID *subvolID = (const BtrfsObjID *)input1;
-				bool *exists = (bool *)output1;
+				const BtrfsObjID *subvolID = (const BtrfsObjID *)input0;
+				bool *exists = (bool *)output0;
 
 				if (item->key.type == TYPE_ROOT_BACKREF && endian64(item->key.offset) == *subvolID)
 				{
@@ -293,7 +293,7 @@ void parseRootTreeRec(unsigned __int64 addr, RTOperation operation, void *input1
 			BtrfsKeyPtr *keyPtr = (BtrfsKeyPtr *)nodePtr;
 
 			/* recurse down one level of the tree */
-			parseRootTreeRec(endian64(keyPtr->blockNum), operation, input1, output1,
+			parseRootTreeRec(endian64(keyPtr->blockNum), operation, input0, output0,
 				returnCode, shortCircuit);
 
 			if (*shortCircuit)
@@ -306,7 +306,7 @@ void parseRootTreeRec(unsigned __int64 addr, RTOperation operation, void *input1
 	free(nodeBlock);
 }
 
-int parseRootTree(RTOperation operation, void *input1, void *output1)
+int parseRootTree(RTOperation operation, void *input0, void *output0)
 {
 	int returnCode;
 	bool shortCircuit = false;
@@ -324,13 +324,13 @@ int parseRootTree(RTOperation operation, void *input1, void *output1)
 
 	if (operation == RTOP_SUBVOL_EXISTS)
 	{
-		bool *exists = (bool *)output1;
+		bool *exists = (bool *)output0;
 
 		/* default to nonexistence */
 		*exists = false;
 	}
 	
-	parseRootTreeRec(endian64(super.rootTreeLAddr), operation, input1, output1,
+	parseRootTreeRec(endian64(super.rootTreeLAddr), operation, input0, output0,
 		&returnCode, &shortCircuit);
 
 	return returnCode;
