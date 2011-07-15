@@ -400,9 +400,6 @@ DWORD readLogical(LogiAddr addr, unsigned __int64 len, unsigned char *dest)
 	PhysAddr *physAddr;
 	BlockReader *blockReader;
 
-	/* TODO: actually interpret the chunk's block group flags and handle striping properly */
-	printf("readLogical: reading straight off stripe 0 for now!\n");
-
 	physAddr = logiToPhys(addr, len);
 
 	/* isolate the flags having to do with striping levels */

@@ -66,6 +66,7 @@ enum BtrfsItemType : unsigned char
 
 enum BlockGroupFlags : unsigned __int64
 {
+	BGFLAG_SINGLE = 0x0,
 	BGFLAG_DATA = 0x1,
 	BGFLAG_SYSTEM = 0x2,
 	BGFLAG_METADATA = 0x4,
