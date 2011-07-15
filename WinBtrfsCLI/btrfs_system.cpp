@@ -404,12 +404,56 @@ DWORD readLogical(LogiAddr addr, unsigned __int64 len, unsigned char *dest)
 	printf("readLogical: reading straight off stripe 0 for now!\n");
 
 	physAddr = logiToPhys(addr, len);
-	blockReader = getBlockReader(physAddr->chunkItem.stripes[0].devID);
 
-	DWORD rtnVal = blockReader->directRead(physAddr->offset +
-		physAddr->chunkItem.stripes[0].offset, len, dest);
+	/* isolate the flags having to do with striping levels */
+	switch (physAddr->chunkItem.type & (BGFLAG_RAID0 | BGFLAG_RAID1 | BGFLAG_DUPLICATE | BGFLAG_RAID10))
+	{
+	case BGFLAG_SINGLE:
+single_fallback: // remove this label
+	{
+		assert(physAddr->chunkItem.numStripes >= 1);
 
-	free(physAddr);
+		/* there should only be one stripe, so we'll always use stripe 0 */
+		blockReader = getBlockReader(physAddr->chunkItem.stripes[0].devID);
+		DWORD rtnVal = blockReader->directRead(physAddr->offset +
+			physAddr->chunkItem.stripes[0].offset, len, dest);
 
-	return rtnVal;
+		free(physAddr);
+		return rtnVal;
+	}
+	case BGFLAG_RAID0:
+		assert(physAddr->chunkItem.numStripes >= 2);
+		
+		printf("readLogical: reading from raid0 chunks isn't yet supported!\n"
+			"addr: %I64x len: %I64x\n", addr, len);
+		
+		free(physAddr);
+		return ERROR_UNSUPPORTED_TYPE;
+	case BGFLAG_RAID1:
+		assert(physAddr->chunkItem.numStripes >= 2);
+		
+		printf("readLogical: warning, treating raid1 chunk as non-mirrored\n");
+		
+		goto single_fallback;
+	case BGFLAG_DUPLICATE:
+		assert(physAddr->chunkItem.numStripes >= 2);
+		
+		printf("readLogical: warning, treating duplicate chunk as non-mirrored\n");
+		
+		goto single_fallback;
+	case BGFLAG_RAID10:
+		assert(physAddr->chunkItem.numStripes >= 4);
+		
+		printf("readLogical: reading from raid10 chunks isn't yet supported!\n"
+			"addr: %I64x len: %I64x\n", addr, len);
+		
+		free(physAddr);
+		return ERROR_UNSUPPORTED_TYPE;
+	default: // two or more flags set; this shouldn't happen
+		printf("readLogical: multiple striping levels given for this chunk!\n"
+			"addr: %I64x len: %I64x\n", addr, len);
+
+		free(physAddr);
+		return ERROR_INVALID_DATA;
+	}
 }
