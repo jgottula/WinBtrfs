@@ -232,6 +232,17 @@ void usage()
 	exit(1);
 }
 
+void usageError(const char *format, ...)
+{
+	va_list args;
+
+	va_start(args, format);
+	vprintf(format, args);
+	va_end(args);
+
+	usage();
+}
+
 int main(int argc, char **argv)
 {
 	PDOKAN_OPTIONS dokanOptions;
@@ -258,22 +269,13 @@ int main(int argc, char **argv)
 						if (sscanf(argv[i] + 12, "%I64u ", &subvolID) == 1)
 							useSubvolID = true;
 						else
-						{
-							printf("You entered an indecipherable subvolume object ID!\n\n");
-							usage();
-						}
+							usageError("You entered an indecipherable subvolume object ID!\n\n");
 					}
 					else
-					{
-						printf("You specified more than one subvolume to mount!\n\n");
-						usage();
-					}
+						usageError("You specified more than one subvolume to mount!\n\n");
 				}
 				else
-				{
-					printf("You didn't specify a subvolume object ID!\n\n");
-					usage();
-				}
+					usageError("You didn't specify a subvolume object ID!\n\n");
 			}
 			else if (strncmp(argv[i], "--subvol=", 9) == 0)
 			{
@@ -285,22 +287,13 @@ int main(int argc, char **argv)
 						useSubvolName = true;
 					}
 					else
-					{
-						printf("You specified more than one subvolume to mount!\n\n");
-						usage();
-					}
+						usageError("You specified more than one subvolume to mount!\n\n");
 				}
 				else
-				{
-					printf("You didn't specify a subvolume name!\n\n");
-					usage();
-				}
+					usageError("You didn't specify a subvolume name!\n\n");
 			}
 			else
-			{
-				printf("'%s' is not a recognized command-line option!\n\n", argv[i]);
-				usage();
-			}
+				usageError("'%s' is not a recognized command-line option!\n\n", argv[i]);
 		}
 		else
 		{
@@ -326,22 +319,13 @@ int main(int argc, char **argv)
 	}
 
 	if (noDump && dumpOnly)
-	{
-		printf("You cannot specify both --no-dump and --dump-only on a single run!\n\n");
-		usage();
-	}
+		usageError("You cannot specify both --no-dump and --dump-only on a single run!\n\n");
 
 	if (argState == 0)
-	{
-		printf("You didn't specify a mount point or devices to load!\n\n");
-		usage();
-	}
+		usageError("You didn't specify a mount point or devices to load!\n\n");
 
 	if (devicePaths.size() == 0)
-	{
-		printf("You didn't specify one or more devices to load!\n\n");
-		usage();
-	}
+		usageError("You didn't specify one or more devices to load!\n\n");
 
 	dokanOptions = (PDOKAN_OPTIONS)malloc(sizeof(DOKAN_OPTIONS));
 	dokanOptions->Version = 600;
