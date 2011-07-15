@@ -14,6 +14,7 @@
 #include <cassert>
 #include <vector>
 #include <boost/detail/endian.hpp>
+#include <Windows.h>
 #include "btrfs_system.h"
 #include "chunktree_parser.h"
 #include "dokan_callbacks.h"
@@ -57,6 +58,21 @@ bool useSubvolID = false, useSubvolName = false;
 BtrfsObjID subvolID;
 char *subvolName;
 bool noDump = false, dumpOnly = false;
+
+void terminate()
+{
+	cleanUp();
+	DokanRemoveMountPoint(mountPoint); // DokanUnmount only allows drive letters
+	exit(0);
+}
+
+BOOL WINAPI ctrlHandler(DWORD dwCtrlType)
+{
+	printf("ctrlHandler: received 0x%x, terminating gracefully\n", dwCtrlType);
+
+	terminate();
+	return FALSE;
+}
 
 void firstTasks()
 {
@@ -335,6 +351,9 @@ int main(int argc, char **argv)
 	dokanOptions->MountPoint = mountPoint;
 
 	firstTasks();
+
+	/* ensure that Ctrl+C and other things will terminate the driver gracefully */
+	SetConsoleCtrlHandler(&ctrlHandler, TRUE);
 
 	dokanResult = DokanMain(dokanOptions, &btrfsOperations);
 

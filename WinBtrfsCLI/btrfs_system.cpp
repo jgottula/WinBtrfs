@@ -44,6 +44,8 @@ DWORD init()
 
 void cleanUp()
 {
+	printf("cleanUp: warning, this function may be very thread-unsafe\n");
+	
 	/* iterate backwards thru the block readers and destroy them */
 	for (size_t i = blockReaders.size(); i > 0; --i)
 	{

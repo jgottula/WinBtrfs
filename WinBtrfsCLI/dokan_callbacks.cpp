@@ -642,6 +642,7 @@ int DOKAN_CALLBACK btrfsUnmount(PDOKAN_FILE_INFO info)
 {
 	/* nothing to do */
 	
+	printf("btrfsUnmount: OK\n");
 	return ERROR_SUCCESS;
 }
 
