@@ -1,4 +1,4 @@
-/* WinBtrfsCLI/roottree_parser.h
+/* WinBtrfsLib/roottree_parser.h
  * root tree parser
  *
  * WinBtrfs

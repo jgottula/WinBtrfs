@@ -1,4 +1,4 @@
-/* WinBtrfsCLI/util.h
+/* WinBtrfsLib/util.h
  * utility functions
  *
  * WinBtrfs

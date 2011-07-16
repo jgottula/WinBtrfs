@@ -1,4 +1,4 @@
-/* WinBtrfsCLI/block_reader.cpp
+/* WinBtrfsLib/block_reader.cpp
  * low-level block reading and caching
  *
  * WinBtrfs

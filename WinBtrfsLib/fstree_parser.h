@@ -1,4 +1,4 @@
-/* WinBtrfsCLI/fstree_parser.h
+/* WinBtrfsLib/fstree_parser.h
  * fs tree parser
  *
  * WinBtrfs

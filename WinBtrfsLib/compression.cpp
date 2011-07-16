@@ -1,4 +1,4 @@
-/* WinBtrfsCLI/compression.cpp
+/* WinBtrfsLib/compression.cpp
  * data compression algorithms
  *
  * WinBtrfs

@@ -1,4 +1,4 @@
-/* WinBtrfsCLI/endian.h
+/* WinBtrfsLib/endian.h
  * functions to deal with disk/CPU endianness differences
  *
  * WinBtrfs

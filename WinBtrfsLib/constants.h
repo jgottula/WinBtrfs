@@ -1,4 +1,4 @@
-/* WinBtrfsCLI/constants.h
+/* WinBtrfsLib/constants.h
  * symbolic constant definitions
  *
  * WinBtrfs

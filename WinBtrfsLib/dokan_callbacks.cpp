@@ -1,4 +1,4 @@
-/* WinBtrfsCLI/dokan_callbacks.cpp
+/* WinBtrfsLib/dokan_callbacks.cpp
  * implementations of Dokan callback functions
  *
  * WinBtrfs

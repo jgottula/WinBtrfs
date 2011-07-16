@@ -1,4 +1,4 @@
-/* WinBtrfsCLI/btrfs_operations.h
+/* WinBtrfsLib/btrfs_operations.h
  * high-level filesystem operations
  *
  * WinBtrfs

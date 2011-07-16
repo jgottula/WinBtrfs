@@ -1,4 +1,4 @@
-/* WinBtrfsCLI/chunktree_parser.cpp
+/* WinBtrfsLib/chunktree_parser.cpp
  * chunk tree parser
  *
  * WinBtrfs

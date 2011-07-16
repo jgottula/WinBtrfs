@@ -1,4 +1,4 @@
-/* WinBtrfsCLI/btrfs_system.h
+/* WinBtrfsLib/btrfs_system.h
  * low-level filesystem code
  *
  * WinBtrfs
