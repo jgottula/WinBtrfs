@@ -1,6 +1,6 @@
 WinBtrfs — Readme/FAQ
 
-Last updated 2011.07.15
+Last updated 2011.07.16
 
 
 NOTE: WinBtrfs is in NO WAY a finished product and is NOT ready for general use. At this time, it should only really be used by people interested in testing, experimentation, or development. See [03] below for details on which features have been implemented.
@@ -39,7 +39,7 @@ Running WinBtrfs requires:
 
 [05] How do I build WinBtrfs?
 
-See [04] for information on the software and libraries required to build WinBtrfs. If you are using Visual Studio, load up the solution file and hit Build. Provided you have fulfilled the dependencies, it should build successfully. You will probably need to adjust the WinBtrfsCLI project settings so that the include directories and linker inputs are pointed toward Dokan's and Boost's headers and libs.
+See [04] for information on the software and libraries required to build WinBtrfs. If you are using Visual Studio, load up the solution file and hit Build. Provided you have fulfilled the dependencies, it should build successfully. You will probably need to adjust the WinBtrfsLib project settings so that the include directories and linker inputs are pointed toward Dokan's and Boost's headers and libs.
 If you are using a non-Microsoft compiler to build WinBtrfs, you are pretty much on your own at this point, until the developer finds the time to try out other compilers himself. There isn't a Makefile prepared, but no atypical compiler options should be necessary at this time. You will probably have to fix several instances where the developer has relied on Microsoft-specific language extensions.
 
 
@@ -56,9 +56,12 @@ where <device> is either the path to an image file, or a physical partition in t
 
 The following major features will be developed in approximately the order specified:
 — Multi-drive volumes
+— Windows service
 — GUI
 — Installer
 — Multithreading
+— Speed
+Lower priority objectives:
 — Non-Microsoft compiler support (MinGW, Cygwin)
 — UI Translations
 — Old OS support
@@ -81,4 +84,4 @@ Absolutely. WinBtrfs is an open source project, which means that submitting bug 
 
 [0B] Where can I obtain the latest source code?
 
-WinBtrfs is an open source project hosted on GitHub at https://github.com/jgottula/WinBtrfs. This project's page on GitHub will always have the latest source code and releases, as well as the facilities for contributing back to the project.
+WinBtrfs is an open source project hosted on GitHub at https://github.com/jgottula/WinBtrfs. This project's page on GitHub will always have the latest source code and releases, as well as the facilities for contributing back to the project and reporting bugs or other issues.
