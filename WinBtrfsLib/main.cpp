@@ -220,9 +220,9 @@ void usage()
 {
 	printf("Usage: WinBtrfsCLI.exe [options] <mount point> <device> [<device> ...]\n\n"
 		"Options:\n"
-		"--no-dump               don't dump trees at startup\n"
-		"--subvol=<subvol name>  mount the subvolume with the given name\n"
-		"--subvol-id=<object ID> mount the subvolume with the given object ID\n");
+		"--no-dump         don't dump trees at startup\n"
+		"--subvol=<name>   mount the subvolume with the given name\n"
+		"--subvol-id=<ID>  mount the subvolume with the given object ID\n");
 
 	exit(1);
 }
