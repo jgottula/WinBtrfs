@@ -9,6 +9,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "VolumeLister", "VolumeListe
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WinBtrfsGUI", "WinBtrfsGUI\WinBtrfsGUI.csproj", "{EFDD22B2-7143-4EDA-A267-B88433E1BE20}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "WinBtrfsLib", "WinBtrfsLib\WinBtrfsLib.vcxproj", "{B6810100-D89C-4DAB-9FD7-C82A2AD52831}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Mixed Platforms = Debug|Mixed Platforms
@@ -59,6 +61,16 @@ Global
 		{EFDD22B2-7143-4EDA-A267-B88433E1BE20}.Release|Win32.ActiveCfg = Release|x86
 		{EFDD22B2-7143-4EDA-A267-B88433E1BE20}.Release|x86.ActiveCfg = Release|x86
 		{EFDD22B2-7143-4EDA-A267-B88433E1BE20}.Release|x86.Build.0 = Release|x86
+		{B6810100-D89C-4DAB-9FD7-C82A2AD52831}.Debug|Mixed Platforms.ActiveCfg = Debug|Win32
+		{B6810100-D89C-4DAB-9FD7-C82A2AD52831}.Debug|Mixed Platforms.Build.0 = Debug|Win32
+		{B6810100-D89C-4DAB-9FD7-C82A2AD52831}.Debug|Win32.ActiveCfg = Debug|Win32
+		{B6810100-D89C-4DAB-9FD7-C82A2AD52831}.Debug|Win32.Build.0 = Debug|Win32
+		{B6810100-D89C-4DAB-9FD7-C82A2AD52831}.Debug|x86.ActiveCfg = Debug|Win32
+		{B6810100-D89C-4DAB-9FD7-C82A2AD52831}.Release|Mixed Platforms.ActiveCfg = Release|Win32
+		{B6810100-D89C-4DAB-9FD7-C82A2AD52831}.Release|Mixed Platforms.Build.0 = Release|Win32
+		{B6810100-D89C-4DAB-9FD7-C82A2AD52831}.Release|Win32.ActiveCfg = Release|Win32
+		{B6810100-D89C-4DAB-9FD7-C82A2AD52831}.Release|Win32.Build.0 = Release|Win32
+		{B6810100-D89C-4DAB-9FD7-C82A2AD52831}.Release|x86.ActiveCfg = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
