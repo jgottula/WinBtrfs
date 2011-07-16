@@ -243,7 +243,10 @@ int main(int argc, char **argv)
 	PDOKAN_OPTIONS dokanOptions;
 	int argState = 0, dokanResult;
 
-	printf("WinBtrfs Command Line Interface\nCopyright (c) 2011 Justin Gottula\n\n");
+	printf("WinBtrfs Command Line Interface\n"
+		"Copyright (c) 2011 Justin Gottula\n\n"
+		"This program is under heavy development. If you encounter a bug, please go to\n"
+		"http://github.com/jgottula/WinBtrfs and file an issue!\n\n");
 
 	/* Need MAX_PATH checking for buffer overruns */
 
