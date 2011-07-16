@@ -2,6 +2,8 @@ Debug/
 Release/
 */Debug/
 */Release/
+*/bin/
+*/obj/
 *.suo
 *.sln.docstates
 *.vcxproj.user
