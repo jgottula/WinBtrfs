@@ -1,4 +1,4 @@
-/* types.h
+/* WinBtrfsCLI/types.h
  * user type and struct definitions
  *
  * WinBtrfs

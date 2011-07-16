@@ -1,4 +1,4 @@
-/* compression.h
+/* WinBtrfsCLI/compression.h
  * data compression algorithms
  *
  * WinBtrfs

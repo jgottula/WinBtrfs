@@ -1,4 +1,4 @@
-/* main.cpp
+/* WinBtrfsCLI/main.cpp
  * the CLI frontend
  *
  * WinBtrfs
@@ -247,8 +247,6 @@ int main(int argc, char **argv)
 		"Copyright (c) 2011 Justin Gottula\n\n"
 		"This program is under heavy development. If you encounter a bug, please go to\n"
 		"http://github.com/jgottula/WinBtrfs and file an issue!\n\n");
-
-	/* Need MAX_PATH checking for buffer overruns */
 
 	for (int i = 1; i < argc; i++)
 	{
