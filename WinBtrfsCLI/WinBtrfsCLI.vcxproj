@@ -10,6 +10,9 @@
       <Platform>Win32</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="main.cpp" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{BB6E39AC-8DF6-414E-924D-A190E2D15939}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
@@ -38,8 +41,9 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <LinkIncremental>true</LinkIncremental>
-    <IncludePath>J:\Programming\WinBtrfs\dokan\dokan;J:\Programming\WinBtrfs\boost_1_46_1;$(IncludePath)</IncludePath>
+    <LinkIncremental>false</LinkIncremental>
+    <IncludePath>$(IncludePath)</IncludePath>
+    <LibraryPath>..\Debug;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -66,7 +70,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>"C:\Program Files\Dokan\DokanLibrary\dokan.lib";%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>WinBtrfsLib.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
       <Profile>true</Profile>
       <OptimizeReferences>false</OptimizeReferences>
@@ -98,66 +102,6 @@
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
     </Link>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <ClCompile Include="block_reader.cpp" />
-    <ClCompile Include="chunktree_parser.cpp" />
-    <ClCompile Include="compression.cpp" />
-    <ClCompile Include="fstree_parser.cpp" />
-    <ClCompile Include="btrfs_operations.cpp" />
-    <ClCompile Include="minilzo\minilzo.c" />
-    <ClCompile Include="roottree_parser.cpp" />
-    <ClCompile Include="btrfs_system.cpp" />
-    <ClCompile Include="dokan_callbacks.cpp" />
-    <ClCompile Include="crc32c.cpp" />
-    <ClCompile Include="main.cpp" />
-    <ClCompile Include="util.cpp" />
-    <ClCompile Include="zlib\adler32.c" />
-    <ClCompile Include="zlib\compress.c" />
-    <ClCompile Include="zlib\crc32.c" />
-    <ClCompile Include="zlib\deflate.c" />
-    <ClCompile Include="zlib\gzlib.c" />
-    <ClCompile Include="zlib\gzread.c" />
-    <ClCompile Include="zlib\gzwrite.c" />
-    <ClCompile Include="zlib\infback.c" />
-    <ClCompile Include="zlib\inffast.c" />
-    <ClCompile Include="zlib\inflate.c" />
-    <ClCompile Include="zlib\inftrees.c" />
-    <ClCompile Include="zlib\trees.c" />
-    <ClCompile Include="zlib\uncompr.c" />
-    <ClCompile Include="zlib\zutil.c" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="block_reader.h" />
-    <ClInclude Include="btrfs_operations.h" />
-    <ClInclude Include="btrfs_system.h" />
-    <ClInclude Include="chunktree_parser.h" />
-    <ClInclude Include="compression.h" />
-    <ClInclude Include="dokan_callbacks.h" />
-    <ClInclude Include="constants.h" />
-    <ClInclude Include="crc32c.h" />
-    <ClInclude Include="endian.h" />
-    <ClInclude Include="fstree_parser.h" />
-    <ClInclude Include="minilzo\lzoconf.h" />
-    <ClInclude Include="minilzo\lzodefs.h" />
-    <ClInclude Include="minilzo\minilzo.h" />
-    <ClInclude Include="roottree_parser.h" />
-    <ClInclude Include="types.h" />
-    <ClInclude Include="util.h" />
-    <ClInclude Include="zlib\crc32.h" />
-    <ClInclude Include="zlib\deflate.h" />
-    <ClInclude Include="zlib\gzguts.h" />
-    <ClInclude Include="zlib\inffast.h" />
-    <ClInclude Include="zlib\inffixed.h" />
-    <ClInclude Include="zlib\inflate.h" />
-    <ClInclude Include="zlib\inftrees.h" />
-    <ClInclude Include="zlib\trees.h" />
-    <ClInclude Include="zlib\zconf.h" />
-    <ClInclude Include="zlib\zlib.h" />
-    <ClInclude Include="zlib\zutil.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="WinBtrfsCLI.psess" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

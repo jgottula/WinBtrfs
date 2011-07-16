@@ -1,5 +1,5 @@
 /* WinBtrfsLib/lib.cpp
- * ???
+ * DLL-related code
  *
  * WinBtrfs
  *
@@ -16,7 +16,5 @@
 
 BOOL WINAPI DLLMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
-	printf("WinBtrfsLib is a stub!\n");
-	
 	return TRUE;
 }

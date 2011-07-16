@@ -12,8 +12,8 @@
  */
 
 #include <cassert>
-#include "minilzo/minilzo.h"
-#include "zlib/zlib.h"
+#include "../minilzo/minilzo.h"
+#include "../zlib/zlib.h"
 #include "endian.h"
 
 int lzoDecompress(const unsigned char *compressed, unsigned char *decompressed,
