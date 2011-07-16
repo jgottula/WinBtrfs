@@ -246,7 +246,7 @@ __declspec(dllexport) int __stdcall winBtrfsLib_main(int argc, char **argv)
 
 	printf("WinBtrfsLib Transitional CLI\n"
 		"Copyright (c) 2011 Justin Gottula\n\n"
-		"This program is under heavy development. If you encounter a bug, please go to\n"
+		"WinBtrfs is under heavy development. If you encounter a bug, please go to\n"
 		"http://github.com/jgottula/WinBtrfs and file an issue!\n\n");
 
 	for (int i = 1; i < argc; i++)
