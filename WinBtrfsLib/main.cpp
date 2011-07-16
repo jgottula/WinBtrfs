@@ -1,8 +1,7 @@
-/* WinBtrfsCLI/main.cpp
- * the CLI frontend
+/* WinBtrfsLib/main.cpp
+ * transitional CLI interface
  *
  * WinBtrfs
- *
  * Copyright (c) 2011 Justin Gottula
  *
  * This program is free software; you can redistribute it and/or modify it
@@ -239,6 +238,9 @@ void usageError(const char *format, ...)
 	usage();
 }
 
+/* this function (and probably the entirety of this function needs to be moved to WinBtrfsCLI.
+	in the fucture, WinBtrfsCLI will validate user CLI input, then call DLL interfaces to start,
+	terminate, (and eventually control) WinBtrfsLib. */
 __declspec(dllexport) int __stdcall winBtrfsLib_main(int argc, char **argv)
 {
 	PDOKAN_OPTIONS dokanOptions;

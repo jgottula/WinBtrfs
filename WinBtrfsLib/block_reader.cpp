@@ -2,7 +2,6 @@
  * low-level block reading and caching
  *
  * WinBtrfs
- *
  * Copyright (c) 2011 Justin Gottula
  *
  * This program is free software; you can redistribute it and/or modify it
