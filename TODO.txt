@@ -6,10 +6,10 @@ File locking and unlocking callbacks
 File security callback
 XATTRs
 Remove Dokan callbacks that should never be called
-Esoteric Btrfs stuff (add a README faq for "which Btrfs features are supported")
-— Multi-drive volumes
-— Extended attributes?
-— Preallocated files (torrents maybe)
+Multi-drive volumes
+Extended attributes?
+Preallocated files (torrents maybe)
+Data corruption resiliency (detect checksum issues and read from other copies if possible)
 Concurrent callback support (threadsafety)
 GUI (C#: which .NET version?)
 Installer (NSIS)
@@ -28,7 +28,7 @@ Determine if, when a subvolume (B) is created within another subvolume (A), the 
 	possibly among other things that assume that these trees will have tree 0x5 as their parent
 Write an fopen (or Win32) test to determine if CREATE_ALWAYS or OPEN_ALWAYS will ever get passed to btrfsCreateFile
 Try different Win32 apis (specifically ones that correspond with callbacks that should NEVER BE CALLED) and see if eliciting a crash
-	is possible
+	is possible; also, see if removing the callbacks (putting NULL in the callback array) does what we ultimately want
 Mount a test image in SSD mode and then see if WinBtrfs uses a secondary superblock
 
 Bugs:
@@ -76,3 +76,4 @@ Add a Ctrl+C handler to unmount and clean up gracefully
 Decompress only the nodes of an extent that are going to be read in part or in whole; skip those that won't be read
 Find better Windows error codes for failure conditions in Dokan callbacks
 Be more consistent about whether error output is in the caller or the callee (currently they are both, somewhat randomly)
+Look thru <WinError.h> and adjust Win32 error codes based on the message they will present to the user
