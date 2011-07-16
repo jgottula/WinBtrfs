@@ -1,6 +1,6 @@
 WinBtrfs — Readme/FAQ
 
-Last updated 2011.07.14
+Last updated 2011.07.15
 
 
 NOTE: WinBtrfs is in NO WAY a finished product and is NOT ready for general use. At this time, it should only really be used by people interested in testing, experimentation, or development. See [03] below for details on which features have been implemented.
@@ -47,9 +47,9 @@ If you are using a non-Microsoft compiler to build WinBtrfs, you are pretty much
 
 Run WinBtrfsCLI.exe without any options to see usage information. Essentially, run the command in this manner:
 
-WinBtrfsCLI.exe [options] <mount point> <device>
+WinBtrfsCLI.exe [options] <mount point> <device(s)>
 
-where <device> is either the path to an image file, or a physical partition in the format \\.\HarddiskAPartitionB, where A is the hard drive (numbered from zero) and B is the partition within that drive (numbered from one); and where <mount point> is either a drive letter (e.g. "C:") or an empty directory on an NTFS drive. To figure out what the physical disk and partition numbers are for your system, open the Disk Management console in Windows and take a look at how the disks and their partitions are numbered; use these numbers when invoking WinBtrfsCLI. For Linux users, it may be helpful to know that /dev/sda1 is equivalent to \\.\Harddisk0Partition1; /dev/sdb2 is equivalent to \\.\Harddisk1Partition2; and so forth. For multi-drive volumes, you may specify multiple devices, one after the other. These steps will become much easier in the future, once a GUI is implemented.
+where <device> is either the path to an image file, or a physical partition in the format \\.\HarddiskAPartitionB, where A is the hard drive (numbered from zero) and B is the partition within that drive (numbered from one); and where <mount point> is either a drive letter (e.g. "C:") or an empty directory on an NTFS drive. To figure out what the physical disk and partition numbers are for your system, open the Disk Management console in Windows and take a look at how the disks and their partitions are numbered; use these numbers when invoking WinBtrfsCLI. For Linux users, it may be helpful to know that /dev/sda1 is equivalent to \\.\Harddisk0Partition1; /dev/sdb2 is equivalent to \\.\Harddisk1Partition2; and so forth (disks are indexed from zero, and partitions are indexed from one). For multi-drive volumes, you may specify multiple devices, one after the other. These steps will become much easier in the future, once a GUI is implemented.
 
 
 [07] What does the project roadmap look like?

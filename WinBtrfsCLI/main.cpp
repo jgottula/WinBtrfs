@@ -219,11 +219,6 @@ void dokanError(int dokanResult)
 void usage()
 {
 	printf("Usage: WinBtrfsCLI.exe [options] <mount point> <device> [<device> ...]\n\n"
-		"For the device argument, try something like \\\\.\\HarddiskXPartitionY.\n"
-		"Disks are indexed from zero; partitions are indexed from one.\n"
-		"Example: /dev/sda1 = \\\\.\\Harddisk0Partition1\n\n"
-		"You can also specify an image file to mount.\n\n"
-		"The mount point can be a drive letter or an empty NTFS directory.\n\n"
 		"Options:\n"
 		"--no-dump               don't dump trees at startup\n"
 		"--subvol=<subvol name>  mount the subvolume with the given name\n"
