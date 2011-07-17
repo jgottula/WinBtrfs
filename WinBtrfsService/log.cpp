@@ -30,8 +30,15 @@ namespace WinBtrfsService
 		tm *now_tm = localtime(&now);
 		
 		logFile = fopen("WinBtrfsService.log", "a");
+
+		/* if the log file has other contents, put in a space */
+		if (ftell(logFile) > 0)
+			fputs("\n\n", logFile);
+
+		/* print the log instance header */
 		fprintf(logFile, "WinBtrfsService PID: %u\nStarted on %s\n",
 			GetCurrentProcessId(), asctime(now_tm));
+		fflush(logFile);
 		
 		assert((hMutex = CreateMutex(NULL, FALSE, NULL)) != INVALID_HANDLE_VALUE);
 	}
@@ -61,9 +68,7 @@ namespace WinBtrfsService
 	
 	void logClose()
 	{
-		fputs("\n\n", logFile);
 		fclose(logFile);
-
 		CloseHandle(hMutex);
 	}
 
