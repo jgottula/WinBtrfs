@@ -114,12 +114,9 @@ int main(int argc, char **argv)
 	/* this function will not return until all of this process's services have stopped */
 	if (StartServiceCtrlDispatcher(serviceTable) == 0)
 	{
-		char message[1024];
-		
 		error = GetLastError();
-		
-		FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM, NULL, error, 0, message, 1024, NULL);
-		log("StartServiceCtrlDispatcher returned error %u: %s", error, message);
+
+		log("StartServiceCtrlDispatcher returned error %u: %s", error, getErrorMessage(error));
 
 		/* this would indicate a grave error on the part of the developer */
 		assert(error != ERROR_INVALID_DATA);

@@ -11,6 +11,7 @@
  */
 
 #include "log.h"
+#include <cassert>
 #include <cstdarg>
 #include <cstdio>
 #include <ctime>
@@ -49,10 +50,24 @@ namespace WinBtrfsService
 
 		fflush(logFile);
 	}
-
+	
 	void logClose()
 	{
 		fputs("\n\n", logFile);
 		fclose(logFile);
+	}
+
+	const char *getErrorMessage(DWORD error)
+	{
+		const char *buffer = NULL;
+		
+		FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
+			NULL, error, 0, (LPSTR)&buffer, 1024, NULL);
+
+		assert(buffer != NULL);
+
+		/* buffer should be freed by LocalFree, but a 1K leak that happens once isn't an issue */
+
+		return buffer;
 	}
 }

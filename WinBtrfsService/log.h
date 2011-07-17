@@ -15,4 +15,5 @@ namespace WinBtrfsService
 	void logInit();
 	void log(const char *format, ...);
 	void logClose();
+	const char *getErrorMessage(DWORD error);
 }
