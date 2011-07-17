@@ -61,6 +61,8 @@ namespace WinBtrfsService
 
 			/* global initialization tasks */
 			stopEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+			if (setupIPC() != 0)
+				return;
 
 			status.dwControlsAccepted |= SERVICE_ACCEPT_STOP | SERVICE_ACCEPT_SHUTDOWN;
 			status.dwCurrentState = SERVICE_RUNNING;

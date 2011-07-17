@@ -12,9 +12,15 @@
 
 #include "volume_mgr.h"
 #include "../WinBtrfsLib/WinBtrfsLib.h"
+#include "log.h"
 
 namespace WinBtrfsService
 {
+	DWORD setupIPC()
+	{
+		return 0;
+	}
+	
 	void checkIPC()
 	{
 
