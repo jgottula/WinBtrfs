@@ -19,7 +19,6 @@
 
 namespace WinBtrfsService
 {
-	FILE *logFile = NULL;
 	HANDLE hMutex = INVALID_HANDLE_VALUE;
 	
 	/* note: the localtime & asctime functions are not threadsafe. */
@@ -28,21 +27,22 @@ namespace WinBtrfsService
 	{
 		time_t now = time(NULL);
 		tm *now_tm = localtime(&now);
-
-		/* redirect stdout and stderr to files because otherwise they're unreadable */
-		freopen("WinBtrfsService_stdout.log", "a", stdout);
-		freopen("WinBtrfsService_stderr.log", "a", stderr);
 		
-		logFile = fopen("WinBtrfsService.log", "a");
-
-		/* if the log file has other contents, put in a space */
-		if (ftell(logFile) > 0)
+		/* if the log file already has other contents, put in a space */
+		FILE *logFile = fopen("WinBtrfsService_log.txt", "r+");
+		if (logFile != NULL)
+		{
 			fputs("\n\n", logFile);
+			fclose(logFile);
+		}
+
+		/* redirect stdout and stderr to files so the user can actually read them */
+		freopen("WinBtrfsService_log.txt", "a", stdout);
+		freopen("WinBtrfsService_stderr.txt", "a", stderr);
 
 		/* print the log instance header */
-		fprintf(logFile, "WinBtrfsService PID: %u\nStarted on %s\n",
+		printf("WinBtrfsService PID: %u\nStarted on %s\n",
 			GetCurrentProcessId(), asctime(now_tm));
-		fflush(logFile);
 		
 		assert((hMutex = CreateMutex(NULL, FALSE, NULL)) != INVALID_HANDLE_VALUE);
 	}
@@ -57,22 +57,19 @@ namespace WinBtrfsService
 		tm *now_tm = localtime(&now);
 
 		/* add a timestamp to each entry */
-		fprintf(logFile, "[%04d.%02d.%02d|%02d:%02d:%02d] ",
+		printf("[%04d.%02d.%02d|%02d:%02d:%02d] ",
 			now_tm->tm_year + 1900, now_tm->tm_mon + 1, now_tm->tm_mday,
 			now_tm->tm_hour, now_tm->tm_min, now_tm->tm_sec);
 
 		va_start(args, format);
-		vfprintf(logFile, format, args);
+		vprintf(format, args);
 		va_end(args);
-
-		fflush(logFile);
 
 		ReleaseMutex(hMutex);
 	}
 	
 	void logClose()
 	{
-		fclose(logFile);
 		CloseHandle(hMutex);
 	}
 
