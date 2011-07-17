@@ -14,7 +14,8 @@
 
 namespace WinBtrfsService
 {
-	DWORD setupIPC();
+	DWORD setUpIPC();
+	void cleanUpIPC();
 	void checkIPC();
 	void mount();
 	void unmountAll();

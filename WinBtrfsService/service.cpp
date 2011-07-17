@@ -65,7 +65,7 @@ namespace WinBtrfsService
 			
 			log("Running global initialization tasks.\n");
 			stopEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
-			if (setupIPC() != 0)
+			if (setUpIPC() != 0)
 				return;
 			
 			log("Setting state to SERVICE_RUNNING.\n");
@@ -82,6 +82,7 @@ namespace WinBtrfsService
 			
 			log("Running global cleanup tasks.\n");
 			CloseHandle(stopEvent);
+			cleanUpIPC();
 			unmountAll();
 			
 			log("Setting state to SERVICE_STOPPED.\n");
