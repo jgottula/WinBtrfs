@@ -10,6 +10,8 @@
  * any later version.
  */
 
+#include <Windows.h>
+
 namespace WinBtrfsService
 {
 	void logInit();
