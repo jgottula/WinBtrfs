@@ -11,6 +11,7 @@
  */
 
 #include "ipc.h"
+#include <cassert>
 #include "log.h"
 #include "volume_mgr.h"
 #include "WinBtrfsService.h"
@@ -79,6 +80,10 @@ namespace WinBtrfsService
 			if (msg->type == MSG_REQ_MOUNT)
 			{
 				MountData *mountData = (MountData *)msg->data;
+
+				assert(msg->dataLen >= sizeof(MountData));
+				assert(msg->dataLen >= sizeof(MountData) +
+					(mountData->numDevices * sizeof(wchar_t) * MAX_PATH));
 				
 				log("Received MSG_REQ_MOUNT.\n");
 				
