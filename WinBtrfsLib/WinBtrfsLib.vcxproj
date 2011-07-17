@@ -35,8 +35,7 @@
     <ClCompile Include="crc32c.cpp" />
     <ClCompile Include="dokan_callbacks.cpp" />
     <ClCompile Include="fstree_parser.cpp" />
-    <ClCompile Include="lib.cpp" />
-    <ClCompile Include="main.cpp" />
+    <ClCompile Include="WinBtrfsLib.cpp" />
     <ClCompile Include="roottree_parser.cpp" />
     <ClCompile Include="util.cpp" />
   </ItemGroup>
@@ -68,6 +67,7 @@
     <ClInclude Include="roottree_parser.h" />
     <ClInclude Include="types.h" />
     <ClInclude Include="util.h" />
+    <ClInclude Include="WinBtrfsLib.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{B6810100-D89C-4DAB-9FD7-C82A2AD52831}</ProjectGuid>

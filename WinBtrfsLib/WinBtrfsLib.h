@@ -1,5 +1,5 @@
-/* WinBtrfsLib/lib.cpp
- * DLL-related code
+/* WinBtrfsLib/WinBtrfsLib.h
+ * public DLL interfaces
  *
  * WinBtrfs
  * Copyright (c) 2011 Justin Gottula
@@ -10,10 +10,14 @@
  * any later version.
  */
 
-#include <cstdio>
-#include <Windows.h>
+#ifdef WINBTRFSLIB_EXPORTS
+#define WINBTRFSLIB_API __declspec(dllexport)
+#else
+#define WINBTRFSLIB_API __declspec(dllimport)
+#endif
 
-BOOL WINAPI DLLMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
+namespace WinBtrfsLib
 {
-	return TRUE;
+	void WINBTRFSLIB_API start();
+	void WINBTRFSLIB_API terminate();
 }

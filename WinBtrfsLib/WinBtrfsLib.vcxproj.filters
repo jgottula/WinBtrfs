@@ -51,12 +51,6 @@
     <ClCompile Include="fstree_parser.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="lib.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="main.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="roottree_parser.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -110,6 +104,9 @@
     </ClCompile>
     <ClCompile Include="..\zlib\zutil.c">
       <Filter>Source Files\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="WinBtrfsLib.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -193,6 +190,9 @@
     </ClInclude>
     <ClInclude Include="..\zlib\zutil.h">
       <Filter>Header Files\zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="WinBtrfsLib.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
