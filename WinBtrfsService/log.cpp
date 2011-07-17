@@ -29,7 +29,8 @@ namespace WinBtrfsService
 		time_t now = time(NULL);
 		tm *now_tm = localtime(&now);
 
-		/* redirect stderr to a file in case a fatal error occurs (e.g. assertion failure) */
+		/* redirect stdout and stderr to files because otherwise they're unreadable */
+		freopen("WinBtrfsService_stdout.log", "a", stdout);
 		freopen("WinBtrfsService_stderr.log", "a", stderr);
 		
 		logFile = fopen("WinBtrfsService.log", "a");
