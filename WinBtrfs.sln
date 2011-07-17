@@ -16,6 +16,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "WinBtrfsService", "WinBtrfs
 		{B6810100-D89C-4DAB-9FD7-C82A2AD52831} = {B6810100-D89C-4DAB-9FD7-C82A2AD52831}
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PipeClient", "PipeClient\PipeClient.vcxproj", "{2C798BED-F141-4469-9B6C-92F55857E540}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Mixed Platforms = Debug|Mixed Platforms
@@ -86,6 +88,16 @@ Global
 		{ECE512A9-A96D-41D8-8137-DE31E62FE102}.Release|Win32.ActiveCfg = Release|Win32
 		{ECE512A9-A96D-41D8-8137-DE31E62FE102}.Release|Win32.Build.0 = Release|Win32
 		{ECE512A9-A96D-41D8-8137-DE31E62FE102}.Release|x86.ActiveCfg = Release|Win32
+		{2C798BED-F141-4469-9B6C-92F55857E540}.Debug|Mixed Platforms.ActiveCfg = Debug|Win32
+		{2C798BED-F141-4469-9B6C-92F55857E540}.Debug|Mixed Platforms.Build.0 = Debug|Win32
+		{2C798BED-F141-4469-9B6C-92F55857E540}.Debug|Win32.ActiveCfg = Debug|Win32
+		{2C798BED-F141-4469-9B6C-92F55857E540}.Debug|Win32.Build.0 = Debug|Win32
+		{2C798BED-F141-4469-9B6C-92F55857E540}.Debug|x86.ActiveCfg = Debug|Win32
+		{2C798BED-F141-4469-9B6C-92F55857E540}.Release|Mixed Platforms.ActiveCfg = Release|Win32
+		{2C798BED-F141-4469-9B6C-92F55857E540}.Release|Mixed Platforms.Build.0 = Release|Win32
+		{2C798BED-F141-4469-9B6C-92F55857E540}.Release|Win32.ActiveCfg = Release|Win32
+		{2C798BED-F141-4469-9B6C-92F55857E540}.Release|Win32.Build.0 = Release|Win32
+		{2C798BED-F141-4469-9B6C-92F55857E540}.Release|x86.ActiveCfg = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
