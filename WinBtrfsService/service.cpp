@@ -13,6 +13,7 @@
 #include <cassert>
 #include <cstdio>
 #include <Windows.h>
+#include "log.h"
 #include "volume_mgr.h"
 
 namespace WinBtrfsService
@@ -86,26 +87,35 @@ using namespace WinBtrfsService;
 
 int main(int argc, char **argv)
 {
+	DWORD error = 0;
 	SERVICE_TABLE_ENTRY serviceTable[] =
 	{
 		{ L"WinBtrfsService", &WinBtrfsService::serviceMain },
 		{ NULL, NULL }
 	};
 
+	logInit();
+
 	/* this function will not return until all of this process's services have stopped */
 	if (StartServiceCtrlDispatcher(serviceTable) == 0)
 	{
-		DWORD error = GetLastError();
+		char message[1024];
 		
+		error = GetLastError();
+		
+		FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM, NULL, error, 0, message, 1024, NULL);
+		log("StartServiceCtrlDispatcher returned error %u: %s", error, message);
+
 		/* this would indicate a grave error on the part of the developer */
 		assert(error != ERROR_INVALID_DATA);
 
 		/* boneheaded user error */
 		if (error == ERROR_FAILED_SERVICE_CONTROLLER_CONNECT)
 			fprintf(stderr, "Hey, you can't do that! This program must be run as a service!\n");
-
-		return error;
 	}
-	else
-		return 0;
+
+	log("Terminated with code %u.\n", error);
+	logClose();
+
+	return error;
 }

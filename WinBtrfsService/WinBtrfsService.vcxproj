@@ -11,10 +11,12 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="log.cpp" />
     <ClCompile Include="service.cpp" />
     <ClCompile Include="volume_mgr.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="log.h" />
     <ClInclude Include="volume_mgr.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
