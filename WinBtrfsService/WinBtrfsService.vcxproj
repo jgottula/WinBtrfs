@@ -20,6 +20,7 @@
     <ClInclude Include="ipc.h" />
     <ClInclude Include="log.h" />
     <ClInclude Include="volume_mgr.h" />
+    <ClInclude Include="WinBtrfsService.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{ECE512A9-A96D-41D8-8137-DE31E62FE102}</ProjectGuid>

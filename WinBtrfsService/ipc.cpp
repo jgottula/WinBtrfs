@@ -12,6 +12,8 @@
 
 #include "ipc.h"
 #include "log.h"
+#include "volume_mgr.h"
+#include "WinBtrfsService.h"
 
 namespace WinBtrfsService
 {
@@ -63,17 +65,57 @@ namespace WinBtrfsService
 
 	void handleIPC()
 	{
-		char *buffer = (char *)malloc(10240);
 		DWORD error, bytesRead = 0, bytesWritten = 0;
+		char *buffer = (char *)malloc(10240);
+		ServiceMsg *msg;
 		
 		if ((error = ReadFile(hPipe, buffer, 10240, &bytesRead, NULL)) != 0)
 		{
-			log("Received %u bytes: %s\n", bytesRead, buffer);
+			bool respOK = false, respError = false;
+			int errorCode = 0;
+			
+			msg = (ServiceMsg *)buffer;
 
-			log("Sending a response.\n");
-			if ((error = WriteFile(hPipe, "Hello from WinBtrfsService!", 28, &bytesWritten, NULL)) == 0)
-				log("Attempting to write to the pipe returned error %u: %s",
-				error, getErrorMessage(error));
+			if (msg->type == MSG_REQ_MOUNT)
+			{
+				MountData *mountData = (MountData *)msg->data;
+				
+				log("Received MSG_REQ_MOUNT.\n");
+				
+				if ((errorCode = mount(mountData)) == 0)
+					respOK = true;
+				else
+					respError = true;
+			}
+
+			if (respOK)
+			{
+				ServiceMsg msg;
+
+				msg.type = MSG_RESP_OK;
+				msg.dataLen = 0;
+				
+				log("Sending MSG_RESP_OK.\n");
+				if ((error = WriteFile(hPipe, &msg, sizeof(msg), &bytesWritten, NULL)) == 0)
+					log("Attempting to write to the pipe returned error %u: %s",
+						error, getErrorMessage(error));
+			}
+
+			if (respError)
+			{
+				ServiceMsg *msg = (ServiceMsg *)malloc(sizeof(ServiceMsg) + sizeof(int));
+
+				msg->type = MSG_RESP_ERROR;
+				msg->dataLen = sizeof(int);
+				*((int *)msg->data) = errorCode;
+				
+				log("Sending MSG_RESP_ERROR.\n");
+				if ((error = WriteFile(hPipe, &msg, sizeof(msg), &bytesWritten, NULL)) == 0)
+					log("Attempting to write to the pipe returned error %u: %s",
+						error, getErrorMessage(error));
+
+				free(msg);
+			}
 		}
 		else
 			log("Attempting to read from the pipe returned error %u: %s",

@@ -16,10 +16,14 @@
 
 namespace WinBtrfsService
 {
-	void mount()
+	int mount(MountData *mountData)
 	{
 		log("mount is a stub!\n");
 		// log on failure, this is nonfatal
+
+		// ensure that this FS UUID isn't already mounted somewhere else
+
+		return 0;
 	}
 	
 	void unmountAll()
