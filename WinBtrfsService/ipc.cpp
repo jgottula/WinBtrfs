@@ -15,6 +15,8 @@
 
 namespace WinBtrfsService
 {
+	extern HANDLE ipcEvent;
+
 	HANDLE hPipe = INVALID_HANDLE_VALUE, hThread = INVALID_HANDLE_VALUE,
 		threadTermEvent = INVALID_HANDLE_VALUE, threadDoneEvent = INVALID_HANDLE_VALUE;
 	
@@ -56,23 +58,57 @@ namespace WinBtrfsService
 		CloseHandle(hPipe);
 		CloseHandle(threadTermEvent);
 		CloseHandle(threadDoneEvent);
+		CloseHandle(hThread);
 	}
 
 	void handleIPC()
 	{
-		/* handle incoming IPC events */
+		char *buffer = (char *)malloc(10240);
+		DWORD error, bytesRead = 0;
 		
-		/* unset the ipcEvent event when all IPC messages have been handled */
+		if ((error = ReadFile(hPipe, buffer, 10240, &bytesRead, NULL)) != 0)
+			log("Received %u bytes: %s\n", bytesRead, buffer);
+		else
+			log("Attempting ReadFile on the pipe returned error %u: %s", error, getErrorMessage(error));
+
+		DisconnectNamedPipe(hPipe);
+		free(buffer);
+		ResetEvent(ipcEvent);
 	}
 
 	/* warning: this function runs in a different thread! */
 	DWORD WINAPI watchIPC(LPVOID lpParameter)
 	{
-		/* watch for connections on the named pipe, and if one comes in,
-			set the ipcEvent event. */
+		do
+		{
+			BOOL result = ConnectNamedPipe(hPipe, NULL);
+			DWORD error = GetLastError();
+			
+			if (result != 0 || error == ERROR_PIPE_CONNECTED)
+			{
+				log("Got a connection on the named pipe.\n");
+				SetEvent(ipcEvent);
+			}
+			else
+			{
+				DWORD error = GetLastError();
+				
+				switch (error)
+				{
+				case ERROR_IO_PENDING:
+				case ERROR_PIPE_LISTENING:
+					/* not a problem */
+					break;
+				default:
+					log("ConnectNamedPipe returned error %u: %s", error, getErrorMessage(error));
+					break;
+				}
+			}
+		}
+		while (WaitForSingleObject(threadTermEvent, 100) != WAIT_OBJECT_0);
 
-		/* immediately terminate if the threadTermEvent event is set. */
-		/* set threadDoneEvent when we're finished here. */
+		/* we're done here */
+		SetEvent(threadDoneEvent);
 
 		return 0;
 	}
