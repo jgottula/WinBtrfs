@@ -61,6 +61,10 @@ namespace WinBtrfsLib
 	{
 		DWORD error;
 
+#ifndef BOOST_DETAIL_ENDIAN_HPP
+#error You need to include <boost/detail/endian.hpp>!
+#endif
+
 #ifndef BOOST_LITTLE_ENDIAN
 #pragma message("Warning: support for non-little-endian architectures is untested!")
 		printf("firstTasks: warning: support for non-little-endian architectures is untested!\n");
