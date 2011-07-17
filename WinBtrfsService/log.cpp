@@ -29,7 +29,7 @@ namespace WinBtrfsService
 		time_t now = time(NULL);
 		tm *now_tm = localtime(&now);
 		
-		logFile = fopen("WinBtrfsService.log", "a+");
+		logFile = fopen("WinBtrfsService.log", "a");
 		fprintf(logFile, "WinBtrfsService PID: %u\nStarted on %s\n",
 			GetCurrentProcessId(), asctime(now_tm));
 		
