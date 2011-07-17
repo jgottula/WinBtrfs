@@ -32,14 +32,15 @@ namespace WinBtrfsService
 		size_t dataLen;
 		char data[0];
 	};
-
+	
 	struct MountData
 	{
 		bool noDump, dumpOnly, useSubvolID, useSubvolName;
 		WinBtrfsLib::BtrfsObjID subvolID;
-		char *subvolName;
+		char subvolName[256];
 		wchar_t mountPoint[MAX_PATH];
-		std::vector<const wchar_t *> devicePaths;
+		size_t numDevices;
+		wchar_t devicePaths[0];
 	};
 }
 

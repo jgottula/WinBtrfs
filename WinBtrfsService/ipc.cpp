@@ -121,8 +121,6 @@ namespace WinBtrfsService
 			log("Attempting to read from the pipe returned error %u: %s",
 			error, getErrorMessage(error));
 
-		log("Disconnecting from the named pipe.\n");
-		DisconnectNamedPipe(hPipe);
 		free(buffer);
 		ResetEvent(ipcEvent);
 	}
@@ -146,6 +144,11 @@ namespace WinBtrfsService
 				
 				switch (error)
 				{
+				case ERROR_NO_DATA:
+					/* the client is done with the pipe */
+					log("Disconnecting from the named pipe.\n");
+					DisconnectNamedPipe(hPipe);
+					break;
 				case ERROR_IO_PENDING:
 				case ERROR_PIPE_LISTENING:
 					/* not a problem */
