@@ -16,6 +16,6 @@ namespace WinBtrfsService
 {
 	DWORD setUpIPC();
 	void cleanUpIPC();
-	DWORD WINAPI watchIPC(LPVOID lpParameter);
 	void handleIPC();
+	DWORD WINAPI watchIPC(LPVOID lpParameter);
 }

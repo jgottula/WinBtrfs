@@ -15,7 +15,8 @@
 
 namespace WinBtrfsService
 {
-	HANDLE hPipe = INVALID_HANDLE_VALUE;
+	HANDLE hPipe = INVALID_HANDLE_VALUE, hThread = INVALID_HANDLE_VALUE,
+		threadTermEvent = INVALID_HANDLE_VALUE, threadDoneEvent = INVALID_HANDLE_VALUE;
 	
 	DWORD setUpIPC()
 	{
@@ -30,15 +31,38 @@ namespace WinBtrfsService
 			return error;
 		}
 
-		// create thread for watchIPC
+		if ((hThread = CreateThread(NULL, 0, &watchIPC, NULL, 0, NULL)) == NULL)
+		{
+			DWORD error = GetLastError();
+			
+			log("CreateThread returned error %u: %s", error, getErrorMessage(error));
+			
+			return error;
+		}
+
+		threadTermEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+		threadDoneEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
 
 		return 0;
 	}
 
 	void cleanUpIPC()
 	{
-		// end the thread
+		/* give the thread a full second to finish cleanly; then, mercilessly terminate it */
+		SetEvent(threadTermEvent);
+		if (WaitForSingleObject(threadDoneEvent, 1000) == WAIT_TIMEOUT)
+			TerminateThread(hThread, 1);
+		
 		CloseHandle(hPipe);
+		CloseHandle(threadTermEvent);
+		CloseHandle(threadDoneEvent);
+	}
+
+	void handleIPC()
+	{
+		/* handle incoming IPC events */
+		
+		/* unset the ipcEvent event when all IPC messages have been handled */
 	}
 
 	/* warning: this function runs in a different thread! */
@@ -47,13 +71,9 @@ namespace WinBtrfsService
 		/* watch for connections on the named pipe, and if one comes in,
 			set the ipcEvent event. */
 
-		return 0;
-	}
+		/* immediately terminate if the threadTermEvent event is set. */
+		/* set threadDoneEvent when we're finished here. */
 
-	void handleIPC()
-	{
-		/* handle incoming IPC events */
-		
-		/* unset the ipcEvent event when all IPC messages have been handled */
+		return 0;
 	}
 }
