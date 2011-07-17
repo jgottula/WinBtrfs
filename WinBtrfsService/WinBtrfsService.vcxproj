@@ -44,6 +44,8 @@
     <LinkIncremental>false</LinkIncremental>
     <IncludePath>$(IncludePath)</IncludePath>
     <LibraryPath>..\Debug;$(LibraryPath)</LibraryPath>
+    <CustomBuildAfterTargets>
+    </CustomBuildAfterTargets>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -76,6 +78,19 @@
       <Profile>true</Profile>
       <OptimizeReferences>false</OptimizeReferences>
     </Link>
+    <CustomBuildStep>
+      <Command>
+      </Command>
+    </CustomBuildStep>
+    <PostBuildEvent>
+      <Command>sc \\localhost stop WinBtrfsService
+rmdir /s /q C:\WinBtrfsService
+mkdir C:\WinBtrfsService
+copy J:\Programming\WinBtrfs\WinBtrfs\Debug\* C:\WinBtrfsService\*</Command>
+    </PostBuildEvent>
+    <PostBuildEvent>
+      <Message>Copying to C:\WinBtrfsService</Message>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -102,6 +117,13 @@
       <AdditionalDependencies>WinBtrfsLib.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
     </Link>
+    <PostBuildEvent>
+      <Command>sc \\localhost stop WinBtrfsService
+rmdir /s /q C:\WinBtrfsService
+mkdir C:\WinBtrfsService
+copy J:\Programming\WinBtrfs\WinBtrfs\Debug\* C:\WinBtrfsService\*</Command>
+      <Message>Copying to C:\WinBtrfsService</Message>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
