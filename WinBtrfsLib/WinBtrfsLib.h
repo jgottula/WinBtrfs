@@ -10,6 +10,9 @@
  * any later version.
  */
 
+#ifndef WINBTRFSLIB_WINBTRFSLIB_H
+#define WINBTRFSLIB_WINBTRFSLIB_H
+
 #ifdef WINBTRFSLIB_EXPORTS
 	#define WINBTRFSLIB_API __declspec(dllexport)
 #else
@@ -34,3 +37,5 @@ namespace WinBtrfsLib
 	void WINBTRFSLIB_API start(VolumeInfo v);
 	void WINBTRFSLIB_API terminate();
 }
+
+#endif
