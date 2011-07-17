@@ -24,12 +24,18 @@
     <ClCompile Include="log.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ipc.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="volume_mgr.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="log.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ipc.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

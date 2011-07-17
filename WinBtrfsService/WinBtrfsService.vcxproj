@@ -11,11 +11,13 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="ipc.cpp" />
     <ClCompile Include="log.cpp" />
     <ClCompile Include="service.cpp" />
     <ClCompile Include="volume_mgr.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="ipc.h" />
     <ClInclude Include="log.h" />
     <ClInclude Include="volume_mgr.h" />
   </ItemGroup>
