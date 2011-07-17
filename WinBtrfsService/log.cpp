@@ -32,6 +32,7 @@ namespace WinBtrfsService
 		FILE *logFile = fopen("WinBtrfsService_log.txt", "r+");
 		if (logFile != NULL)
 		{
+			fseek(logFile, 0, SEEK_END);
 			fputs("\n\n", logFile);
 			fclose(logFile);
 		}
@@ -65,11 +66,15 @@ namespace WinBtrfsService
 		vprintf(format, args);
 		va_end(args);
 
+		fflush(stdout);
+
 		ReleaseMutex(hMutex);
 	}
 	
 	void logClose()
 	{
+		fflush(stdout);
+		fflush(stderr);
 		CloseHandle(hMutex);
 	}
 
