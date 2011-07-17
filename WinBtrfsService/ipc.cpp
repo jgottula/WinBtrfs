@@ -64,13 +64,22 @@ namespace WinBtrfsService
 	void handleIPC()
 	{
 		char *buffer = (char *)malloc(10240);
-		DWORD error, bytesRead = 0;
+		DWORD error, bytesRead = 0, bytesWritten = 0;
 		
 		if ((error = ReadFile(hPipe, buffer, 10240, &bytesRead, NULL)) != 0)
+		{
 			log("Received %u bytes: %s\n", bytesRead, buffer);
-		else
-			log("Attempting ReadFile on the pipe returned error %u: %s", error, getErrorMessage(error));
 
+			log("Sending a response.\n");
+			if ((error = WriteFile(hPipe, "Hello from WinBtrfsService!", 28, &bytesWritten, NULL)) == 0)
+				log("Attempting to write to the pipe returned error %u: %s",
+				error, getErrorMessage(error));
+		}
+		else
+			log("Attempting to read from the pipe returned error %u: %s",
+			error, getErrorMessage(error));
+
+		log("Disconnecting from the named pipe.\n");
 		DisconnectNamedPipe(hPipe);
 		free(buffer);
 		ResetEvent(ipcEvent);
