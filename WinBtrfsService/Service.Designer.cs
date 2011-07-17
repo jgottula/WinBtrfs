@@ -1,6 +1,6 @@
 ﻿namespace WinBtrfsService
 {
-    partial class Service1
+    partial class Service
     {
         /// <summary> 
         /// Required designer variable.
@@ -28,8 +28,11 @@
         /// </summary>
         private void InitializeComponent()
         {
-            components = new System.ComponentModel.Container();
-            this.ServiceName = "Service1";
+            // 
+            // Service
+            // 
+            this.ServiceName = "WinBtrfsService";
+
         }
 
         #endregion
