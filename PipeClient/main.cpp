@@ -12,10 +12,11 @@
 
 #include <cstdio>
 #include <Windows.h>
+#include "../WinBtrfsService/WinBtrfsService.h"
 
 /* based on http://ist.marshall.edu/ist480acp/code/pipec.cpp */
 
-const char msg[] = "Hello from PipeClient!";
+using namespace WinBtrfsService;
 
 int main(int argc, char **argv)
 {
@@ -38,28 +39,52 @@ int main(int argc, char **argv)
 
 	printf("Opened the pipe successfully.\n");
 
+	ServiceMsg *msg = (ServiceMsg *)malloc(sizeof(ServiceMsg) + sizeof(MountData) + (2 * MAX_PATH * sizeof(wchar_t)));
+	MountData *mountData = (MountData *)msg->data;
 	DWORD bytesWritten = 0;
 
-	if (WriteFile(hPipe, msg, strlen(msg) + 1, &bytesWritten, NULL) == 0)
+	mountData->dumpOnly = false;
+	mountData->noDump = false;
+	mountData->useSubvolID = true;
+	mountData->useSubvolName = false;
+	mountData->subvolID = (WinBtrfsLib::BtrfsObjID)256;
+	mountData->subvolName[0] = 0;
+	wcscpy(mountData->mountPoint, L"X:");
+	mountData->numDevices = 2;
+	wcscpy(mountData->devicePaths, L"..\\..\\test_images\\btrfs_multiA.img");
+	wcscpy(mountData->devicePaths + MAX_PATH, L"..\\..\\test_images\\btrfs_multiB.img");
+
+	msg->type = MSG_REQ_MOUNT;
+	msg->dataLen = sizeof(MountData);
+
+	if (WriteFile(hPipe, msg, sizeof(ServiceMsg) + sizeof(MountData) + (2 * MAX_PATH * sizeof(wchar_t)),
+		&bytesWritten, NULL) == 0)
 	{
 		fprintf(stderr, "WriteFile failed: %u\n", GetLastError());
 		CloseHandle(hPipe);
 		return 3;
 	}
 
-	printf("Sent message: '%s'.\n", msg);
+	free(msg);
 
-	char buffer[1024];
+	printf("Sent REQ_MOUNT.\n", msg);
+
+	msg = (ServiceMsg *)malloc(sizeof(ServiceMsg) + sizeof(int));
 	DWORD bytesRead = 0;
 
-	if (ReadFile(hPipe, buffer, 1024, &bytesRead, NULL) == 0)
+	if (ReadFile(hPipe, msg, sizeof(ServiceMsg) + sizeof(int), &bytesRead, NULL) == 0)
 	{
 		fprintf(stderr, "ReadFile failed: %u\n", GetLastError());
 		CloseHandle(hPipe);
 		return 4;
 	}
 
-	printf("Received message: '%s'.\n", buffer);
+	if (msg->type == MSG_RESP_OK)
+		printf("Received MSG_RESP_OK.\n");
+	else if (msg->type == MSG_RESP_ERROR)
+		printf("Received MSG_RESP_ERROR (%d).\n", *((int *)msg->data));
+
+	free(msg);
 
 	CloseHandle(hPipe);
 
