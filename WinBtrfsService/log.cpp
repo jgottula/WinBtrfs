@@ -46,6 +46,8 @@ namespace WinBtrfsService
 		va_start(args, format);
 		vfprintf(logFile, format, args);
 		va_end(args);
+
+		fflush(logFile);
 	}
 
 	void logClose()
