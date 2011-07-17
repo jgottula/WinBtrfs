@@ -16,7 +16,7 @@
 
 namespace WinBtrfsLib
 {
-	DWORD init();
+	void allocateBlockReaders();
 	void cleanUp();
 	PhysAddr *logiToPhys(LogiAddr logiAddr, unsigned __int64 len);
 	int loadSBs(bool dump);

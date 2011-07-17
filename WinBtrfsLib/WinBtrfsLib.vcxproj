@@ -32,6 +32,7 @@
     <ClCompile Include="btrfs_system.cpp" />
     <ClCompile Include="chunktree_parser.cpp" />
     <ClCompile Include="compression.cpp" />
+    <ClCompile Include="init.cpp" />
     <ClCompile Include="crc32c.cpp" />
     <ClCompile Include="dokan_callbacks.cpp" />
     <ClCompile Include="fstree_parser.cpp" />
@@ -64,6 +65,7 @@
     <ClInclude Include="dokan_callbacks.h" />
     <ClInclude Include="endian.h" />
     <ClInclude Include="fstree_parser.h" />
+    <ClInclude Include="init.h" />
     <ClInclude Include="roottree_parser.h" />
     <ClInclude Include="types.h" />
     <ClInclude Include="util.h" />

@@ -29,7 +29,7 @@ namespace WinBtrfsLib
 	std::vector<BtrfsSBChunk *> sbChunks; // using an array of ptrs because BtrfsSBChunk is variably sized
 	BtrfsObjID mountedSubvol = (BtrfsObjID)0;
 
-	DWORD init()
+	void allocateBlockReaders()
 	{
 		/* allocate a block reader for each device */
 		std::vector<const wchar_t *>::iterator it = devicePaths->begin(), end = devicePaths->end();
@@ -39,8 +39,6 @@ namespace WinBtrfsLib
 
 			blockReaders.push_back(blockReader);
 		}
-	
-		return 0;
 	}
 
 	void cleanUp()

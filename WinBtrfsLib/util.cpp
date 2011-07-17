@@ -14,6 +14,7 @@
 #include <cassert>
 #include <cstdio>
 #include <vector>
+#include <dokan.h>
 #include "constants.h"
 #include "endian.h"
 
@@ -216,5 +217,37 @@ namespace WinBtrfsLib
 			strcat(dest, "RAID10");
 		else
 			strcat(dest, "single");
+	}
+
+	void dokanError(int dokanResult)
+	{
+		switch (dokanResult)
+		{
+		case DOKAN_SUCCESS:
+			printf("Dokan terminated successfully.\n");
+			break;
+		case DOKAN_ERROR:
+			printf("Dokan reported a general error!\n");
+			break;
+		case DOKAN_DRIVE_LETTER_ERROR:
+			printf("Dokan reported a bad drive letter!\n");
+			break;
+		case DOKAN_DRIVER_INSTALL_ERROR:
+			printf("Dokan reported it couldn't install the driver!\n");
+			break;
+		case DOKAN_START_ERROR:
+			printf("Dokan reported something is wrong with the driver!\n");
+			break;
+		case DOKAN_MOUNT_ERROR:
+			printf("Dokan reported it couldn't assign a drive letter or mount point!\n"
+				"Sometimes this problem is resolved by running WinBtrfsCLI again.\n");
+			break;
+		case DOKAN_MOUNT_POINT_ERROR:
+			printf("Dokan reported the mount point is invalid!\n");
+			break;
+		default:
+			printf("Dokan returned an unknown error!\n");
+			break;
+		}
 	}
 }

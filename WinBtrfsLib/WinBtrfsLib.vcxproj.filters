@@ -108,6 +108,9 @@
     <ClCompile Include="WinBtrfsLib.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="init.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="block_reader.h">
@@ -192,6 +195,9 @@
       <Filter>Header Files\zlib</Filter>
     </ClInclude>
     <ClInclude Include="WinBtrfsLib.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="init.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

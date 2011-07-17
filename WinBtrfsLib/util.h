@@ -21,4 +21,5 @@ namespace WinBtrfsLib
 	void uuidToStr(const unsigned char *uuid, char *dest);
 	void stModeToStr(unsigned int mode, char *dest);
 	void bgFlagsToStr(BlockGroupFlags flags, char *dest);
+	void dokanError(int dokanResult);
 }
