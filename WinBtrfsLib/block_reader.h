@@ -13,19 +13,22 @@
 #include <Windows.h>
 #include "types.h"
 
-#ifndef WINBTRFS_BLOCK_READER_H
-#define WINBTRFS_BLOCK_READER_H
+#ifndef WINBTRFSLIB_BLOCK_READER_H
+#define WINBTRFSLIB_BLOCK_READER_H
 
-class BlockReader
+namespace WinBtrfsLib
 {
-public:
-	BlockReader(const wchar_t *devicePath);
-	~BlockReader();
-	
-	DWORD directRead(unsigned __int64 addr, unsigned __int64 len, unsigned char *dest);
+	class BlockReader
+	{
+	public:
+		BlockReader(const wchar_t *devicePath);
+		~BlockReader();
+		
+		DWORD directRead(unsigned __int64 addr, unsigned __int64 len, unsigned char *dest);
 
-private:
-	HANDLE hPhysical, hReadMutex;
-};
+	private:
+		HANDLE hPhysical, hReadMutex;
+	};
+}
 
 #endif

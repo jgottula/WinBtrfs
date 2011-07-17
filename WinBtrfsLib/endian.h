@@ -12,35 +12,43 @@
 
 #include <boost/detail/endian.hpp>
 
+#ifndef WINBTRFSLIB_ENDIAN_H
+#define WINBTRFSLIB_ENDIAN_H
+
 #ifndef BOOST_LITTLE_ENDIAN
 #ifndef BOOST_BIG_ENDIAN
 #error Architecture appears to be neither little- nor big-endian! Check endian.h!
 #endif
 #endif
 
-inline unsigned short endian16(unsigned short _leFromDisk)
+namespace WinBtrfsLib
 {
-#ifdef BOOST_LITTLE_ENDIAN
-	return _leFromDisk;
-#elif BOOST_BIG_ENDIAN
-	return _byteswap_ushort(_leFromDisk);
-#endif
+	inline unsigned short endian16(unsigned short _leFromDisk)
+	{
+	#ifdef BOOST_LITTLE_ENDIAN
+		return _leFromDisk;
+	#elif BOOST_BIG_ENDIAN
+		return _byteswap_ushort(_leFromDisk);
+	#endif
+	}
+
+	inline unsigned int endian32(unsigned int _leFromDisk)
+	{
+	#ifdef BOOST_LITTLE_ENDIAN
+		return _leFromDisk;
+	#elif BOOST_BIG_ENDIAN
+		return _byteswap_ulong(_leFromDisk);
+	#endif
+	}
+
+	inline unsigned __int64 endian64(unsigned __int64 _leFromDisk)
+	{
+	#ifdef BOOST_LITTLE_ENDIAN
+		return _leFromDisk;
+	#elif BOOST_BIG_ENDIAN
+		return _byteswap_uint64(_leFromDisk);
+	#endif
+	}
 }
 
-inline unsigned int endian32(unsigned int _leFromDisk)
-{
-#ifdef BOOST_LITTLE_ENDIAN
-	return _leFromDisk;
-#elif BOOST_BIG_ENDIAN
-	return _byteswap_ulong(_leFromDisk);
 #endif
-}
-
-inline unsigned __int64 endian64(unsigned __int64 _leFromDisk)
-{
-#ifdef BOOST_LITTLE_ENDIAN
-	return _leFromDisk;
-#elif BOOST_BIG_ENDIAN
-	return _byteswap_uint64(_leFromDisk);
-#endif
-}

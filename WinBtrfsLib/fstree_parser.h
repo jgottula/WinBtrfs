@@ -12,5 +12,8 @@
 
 #include "types.h"
 
-int parseFSTree(BtrfsObjID tree, FSOperation operation, void *input0, void *input1, void *input2,
-	void *output0, void *output1);
+namespace WinBtrfsLib
+{
+	int parseFSTree(BtrfsObjID tree, FSOperation operation, void *input0, void *input1, void *input2,
+		void *output0, void *output1);
+}

@@ -13,9 +13,12 @@
 #include <Windows.h>
 #include "types.h"
 
-void convertTime(const BtrfsTime *bTime, PFILETIME wTime);
-void convertMetadata(const FilePkg *input, void *output, bool dirList);
-void hexToChar(unsigned char hex, char *chr);
-void uuidToStr(const unsigned char *uuid, char *dest);
-void stModeToStr(unsigned int mode, char *dest);
-void bgFlagsToStr(BlockGroupFlags flags, char *dest);
+namespace WinBtrfsLib
+{
+	void convertTime(const BtrfsTime *bTime, PFILETIME wTime);
+	void convertMetadata(const FilePkg *input, void *output, bool dirList);
+	void hexToChar(unsigned char hex, char *chr);
+	void uuidToStr(const unsigned char *uuid, char *dest);
+	void stModeToStr(unsigned int mode, char *dest);
+	void bgFlagsToStr(BlockGroupFlags flags, char *dest);
+}

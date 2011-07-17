@@ -14,14 +14,17 @@
 #include "block_reader.h"
 #include "types.h"
 
-DWORD init();
-void cleanUp();
-PhysAddr *logiToPhys(LogiAddr logiAddr, unsigned __int64 len);
-int loadSBs(bool dump);
-int validateSB(BtrfsSuperblock *s);
-void loadSBChunks(bool dump);
-unsigned char *loadNode(LogiAddr addr, BtrfsHeader **header);
-LogiAddr getTreeRootAddr(BtrfsObjID tree);
-int verifyDevices();
-BlockReader *getBlockReader(unsigned __int64 devID);
-DWORD readLogical(LogiAddr addr, unsigned __int64 len, unsigned char *dest);
+namespace WinBtrfsLib
+{
+	DWORD init();
+	void cleanUp();
+	PhysAddr *logiToPhys(LogiAddr logiAddr, unsigned __int64 len);
+	int loadSBs(bool dump);
+	int validateSB(BtrfsSuperblock *s);
+	void loadSBChunks(bool dump);
+	unsigned char *loadNode(LogiAddr addr, BtrfsHeader **header);
+	LogiAddr getTreeRootAddr(BtrfsObjID tree);
+	int verifyDevices();
+	BlockReader *getBlockReader(unsigned __int64 devID);
+	DWORD readLogical(LogiAddr addr, unsigned __int64 len, unsigned char *dest);
+}

@@ -10,7 +10,11 @@
  * any later version.
  */
 
-int lzoDecompress(const unsigned char *compressed, unsigned char *decompressed,
-	unsigned __int64 cSize, unsigned __int64 dSize);
-int zlibDecompress(const unsigned char *compressed, unsigned char *decompressed,
-	unsigned __int64 cSize, unsigned __int64 dSize);
+
+namespace WinBtrfsLib
+{
+	int lzoDecompress(const unsigned char *compressed, unsigned char *decompressed,
+		unsigned __int64 cSize, unsigned __int64 dSize);
+	int zlibDecompress(const unsigned char *compressed, unsigned char *decompressed,
+		unsigned __int64 cSize, unsigned __int64 dSize);
+}

@@ -12,4 +12,7 @@
 
 #include "types.h"
 
-int parseRootTree(RTOperation operation, void *input0, void *output0);
+namespace WinBtrfsLib
+{
+	int parseRootTree(RTOperation operation, void *input0, void *output0);
+}

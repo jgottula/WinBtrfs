@@ -12,4 +12,7 @@
 
 #include "types.h"
 
-void parseChunkTree(CTOperation operation);
+namespace WinBtrfsLib
+{
+	void parseChunkTree(CTOperation operation);
+}

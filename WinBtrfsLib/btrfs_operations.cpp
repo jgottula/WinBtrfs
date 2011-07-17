@@ -15,130 +15,133 @@
 #include "crc32c.h"
 #include "fstree_parser.h"
 
-extern BtrfsObjID mountedSubvol;
-
-void validatePath(const char *input, char *output)
+namespace WinBtrfsLib
 {
-	size_t c = 0, len = strlen(input);
+	extern BtrfsObjID mountedSubvol;
 
-	/* convert "" into "\\" */
-	if (len == 0)
+	void validatePath(const char *input, char *output)
 	{
-		output[0] = '\\';
-		output[1] = 0;
-		return;
-	}
+		size_t c = 0, len = strlen(input);
 
-	/* ensure that it begins with a backslash */
-	if (input[0] != '\\')
-		output[c++] = '\\';
-
-	for (size_t i = 0; i < len; i++)
-	{
-		/* don't copy over double/triple/n-tuple backslashes */
-		if (i == 0 || input[i] != '\\' || input[i - 1] != '\\')
-			output[c++] = input[i];
-	}
-
-	/* ensure that it does NOT end with a backslash */
-	if (output[c - 1] == '\\')
-		c--;
-
-	output[c] = 0;
-}
-
-/* path MUST be validated for this to work properly */
-unsigned int componentizePath(const char *path, char ***output)
-{
-	size_t len = strlen(path), compLen = 0;
-	int numComponents = 0, compIdx = 0, compC = 0;
-
-	if (len == 1 && path[0] == '\\')
-		return 0;
-
-	for (size_t i = 0; i < len; i++)
-	{
-		if (path[i] == '\\')
-			numComponents++;
-	}
-
-	/* allocate the array of pointers */
-	*output = (char **)malloc(sizeof(char *) * numComponents);
-
-	for (size_t i = 1; i < len; i++) // skip the first backslash
-	{
-		if (path[i] != '\\')
-			compLen++;
-		else
+		/* convert "" into "\\" */
+		if (len == 0)
 		{
-			/* allocate this individual pointer in the array */
-			(*output)[compIdx++] = (char *)malloc(compLen + 1);
-			compLen = 0;
+			output[0] = '\\';
+			output[1] = 0;
+			return;
 		}
+
+		/* ensure that it begins with a backslash */
+		if (input[0] != '\\')
+			output[c++] = '\\';
+
+		for (size_t i = 0; i < len; i++)
+		{
+			/* don't copy over double/triple/n-tuple backslashes */
+			if (i == 0 || input[i] != '\\' || input[i - 1] != '\\')
+				output[c++] = input[i];
+		}
+
+		/* ensure that it does NOT end with a backslash */
+		if (output[c - 1] == '\\')
+			c--;
+
+		output[c] = 0;
 	}
 
-	/* get the last one */
-	(*output)[numComponents - 1] = (char *)malloc(compLen + 1);
-
-	compIdx = 0;
-
-	for (size_t i = 1; i < len; i++) // again, skip the first backslash
+	/* path MUST be validated for this to work properly */
+	unsigned int componentizePath(const char *path, char ***output)
 	{
-		if (path[i] != '\\')
+		size_t len = strlen(path), compLen = 0;
+		int numComponents = 0, compIdx = 0, compC = 0;
+
+		if (len == 1 && path[0] == '\\')
+			return 0;
+
+		for (size_t i = 0; i < len; i++)
 		{
-			/* fill in the component name, char by char */
-			(*output)[compIdx][compC++] = path[i];
+			if (path[i] == '\\')
+				numComponents++;
 		}
-		else
+
+		/* allocate the array of pointers */
+		*output = (char **)malloc(sizeof(char *) * numComponents);
+
+		for (size_t i = 1; i < len; i++) // skip the first backslash
 		{
-			/* null terminate */
-			(*output)[compIdx++][compC] = 0;
-			compC = 0;
+			if (path[i] != '\\')
+				compLen++;
+			else
+			{
+				/* allocate this individual pointer in the array */
+				(*output)[compIdx++] = (char *)malloc(compLen + 1);
+				compLen = 0;
+			}
 		}
+
+		/* get the last one */
+		(*output)[numComponents - 1] = (char *)malloc(compLen + 1);
+
+		compIdx = 0;
+
+		for (size_t i = 1; i < len; i++) // again, skip the first backslash
+		{
+			if (path[i] != '\\')
+			{
+				/* fill in the component name, char by char */
+				(*output)[compIdx][compC++] = path[i];
+			}
+			else
+			{
+				/* null terminate */
+				(*output)[compIdx++][compC] = 0;
+				compC = 0;
+			}
+		}
+
+		/* get the last one */
+		(*output)[numComponents - 1][compC] = 0;
+
+		return numComponents;
 	}
 
-	/* get the last one */
-	(*output)[numComponents - 1][compC] = 0;
-
-	return numComponents;
-}
-
-int getPathID(const char *path, FileID *output, FileID *parent)
-{
-	char vPath[MAX_PATH], **components;
-	FileID fileID, childID;
-	unsigned int numComponents;
-	unsigned int hash;
-	bool isSubvolume;
-
-	validatePath(path, vPath);
-	numComponents = componentizePath(path, &components);
-
-	/* start at the root directory of the currently mounted subvolume */
-	fileID.treeID = childID.treeID = mountedSubvol;
-	fileID.objectID = childID.objectID = OBJID_ROOT_DIR;
-
-	for (int i = 0; i < numComponents; i++)
+	int getPathID(const char *path, FileID *output, FileID *parent)
 	{
-		/* ratchet up */
-		memcpy(&fileID, &childID, sizeof(FileID));
+		char vPath[MAX_PATH], **components;
+		FileID fileID, childID;
+		unsigned int numComponents;
+		unsigned int hash;
+		bool isSubvolume;
 
-		hash = crc32c((unsigned int)~1, (const unsigned char *)(components[i]), strlen(components[i]));
+		validatePath(path, vPath);
+		numComponents = componentizePath(path, &components);
+
+		/* start at the root directory of the currently mounted subvolume */
+		fileID.treeID = childID.treeID = mountedSubvol;
+		fileID.objectID = childID.objectID = OBJID_ROOT_DIR;
+
+		for (int i = 0; i < numComponents; i++)
+		{
+			/* ratchet up */
+			memcpy(&fileID, &childID, sizeof(FileID));
+
+			hash = crc32c((unsigned int)~1, (const unsigned char *)(components[i]), strlen(components[i]));
 		
-		if (parseFSTree(fileID.treeID, FSOP_NAME_TO_ID, &fileID.objectID, &hash, components[i],
-			&childID.objectID, &isSubvolume) != 0)
-			return 1;
+			if (parseFSTree(fileID.treeID, FSOP_NAME_TO_ID, &fileID.objectID, &hash, components[i],
+				&childID.objectID, &isSubvolume) != 0)
+				return 1;
 
-		if (isSubvolume)
-		{
-			/* reset to the root of this subvolume's tree */
-			childID.treeID = childID.objectID;
-			childID.objectID = OBJID_ROOT_DIR;
+			if (isSubvolume)
+			{
+				/* reset to the root of this subvolume's tree */
+				childID.treeID = childID.objectID;
+				childID.objectID = OBJID_ROOT_DIR;
+			}
 		}
+
+		memcpy(output, &childID, sizeof(FileID));
+		memcpy(parent, &fileID, sizeof(FileID));
+
+		return 0;
 	}
-
-	memcpy(output, &childID, sizeof(FileID));
-	memcpy(parent, &fileID, sizeof(FileID));
-
-	return 0;
 }

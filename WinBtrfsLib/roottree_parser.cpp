@@ -18,278 +18,281 @@
 #include "fstree_parser.h"
 #include "util.h"
 
-extern std::vector<BtrfsSuperblock> supers;
-extern BtrfsObjID mountedSubvol;
-
-void parseRootTreeRec(LogiAddr addr, RTOperation operation, void *input0, void *output0,
-	int *returnCode, bool *shortCircuit)
+namespace WinBtrfsLib
 {
-	unsigned char *nodeBlock, *nodePtr;
-	BtrfsHeader *header;
-	BtrfsItem *item;
-	KeyedItem kItem;
+	extern std::vector<BtrfsSuperblock> supers;
+	extern BtrfsObjID mountedSubvol;
 
-	nodeBlock = loadNode(addr, &header);
-
-	assert(header->tree == OBJID_ROOT_TREE);
-	
-	nodePtr = nodeBlock + sizeof(BtrfsHeader);
-
-	if (operation == RTOP_DUMP_TREE)
-		printf("\n[Node] tree = 0x%I64x addr = 0x%I64x level = 0x%02x nrItems = 0x%08x\n", endian64(header->tree),
-			addr, header->level, header->nrItems);
-
-	if (header->level == 0) // leaf node
+	void parseRootTreeRec(LogiAddr addr, RTOperation operation, void *input0, void *output0,
+		int *returnCode, bool *shortCircuit)
 	{
-		for (unsigned int i = 0; i < endian32(header->nrItems); i++)
+		unsigned char *nodeBlock, *nodePtr;
+		BtrfsHeader *header;
+		BtrfsItem *item;
+		KeyedItem kItem;
+
+		nodeBlock = loadNode(addr, &header);
+
+		assert(header->tree == OBJID_ROOT_TREE);
+	
+		nodePtr = nodeBlock + sizeof(BtrfsHeader);
+
+		if (operation == RTOP_DUMP_TREE)
+			printf("\n[Node] tree = 0x%I64x addr = 0x%I64x level = 0x%02x nrItems = 0x%08x\n", endian64(header->tree),
+				addr, header->level, header->nrItems);
+
+		if (header->level == 0) // leaf node
 		{
-			item = (BtrfsItem *)nodePtr;
-			
-			if (operation == RTOP_DUMP_TREE)
+			for (unsigned int i = 0; i < endian32(header->nrItems); i++)
 			{
-				switch (item->key.type)
+				item = (BtrfsItem *)nodePtr;
+			
+				if (operation == RTOP_DUMP_TREE)
 				{
-				case TYPE_INODE_ITEM:
-				{
-					BtrfsInodeItem *inodeItem = (BtrfsInodeItem *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset));
-					char mode[11];
-					
-					stModeToStr(inodeItem->stMode, mode);
-					printf("  [%02x] INODE_ITEM 0x%I64x uid: %d gid: %d mode: %s size: 0x%I64x\n", i,
-						endian64(item->key.objectID), endian32(inodeItem->stUID), endian32(inodeItem->stGID), mode,
-						endian64(inodeItem->stSize));
-					break;
-				}
-				case TYPE_INODE_REF:
-				{
-					BtrfsInodeRef *inodeRef = (BtrfsInodeRef *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset));
-					size_t len = endian16(inodeRef->nameLen);
-					char *name = new char[len + 1];
-
-					memcpy(name, inodeRef->name, len);
-					name[len] = 0;
-
-					printf("  [%02x] INODE_REF 0x%I64x -> '%s' parent: 0x%I64x\n", i, endian64(item->key.objectID), name,
-						endian64(item->key.offset));
-
-					delete[] name;
-					break;
-				}
-				case TYPE_DIR_ITEM:
-				{
-					BtrfsDirItem *dirItem = (BtrfsDirItem *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset)),
-						*firstDirItem = dirItem;
-
-					while (true)
+					switch (item->key.type)
 					{
-						size_t len = endian16(dirItem->n);
+					case TYPE_INODE_ITEM:
+					{
+						BtrfsInodeItem *inodeItem = (BtrfsInodeItem *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset));
+						char mode[11];
+					
+						stModeToStr(inodeItem->stMode, mode);
+						printf("  [%02x] INODE_ITEM 0x%I64x uid: %d gid: %d mode: %s size: 0x%I64x\n", i,
+							endian64(item->key.objectID), endian32(inodeItem->stUID), endian32(inodeItem->stGID), mode,
+							endian64(inodeItem->stSize));
+						break;
+					}
+					case TYPE_INODE_REF:
+					{
+						BtrfsInodeRef *inodeRef = (BtrfsInodeRef *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset));
+						size_t len = endian16(inodeRef->nameLen);
 						char *name = new char[len + 1];
 
-						memcpy(name, dirItem->namePlusData, len);
+						memcpy(name, inodeRef->name, len);
 						name[len] = 0;
 
-						if (dirItem == firstDirItem)
-							printf("  [%02x] ", i);
-						else
-							printf("       ");
-						printf("DIR_ITEM parent: 0x%I64x hash: 0x%08I64x child: 0x%I64x -> '%s'\n",
-							endian64(item->key.objectID), endian64(item->key.offset), endian64(dirItem->child.objectID), name);
-						
+						printf("  [%02x] INODE_REF 0x%I64x -> '%s' parent: 0x%I64x\n", i, endian64(item->key.objectID), name,
+							endian64(item->key.offset));
+
 						delete[] name;
-						
-						/* advance to the next DIR_ITEM if there are more */
-						if (endian32(item->size) > ((char *)dirItem - (char *)firstDirItem) + sizeof(BtrfsDirItem) +
-							endian16(dirItem->m) + endian16(dirItem->n))
-							dirItem = (BtrfsDirItem *)((unsigned char *)dirItem + sizeof(BtrfsDirItem) +
-								endian16(dirItem->m) + endian16(dirItem->n));
-						else
-							break;
+						break;
 					}
-
-					break;
-				}
-				case TYPE_ROOT_ITEM:
-				{
-					BtrfsRootItem *rootItem = (BtrfsRootItem *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset));
-
-					printf("  [%02x] ROOT_ITEM 0x%I64x -> 0x%I64x\n", i, endian64(item->key.objectID),
-						endian64(rootItem->rootNodeBlockNum));
-					break;
-				}
-				case TYPE_ROOT_BACKREF:
-				{
-					BtrfsRootBackref *rootBackref = (BtrfsRootBackref *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset));
-					size_t len = endian16(rootBackref->n);
-					char *name = new char[len + 1];
-
-					memcpy(name, rootBackref->name, len);
-					name[len] = 0;
-					
-					printf("  [%02x] ROOT_BACKREF subtree: 0x%I64x -> '%s' tree: 0x%I64x\n", i,
-						endian64(item->key.objectID), name, endian64(item->key.offset));
-
-					delete[] name;
-					break;
-				}
-				case TYPE_ROOT_REF:
-				{
-					BtrfsRootRef *rootRef = (BtrfsRootRef *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset));
-					size_t len = endian16(rootRef->n);
-					char *name = new char[len + 1];
-
-					memcpy(name, rootRef->name, len);
-					name[len] = 0;
-					
-					printf("  [%02x] ROOT_REF tree: 0x%I64x subtree: 0x%I64x -> '%s'\n", i,
-						endian64(item->key.objectID), endian64(item->key.offset), name);
-
-					delete[] name;
-					break;
-				}
-				default:
-					printf("  [%02x] unknown {0x%I64x|0x%02x|0x%I64x}\n", i, endian64(item->key.objectID),
-						item->key.type, endian64(item->key.offset));
-					break;
-				}
-			}
-			else if (operation == RTOP_DEFAULT_SUBVOL)
-			{
-				if (item->key.type == TYPE_DIR_ITEM && endian64(item->key.objectID) == supers[0].rootDirObjectID)
-				{
-					BtrfsDirItem *dirItem = (BtrfsDirItem *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset));
-					
-					mountedSubvol = (BtrfsObjID)endian64(dirItem->child.objectID);
-
-					*returnCode = 0;
-					*shortCircuit = true;
-				}
-			}
-			else if (operation == RTOP_GET_SUBVOL_ID)
-			{
-				const char *name = (const char *)input0;
-				BtrfsObjID *subvolID = (BtrfsObjID *)output0;
-
-				if (item->key.type == TYPE_ROOT_BACKREF)
-				{
-					BtrfsRootBackref *rootBackref = (BtrfsRootBackref *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset));
-					
-					/* ideally, we would go back up the tree at this point and see if the chain of ROOT_REFs/ROOT_BACKREFs
-						leads back to the FS tree; however, this is awkward, and currently, subtrees appear to only occur
-						in the case of subvolumes, so it currently seems safe to assume that ANY subtree will be a valid subvolume.
-						it's conceivable that in the future, other ROOT_REF'd subtrees might exist for other things,
-						but for now, this solution seems fine */
-					
-					if (strlen(name) == endian16(rootBackref->n) && strncmp(name, rootBackref->name, endian16(rootBackref->n)) == 0)
+					case TYPE_DIR_ITEM:
 					{
-						*subvolID = (BtrfsObjID)endian64(item->key.objectID);
+						BtrfsDirItem *dirItem = (BtrfsDirItem *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset)),
+							*firstDirItem = dirItem;
+
+						while (true)
+						{
+							size_t len = endian16(dirItem->n);
+							char *name = new char[len + 1];
+
+							memcpy(name, dirItem->namePlusData, len);
+							name[len] = 0;
+
+							if (dirItem == firstDirItem)
+								printf("  [%02x] ", i);
+							else
+								printf("       ");
+							printf("DIR_ITEM parent: 0x%I64x hash: 0x%08I64x child: 0x%I64x -> '%s'\n",
+								endian64(item->key.objectID), endian64(item->key.offset), endian64(dirItem->child.objectID), name);
+						
+							delete[] name;
+						
+							/* advance to the next DIR_ITEM if there are more */
+							if (endian32(item->size) > ((char *)dirItem - (char *)firstDirItem) + sizeof(BtrfsDirItem) +
+								endian16(dirItem->m) + endian16(dirItem->n))
+								dirItem = (BtrfsDirItem *)((unsigned char *)dirItem + sizeof(BtrfsDirItem) +
+									endian16(dirItem->m) + endian16(dirItem->n));
+							else
+								break;
+						}
+
+						break;
+					}
+					case TYPE_ROOT_ITEM:
+					{
+						BtrfsRootItem *rootItem = (BtrfsRootItem *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset));
+
+						printf("  [%02x] ROOT_ITEM 0x%I64x -> 0x%I64x\n", i, endian64(item->key.objectID),
+							endian64(rootItem->rootNodeBlockNum));
+						break;
+					}
+					case TYPE_ROOT_BACKREF:
+					{
+						BtrfsRootBackref *rootBackref = (BtrfsRootBackref *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset));
+						size_t len = endian16(rootBackref->n);
+						char *name = new char[len + 1];
+
+						memcpy(name, rootBackref->name, len);
+						name[len] = 0;
+					
+						printf("  [%02x] ROOT_BACKREF subtree: 0x%I64x -> '%s' tree: 0x%I64x\n", i,
+							endian64(item->key.objectID), name, endian64(item->key.offset));
+
+						delete[] name;
+						break;
+					}
+					case TYPE_ROOT_REF:
+					{
+						BtrfsRootRef *rootRef = (BtrfsRootRef *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset));
+						size_t len = endian16(rootRef->n);
+						char *name = new char[len + 1];
+
+						memcpy(name, rootRef->name, len);
+						name[len] = 0;
+					
+						printf("  [%02x] ROOT_REF tree: 0x%I64x subtree: 0x%I64x -> '%s'\n", i,
+							endian64(item->key.objectID), endian64(item->key.offset), name);
+
+						delete[] name;
+						break;
+					}
+					default:
+						printf("  [%02x] unknown {0x%I64x|0x%02x|0x%I64x}\n", i, endian64(item->key.objectID),
+							item->key.type, endian64(item->key.offset));
+						break;
+					}
+				}
+				else if (operation == RTOP_DEFAULT_SUBVOL)
+				{
+					if (item->key.type == TYPE_DIR_ITEM && endian64(item->key.objectID) == supers[0].rootDirObjectID)
+					{
+						BtrfsDirItem *dirItem = (BtrfsDirItem *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset));
+					
+						mountedSubvol = (BtrfsObjID)endian64(dirItem->child.objectID);
 
 						*returnCode = 0;
 						*shortCircuit = true;
 					}
 				}
-			}
-			else if (operation == RTOP_SUBVOL_EXISTS)
-			{
-				const BtrfsObjID *subvolID = (const BtrfsObjID *)input0;
-				bool *exists = (bool *)output0;
-
-				if (item->key.type == TYPE_ROOT_BACKREF && endian64(item->key.offset) == *subvolID)
+				else if (operation == RTOP_GET_SUBVOL_ID)
 				{
-					*exists = true;
+					const char *name = (const char *)input0;
+					BtrfsObjID *subvolID = (BtrfsObjID *)output0;
 
-					*shortCircuit = true;
+					if (item->key.type == TYPE_ROOT_BACKREF)
+					{
+						BtrfsRootBackref *rootBackref = (BtrfsRootBackref *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset));
+					
+						/* ideally, we would go back up the tree at this point and see if the chain of ROOT_REFs/ROOT_BACKREFs
+							leads back to the FS tree; however, this is awkward, and currently, subtrees appear to only occur
+							in the case of subvolumes, so it currently seems safe to assume that ANY subtree will be a valid subvolume.
+							it's conceivable that in the future, other ROOT_REF'd subtrees might exist for other things,
+							but for now, this solution seems fine */
+					
+						if (strlen(name) == endian16(rootBackref->n) && strncmp(name, rootBackref->name, endian16(rootBackref->n)) == 0)
+						{
+							*subvolID = (BtrfsObjID)endian64(item->key.objectID);
+
+							*returnCode = 0;
+							*shortCircuit = true;
+						}
+					}
 				}
-			}
-			else if (operation == RTOP_GET_ADDR)
-			{
-				const BtrfsObjID *treeID = (const BtrfsObjID *)input0;
-				LogiAddr *rootAddr = (unsigned __int64 *)output0;
-
-				if (item->key.type == TYPE_ROOT_ITEM && endian64(item->key.objectID) == *treeID)
+				else if (operation == RTOP_SUBVOL_EXISTS)
 				{
-					BtrfsRootItem *rootItem = (BtrfsRootItem *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset));
+					const BtrfsObjID *subvolID = (const BtrfsObjID *)input0;
+					bool *exists = (bool *)output0;
 
-					*rootAddr = endian64(rootItem->rootNodeBlockNum);
+					if (item->key.type == TYPE_ROOT_BACKREF && endian64(item->key.offset) == *subvolID)
+					{
+						*exists = true;
 
-					*returnCode = 0;
-					*shortCircuit = true;
+						*shortCircuit = true;
+					}
 				}
-			}
-			else if (operation == RTOP_DUMP_SUBVOLS)
-			{
-				/* this code assumes that all trees from 0x100 to -0x100 could only possibly be subvol trees */
-				if (item->key.type == TYPE_ROOT_REF && endian64(item->key.offset) >= 0x100 &&
-					endian64(item->key.offset) < OBJID_MULTIPLE)
-					parseFSTree((BtrfsObjID)endian64(item->key.offset), FSOP_DUMP_TREE,
-						NULL, NULL, NULL, NULL, NULL);
-			}
-			else
-				printf("parseRootTreeRec: unknown operation (0x%02x)!\n", operation);
+				else if (operation == RTOP_GET_ADDR)
+				{
+					const BtrfsObjID *treeID = (const BtrfsObjID *)input0;
+					LogiAddr *rootAddr = (unsigned __int64 *)output0;
 
-			if (*shortCircuit)
-				break;
+					if (item->key.type == TYPE_ROOT_ITEM && endian64(item->key.objectID) == *treeID)
+					{
+						BtrfsRootItem *rootItem = (BtrfsRootItem *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset));
 
-			nodePtr += sizeof(BtrfsItem);
+						*rootAddr = endian64(rootItem->rootNodeBlockNum);
+
+						*returnCode = 0;
+						*shortCircuit = true;
+					}
+				}
+				else if (operation == RTOP_DUMP_SUBVOLS)
+				{
+					/* this code assumes that all trees from 0x100 to -0x100 could only possibly be subvol trees */
+					if (item->key.type == TYPE_ROOT_REF && endian64(item->key.offset) >= 0x100 &&
+						endian64(item->key.offset) < OBJID_MULTIPLE)
+						parseFSTree((BtrfsObjID)endian64(item->key.offset), FSOP_DUMP_TREE,
+							NULL, NULL, NULL, NULL, NULL);
+				}
+				else
+					printf("parseRootTreeRec: unknown operation (0x%02x)!\n", operation);
+
+				if (*shortCircuit)
+					break;
+
+				nodePtr += sizeof(BtrfsItem);
+			}
 		}
-	}
-	else // non-leaf node
-	{
-		if (operation == RTOP_DUMP_TREE)
+		else // non-leaf node
 		{
+			if (operation == RTOP_DUMP_TREE)
+			{
+				for (unsigned int i = 0; i < endian32(header->nrItems); i++)
+				{
+					BtrfsKeyPtr *keyPtr = (BtrfsKeyPtr *)(nodePtr + (sizeof(BtrfsKeyPtr) * i));
+
+					printf("  [%02x] {%I64x|%I64x} KeyPtr: block 0x%016I64x generation 0x%016I64x\n",
+						i, endian64(keyPtr->key.objectID), endian64(keyPtr->key.offset),
+						endian64(keyPtr->blockNum), endian64(keyPtr->generation));
+				}
+			}
+
 			for (unsigned int i = 0; i < endian32(header->nrItems); i++)
 			{
-				BtrfsKeyPtr *keyPtr = (BtrfsKeyPtr *)(nodePtr + (sizeof(BtrfsKeyPtr) * i));
+				BtrfsKeyPtr *keyPtr = (BtrfsKeyPtr *)nodePtr;
 
-				printf("  [%02x] {%I64x|%I64x} KeyPtr: block 0x%016I64x generation 0x%016I64x\n",
-					i, endian64(keyPtr->key.objectID), endian64(keyPtr->key.offset),
-					endian64(keyPtr->blockNum), endian64(keyPtr->generation));
+				/* recurse down one level of the tree */
+				parseRootTreeRec(endian64(keyPtr->blockNum), operation, input0, output0,
+					returnCode, shortCircuit);
+
+				if (*shortCircuit)
+					break;
+
+				nodePtr += sizeof(BtrfsKeyPtr);
 			}
 		}
 
-		for (unsigned int i = 0; i < endian32(header->nrItems); i++)
+		free(nodeBlock);
+	}
+
+	int parseRootTree(RTOperation operation, void *input0, void *output0)
+	{
+		int returnCode;
+		bool shortCircuit = false;
+	
+		switch (operation)
 		{
-			BtrfsKeyPtr *keyPtr = (BtrfsKeyPtr *)nodePtr;
-
-			/* recurse down one level of the tree */
-			parseRootTreeRec(endian64(keyPtr->blockNum), operation, input0, output0,
-				returnCode, shortCircuit);
-
-			if (*shortCircuit)
-				break;
-
-			nodePtr += sizeof(BtrfsKeyPtr);
+		case RTOP_DUMP_TREE:		// always succeeds
+		case RTOP_SUBVOL_EXISTS:	// always succeeds
+		case RTOP_DUMP_SUBVOLS:		// always succeeds
+			returnCode = 0;
+			break;
+		default:
+			returnCode = 0x1;	// 1 bit = 1 part MUST be fulfilled
 		}
-	}
 
-	free(nodeBlock);
-}
+		if (operation == RTOP_SUBVOL_EXISTS)
+		{
+			bool *exists = (bool *)output0;
 
-int parseRootTree(RTOperation operation, void *input0, void *output0)
-{
-	int returnCode;
-	bool shortCircuit = false;
+			/* default to nonexistence */
+			*exists = false;
+		}
 	
-	switch (operation)
-	{
-	case RTOP_DUMP_TREE:		// always succeeds
-	case RTOP_SUBVOL_EXISTS:	// always succeeds
-	case RTOP_DUMP_SUBVOLS:		// always succeeds
-		returnCode = 0;
-		break;
-	default:
-		returnCode = 0x1;	// 1 bit = 1 part MUST be fulfilled
+		parseRootTreeRec(endian64(supers[0].rtRoot), operation, input0, output0,
+			&returnCode, &shortCircuit);
+
+		return returnCode;
 	}
-
-	if (operation == RTOP_SUBVOL_EXISTS)
-	{
-		bool *exists = (bool *)output0;
-
-		/* default to nonexistence */
-		*exists = false;
-	}
-	
-	parseRootTreeRec(endian64(supers[0].rtRoot), operation, input0, output0,
-		&returnCode, &shortCircuit);
-
-	return returnCode;
 }
