@@ -12,6 +12,9 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "WinBtrfsLib", "WinBtrfsLib\WinBtrfsLib.vcxproj", "{B6810100-D89C-4DAB-9FD7-C82A2AD52831}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "WinBtrfsService", "WinBtrfsService\WinBtrfsService.vcxproj", "{ECE512A9-A96D-41D8-8137-DE31E62FE102}"
+	ProjectSection(ProjectDependencies) = postProject
+		{B6810100-D89C-4DAB-9FD7-C82A2AD52831} = {B6810100-D89C-4DAB-9FD7-C82A2AD52831}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
