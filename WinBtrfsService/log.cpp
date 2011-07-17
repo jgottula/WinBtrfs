@@ -20,6 +20,7 @@
 namespace WinBtrfsService
 {
 	FILE *logFile = NULL;
+	HANDLE hMutex = INVALID_HANDLE_VALUE;
 	
 	/* note: the localtime & asctime functions are not threadsafe. */
 
@@ -31,11 +32,16 @@ namespace WinBtrfsService
 		logFile = fopen("WinBtrfsService.log", "a+");
 		fprintf(logFile, "WinBtrfsService PID: %u\nStarted on %s\n",
 			GetCurrentProcessId(), asctime(now_tm));
+		
+		assert((hMutex = CreateMutex(NULL, FALSE, NULL)) != INVALID_HANDLE_VALUE);
 	}
 
 	void log(const char *format, ...)
 	{
 		va_list args;
+
+		WaitForSingleObject(hMutex, INFINITE);
+
 		time_t now = time(NULL);
 		tm *now_tm = localtime(&now);
 
@@ -49,12 +55,16 @@ namespace WinBtrfsService
 		va_end(args);
 
 		fflush(logFile);
+
+		ReleaseMutex(hMutex);
 	}
 	
 	void logClose()
 	{
 		fputs("\n\n", logFile);
 		fclose(logFile);
+
+		CloseHandle(hMutex);
 	}
 
 	const char *getErrorMessage(DWORD error)
