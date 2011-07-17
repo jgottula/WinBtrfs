@@ -82,6 +82,8 @@ namespace WinBtrfsService
 	}
 }
 
+using namespace WinBtrfsService;
+
 int main(int argc, char **argv)
 {
 	SERVICE_TABLE_ENTRY serviceTable[] =

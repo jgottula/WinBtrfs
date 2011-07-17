@@ -140,6 +140,8 @@ namespace WinBtrfsCLI
 	}
 }
 
+using namespace WinBtrfsCLI;
+
 int main(int argc, char **argv)
 {
 	LoadLibraryA("WinBtrfsLib.dll");

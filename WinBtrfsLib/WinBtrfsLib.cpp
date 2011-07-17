@@ -38,6 +38,8 @@ namespace WinBtrfsLib
 	}
 }
 
+using namespace WinBtrfsLib;
+
 BOOL WINAPI DLLMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
 	return TRUE;
