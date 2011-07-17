@@ -31,6 +31,8 @@ namespace WinBtrfsService
 			return NO_ERROR;
 		case SERVICE_CONTROL_STOP:
 		case SERVICE_CONTROL_SHUTDOWN:
+			log("Received SERVICE_CONTROL_%s.\n",
+				(dwControl == SERVICE_CONTROL_STOP ? "STOP" : "SHUTDOWN"));
 			status.dwCurrentState = SERVICE_STOP_PENDING;
 			SetServiceStatus(hStatus, &status);
 
@@ -56,28 +58,32 @@ namespace WinBtrfsService
 		if ((hStatus = RegisterServiceCtrlHandlerEx(L"WinBtrfsService",
 			&serviceCtrlHandlerEx, NULL)) != 0)
 		{
+			log("Setting state to SERVICE_START_PENDING.\n");
 			status.dwCurrentState = SERVICE_START_PENDING;
 			SetServiceStatus(hStatus, &status);
-
-			/* global initialization tasks */
+			
+			log("Running global initialization tasks.\n");
 			stopEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
 			if (setupIPC() != 0)
 				return;
-
+			
+			log("Setting state to SERVICE_RUNNING.\n");
 			status.dwControlsAccepted |= SERVICE_ACCEPT_STOP | SERVICE_ACCEPT_SHUTDOWN;
 			status.dwCurrentState = SERVICE_RUNNING;
 			SetServiceStatus(hStatus, &status);
-
+			
+			log("Entering the main service loop.\n");
 			do
 			{
 				checkIPC();
 			}
 			while (WaitForSingleObject(stopEvent, 10000) == WAIT_TIMEOUT);
-
-			/* global cleanup tasks */
+			
+			log("Running global cleanup tasks.\n");
 			CloseHandle(stopEvent);
 			unmountAll();
-
+			
+			log("Setting state to SERVICE_STOPPED.\n");
 			status.dwControlsAccepted = 0;
 			status.dwCurrentState = SERVICE_STOPPED;
 			SetServiceStatus(hStatus, &status);

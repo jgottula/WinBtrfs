@@ -18,21 +18,25 @@ namespace WinBtrfsService
 {
 	DWORD setupIPC()
 	{
+		log("setupIPC is a stub!\n");
+		// log on failure, return nonzero to indicate fatality
 		return 0;
 	}
 	
 	void checkIPC()
 	{
-
+		// log on failure, this is nonfatal
 	}
 
 	void mount()
 	{
-
+		log("mount is a stub!\n");
+		// log on failure, this is nonfatal
 	}
 	
 	void unmountAll()
 	{
-
+		log("unmountAll is a stub!\n");
+		// log on failure, this is nonfatal
 	}
 }
