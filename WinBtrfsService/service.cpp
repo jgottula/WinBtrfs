@@ -12,6 +12,7 @@
 
 #include <cassert>
 #include <cstdio>
+#include <cstring>
 #include <Windows.h>
 #include "log.h"
 #include "volume_mgr.h"
@@ -96,11 +97,17 @@ using namespace WinBtrfsService;
 int main(int argc, char **argv)
 {
 	DWORD error = 0;
+	char exePath[MAX_PATH];
 	SERVICE_TABLE_ENTRY serviceTable[] =
 	{
 		{ L"WinBtrfsService", &WinBtrfsService::serviceMain },
 		{ NULL, NULL }
 	};
+
+	/* services start in C:\windows\system32 by default, which is bad for logging */
+	GetModuleFileNameA(NULL, exePath, MAX_PATH);
+	*strrchr(exePath, '\\') = 0; // chop off everything after the directory
+	SetCurrentDirectoryA(exePath);
 
 	logInit();
 
