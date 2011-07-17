@@ -23,15 +23,37 @@ Justin Gottula began development on WinBtrfs in May 2011 as a result of the obse
 
 [03] In its current version, what can WinBtrfs do? What can't it do?
 
-As of 2011.07.14, WinBtrfs can load a Btrfs volume from the command line, display information such as the drive label and free space in the Drive Properties dialog, perform both command line and GUI directory listings, report file information (such as file size and attributes), and read file contents. WinBtrfs will automatically detect which subvolume is the default one and mount it as the root directory, or you can manually specify a subvolume name or ID to mount via a command line option. There is no installer or GUI at this time. Subvolumes should be fully functional at this time; however, bugs are highly likely at this time, as many code changes were necessary to enable subvolumes to work. Multi-drive volumes might work to varying degrees at this time; mirrored multi-drive volumes might even work perfectly. Transparent file compression (zlib and lzo) is handled automatically. Brtfs volumes that were converted from ext4 work normally. Any and all features of WinBtrfs may be buggy, especially those most recently implemented, such as subvolumes, compression, multi-drive volumes. Also, the more unusual your particular situation, the more likely you will encounter a bug that the developer has not run across. Most errors related to user input currently manifest themselves as scary-looking assertion failures and other sorts of cryptic messages; in the future, these warnings will become easier to understand.
+As of 2011.07.16, the following features are supported:
+— Mouting volumes via the command line
+— Mounting subvolumes by name or ID
+— Reading Btrfs volumes converted from ext4
+— Drive properties
+— Directory listings
+— File information
+— Reading file contents
+— Multi-drive volumes (limited support; you will not be able to read from raid0/raid10 chunks)
+— Compressed files (both zlib and lzo)
+
+These features are NOT supported yet:
+— Symlinks
+— File locking
+— Extended attributes
+— Mounting volumes via a GUI
+— Automounting volumes at startup
+— Controlling volumes from a central interface
+— User-friendly error messages
+— Easy installation
+— Binaries (you have to compile it yourself)
 
 
 [04] What dependencies are required for WinBtrfs?
 
 Building WinBtrfs requires:
-— Microsoft Visual Studio (for greatest ease)
+— Microsoft Visual Studio 2010 (for greatest ease)
 — Dokan 0.6.0 or later [http://dokan-dev.net/en/]
 — The Boost C++ libraries [http://www.boost.org/]
+The zlib and minilzo libraries are distributed with WinBtrfs.
+
 Running WinBtrfs requires:
 — Microsoft Visual C++ 2010 runtime [http://www.microsoft.com/downloads/en/details.aspx?FamilyID=a7b7a05e-6de6-4d3a-a423-37bf0912db84]
 — Dokan 0.6.0 or later [http://dokan-dev.net/en/]
@@ -61,6 +83,7 @@ The following major features will be developed in approximately the order specif
 — Installer
 — Multithreading
 — Speed
+
 Lower priority objectives:
 — Non-Microsoft compiler support (MinGW, Cygwin)
 — UI Translations
