@@ -1,5 +1,5 @@
 /* WinBtrfsService/service.cpp
- * Windows service code
+ * Windows service boilerplate
  *
  * WinBtrfs
  * Copyright (c) 2011 Justin Gottula
@@ -13,17 +13,13 @@
 #include <cassert>
 #include <cstdio>
 #include <Windows.h>
+#include "volume_mgr.h"
 
 namespace WinBtrfsService
 {
 	SERVICE_STATUS status;
 	SERVICE_STATUS_HANDLE hStatus;
 	HANDLE stopEvent;
-
-	void unmountEverything()
-	{
-		/* TODO: unmount all devices */
-	}
 	
 	DWORD WINAPI serviceCtrlHandlerEx(DWORD dwControl, DWORD dwEventType,
 		LPVOID lpEventData, LPVOID lpContext)
@@ -37,7 +33,9 @@ namespace WinBtrfsService
 			status.dwCurrentState = SERVICE_STOP_PENDING;
 			SetServiceStatus(hStatus, &status);
 
+			/* notify serviceMain that it needs to clean up */
 			SetEvent(stopEvent);
+
 			return NO_ERROR;
 		default:
 			return ERROR_CALL_NOT_IMPLEMENTED;
@@ -69,13 +67,13 @@ namespace WinBtrfsService
 
 			do
 			{
-				/* nothing to do while the service is running */
+				checkIPC();
 			}
 			while (WaitForSingleObject(stopEvent, 10000) == WAIT_TIMEOUT);
 
 			/* global cleanup tasks */
 			CloseHandle(stopEvent);
-			unmountEverything();
+			unmountAll();
 
 			status.dwControlsAccepted = 0;
 			status.dwCurrentState = SERVICE_STOPPED;

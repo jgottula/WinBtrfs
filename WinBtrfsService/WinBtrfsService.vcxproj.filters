@@ -18,5 +18,13 @@
     <ClCompile Include="service.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="volume_mgr.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="volume_mgr.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

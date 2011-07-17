@@ -12,6 +12,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="service.cpp" />
+    <ClCompile Include="volume_mgr.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="volume_mgr.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{ECE512A9-A96D-41D8-8137-DE31E62FE102}</ProjectGuid>
