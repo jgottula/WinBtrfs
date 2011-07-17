@@ -10,7 +10,12 @@
  * any later version.
  */
 
+#include <Windows.h>
+
 namespace WinBtrfsService
 {
-
+	DWORD setUpIPC();
+	void cleanUpIPC();
+	DWORD WINAPI watchIPC(LPVOID lpParameter);
+	void handleIPC();
 }

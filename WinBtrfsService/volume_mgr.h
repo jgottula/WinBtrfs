@@ -10,13 +10,8 @@
  * any later version.
  */
 
-#include <Windows.h>
-
 namespace WinBtrfsService
 {
-	DWORD setUpIPC();
-	void cleanUpIPC();
-	void checkIPC();
 	void mount();
 	void unmountAll();
 }

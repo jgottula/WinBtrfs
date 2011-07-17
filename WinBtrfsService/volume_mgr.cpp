@@ -16,34 +16,6 @@
 
 namespace WinBtrfsService
 {
-	HANDLE hPipe = INVALID_HANDLE_VALUE;
-	
-	DWORD setUpIPC()
-	{
-		if ((hPipe = CreateNamedPipe(L"\\\\.\\pipe\\WinBtrfsService", PIPE_ACCESS_DUPLEX,
-			PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE | PIPE_NOWAIT, PIPE_UNLIMITED_INSTANCES,
-			1024, 1024, 0, NULL)) == INVALID_HANDLE_VALUE)
-		{
-			DWORD error = GetLastError();
-			
-			log("CreateNamedPipe returned error %u: %s", error, getErrorMessage(error));
-			
-			return error;
-		}
-
-		return 0;
-	}
-
-	void cleanUpIPC()
-	{
-		CloseHandle(hPipe);
-	}
-	
-	void checkIPC()
-	{
-		// log on failure, this is nonfatal
-	}
-
 	void mount()
 	{
 		log("mount is a stub!\n");

@@ -13,7 +13,7 @@
 #include <cassert>
 #include <cstdio>
 #include <cstring>
-#include <Windows.h>
+#include "ipc.h"
 #include "log.h"
 #include "volume_mgr.h"
 
@@ -21,7 +21,7 @@ namespace WinBtrfsService
 {
 	SERVICE_STATUS status;
 	SERVICE_STATUS_HANDLE hStatus;
-	HANDLE stopEvent;
+	HANDLE stopEvent = INVALID_HANDLE_VALUE, ipcEvent = INVALID_HANDLE_VALUE;
 	
 	DWORD WINAPI serviceCtrlHandlerEx(DWORD dwControl, DWORD dwEventType,
 		LPVOID lpEventData, LPVOID lpContext)
@@ -65,6 +65,7 @@ namespace WinBtrfsService
 			
 			log("Running global initialization tasks.\n");
 			stopEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+			ipcEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
 			if (setUpIPC() != 0)
 				return;
 			
@@ -73,15 +74,35 @@ namespace WinBtrfsService
 			status.dwCurrentState = SERVICE_RUNNING;
 			SetServiceStatus(hStatus, &status);
 			
+			const HANDLE events[] = { stopEvent, ipcEvent };
+			bool stop = false;
+
 			log("Entering the main service loop.\n");
 			do
 			{
-				checkIPC();
+				switch (WaitForMultipleObjects(2, events, FALSE, INFINITE))
+				{
+				case WAIT_OBJECT_0: // stopEvent
+					stop = true;
+					break;
+				case WAIT_OBJECT_0 + 1: // ipcEvent
+					handleIPC();
+					break;
+				default:
+				{
+					DWORD error = GetLastError();
+
+					log("WaitForMultipleObjects returned error %u: %s", error, getErrorMessage(error));
+					stop = true;
+					break;
+				}
+				}
 			}
-			while (WaitForSingleObject(stopEvent, 10000) == WAIT_TIMEOUT);
-			
+			while (!stop);
+
 			log("Running global cleanup tasks.\n");
 			CloseHandle(stopEvent);
+			CloseHandle(ipcEvent);
 			cleanUpIPC();
 			unmountAll();
 			
