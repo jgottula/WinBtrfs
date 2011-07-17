@@ -39,7 +39,8 @@ int main(int argc, char **argv)
 
 	printf("Opened the pipe successfully.\n");
 
-	ServiceMsg *msg = (ServiceMsg *)malloc(sizeof(ServiceMsg) + sizeof(MountData) + (2 * MAX_PATH * sizeof(wchar_t)));
+	const size_t DATA_LEN = sizeof(MountData) + (2 * MAX_PATH * sizeof(wchar_t));
+	ServiceMsg *msg = (ServiceMsg *)malloc(sizeof(ServiceMsg) + DATA_LEN);
 	MountData *mountData = (MountData *)msg->data;
 	DWORD bytesWritten = 0;
 
@@ -55,10 +56,9 @@ int main(int argc, char **argv)
 	wcscpy(mountData->devicePaths + MAX_PATH, L"..\\..\\test_images\\btrfs_multiB.img");
 
 	msg->type = MSG_REQ_MOUNT;
-	msg->dataLen = sizeof(MountData);
+	msg->dataLen = DATA_LEN;
 
-	if (WriteFile(hPipe, msg, sizeof(ServiceMsg) + sizeof(MountData) + (2 * MAX_PATH * sizeof(wchar_t)),
-		&bytesWritten, NULL) == 0)
+	if (WriteFile(hPipe, msg, sizeof(ServiceMsg) + DATA_LEN, &bytesWritten, NULL) == 0)
 	{
 		fprintf(stderr, "WriteFile failed: %u\n", GetLastError());
 		CloseHandle(hPipe);
