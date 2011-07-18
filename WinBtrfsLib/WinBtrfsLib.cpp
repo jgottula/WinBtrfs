@@ -34,7 +34,7 @@ namespace WinBtrfsLib
 		assert(result.second == true);
 
 		/* load the MountData struct we received into this thread's instance struct */
-		InstanceData *thisInst = (*(result.first)).second;
+		InstanceData *thisInst = result.first->second;
 		thisInst->mountData = (MountData *)malloc(sizeof(MountData) +
 			(mountData->numDevices * sizeof(wchar_t) * MAX_PATH));
 		memcpy(thisInst->mountData, mountData,
