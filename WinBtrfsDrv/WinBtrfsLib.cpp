@@ -17,7 +17,6 @@
 #include <dokan.h>
 #include "btrfs_system.h"
 #include "init.h"
-#include "instance.h"
 
 namespace WinBtrfsDrv
 {

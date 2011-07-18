@@ -55,7 +55,6 @@ namespace WinBtrfsDrv
 
 	void init()
 	{
-		InstanceData *thisInst = getThisInst();
 		DWORD error;
 
 #ifndef BOOST_DETAIL_ENDIAN_HPP

@@ -11,6 +11,7 @@
  */
 
 #include "btrfs_operations.h"
+#include "btrfs_system.h"
 #include "crc32c.h"
 #include "fstree_parser.h"
 #include "instance.h"
@@ -103,7 +104,7 @@ namespace WinBtrfsDrv
 		return numComponents;
 	}
 
-	int getPathID(BtrfsObjID mountedSubvol, const char *path, FileID *output, FileID *parent)
+	int getPathID(const char *path, FileID *output, FileID *parent)
 	{
 		char vPath[MAX_PATH], **components;
 		FileID fileID, childID;

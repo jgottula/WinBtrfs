@@ -28,8 +28,6 @@ namespace WinBtrfsDrv
 
 	void allocateBlockReaders()
 	{
-		InstanceData *thisInst = getThisInst();
-		
 		/* allocate a block reader for each device */
 		size_t numDevices = thisInst->mountData->numDevices;
 		for (size_t i = 0; i < numDevices; i++)
@@ -41,8 +39,6 @@ namespace WinBtrfsDrv
 
 	void cleanUp()
 	{
-		InstanceData *thisInst = getThisInst();
-
 		printf("cleanUp: warning, this function may be very thread-unsafe\n");
 	
 		/* iterate backwards thru the block readers and destroy them */
@@ -55,8 +51,6 @@ namespace WinBtrfsDrv
 
 	PhysAddr *logiToPhys(LogiAddr logiAddr, unsigned __int64 len)
 	{
-		InstanceData *thisInst = getThisInst();
-		
 		/* try superblock chunks first */
 		size_t size = thisInst->sbChunks.size();
 		for (size_t i = 0; i < size; i++)
@@ -108,7 +102,6 @@ namespace WinBtrfsDrv
 
 	int loadSBs(bool dump)
 	{
-		InstanceData *thisInst = getThisInst();
 		int error;
 	
 		/* load the superblock for each device */
@@ -246,7 +239,6 @@ namespace WinBtrfsDrv
 
 	void loadSBChunks(bool dump)
 	{
-		InstanceData *thisInst = getThisInst();
 		/* using the first device's superblock here; it doesn't really matter */
 		unsigned char *sbPtr = thisInst->supers[0].chunkData,
 			*sbMax = sbPtr + endian32(thisInst->supers[0].n);
@@ -290,7 +282,6 @@ namespace WinBtrfsDrv
 
 	unsigned char *loadNode(LogiAddr addr, BtrfsHeader **header)
 	{
-		InstanceData *thisInst = getThisInst();
 		/* seems to be a safe assumption that all devices share the same node size */
 		unsigned int blockSize = endian32(thisInst->supers[0].nodeSize);
 		unsigned char *nodeBlock = (unsigned char *)malloc(blockSize);
@@ -318,7 +309,6 @@ namespace WinBtrfsDrv
 
 	int verifyDevices()
 	{
-		InstanceData *thisInst = getThisInst();
 		char fsUUID[0x10];
 		unsigned __int64 numDevices, generation;
 	
@@ -398,8 +388,6 @@ namespace WinBtrfsDrv
 
 	BlockReader *getBlockReader(unsigned __int64 devID)
 	{
-		InstanceData *thisInst = getThisInst();
-		
 		std::vector<BtrfsSuperblock>::iterator it = thisInst->supers.begin(),
 			end = thisInst->supers.end();
 		for (int i = 0; it != end; ++it, i++)

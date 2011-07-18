@@ -19,7 +19,7 @@ namespace WinBtrfsDrv
 {
 	void validatePath(const char *input, char *output);
 	unsigned int componentizePath(const char *path, char ***output);
-	int getPathID(BtrfsObjID mountedSubvol, const char *path, FileID *output, FileID *parent);
+	int getPathID(const char *path, FileID *output, FileID *parent);
 }
 
 #endif

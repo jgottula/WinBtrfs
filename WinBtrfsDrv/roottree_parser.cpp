@@ -16,7 +16,6 @@
 #include "btrfs_system.h"
 #include "endian.h"
 #include "fstree_parser.h"
-#include "instance.h"
 #include "util.h"
 
 namespace WinBtrfsDrv
@@ -24,7 +23,6 @@ namespace WinBtrfsDrv
 	void parseRootTreeRec(LogiAddr addr, RTOperation operation, void *input0, void *output0,
 		int *returnCode, bool *shortCircuit)
 	{
-		InstanceData *thisInst = getThisInst();
 		unsigned char *nodeBlock, *nodePtr;
 		BtrfsHeader *header;
 		BtrfsItem *item;
@@ -268,7 +266,6 @@ namespace WinBtrfsDrv
 
 	int parseRootTree(RTOperation operation, void *input0, void *output0)
 	{
-		InstanceData *thisInst = getThisInst();
 		int returnCode;
 		bool shortCircuit = false;
 	

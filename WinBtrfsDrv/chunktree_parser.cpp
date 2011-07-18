@@ -23,7 +23,6 @@ namespace WinBtrfsDrv
 	
 	void parseChunkTreeRec(LogiAddr addr, CTOperation operation)
 	{
-		InstanceData *thisInst = getThisInst();
 		unsigned char *nodeBlock, *nodePtr;
 		BtrfsHeader *header;
 		BtrfsItem *item;
@@ -149,8 +148,6 @@ namespace WinBtrfsDrv
 
 	void parseChunkTree(CTOperation operation)
 	{
-		InstanceData *thisInst = getThisInst();
-		
 		parseChunkTreeRec(endian64(thisInst->supers[0].ctRoot), operation);
 	}
 }

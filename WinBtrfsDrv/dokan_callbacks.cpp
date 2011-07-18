@@ -27,8 +27,6 @@ namespace WinBtrfsDrv
 {
 	DWORD setupBigDokanLock()
 	{
-		InstanceData *thisInst = getThisInst();
-		
 		thisInst->hBigDokanLock = CreateMutex(NULL, FALSE, NULL);
 
 		if (thisInst->hBigDokanLock == INVALID_HANDLE_VALUE)
@@ -40,7 +38,6 @@ namespace WinBtrfsDrv
 	int btrfsCreateFileCommon(bool dir, LPCWSTR fileName, DWORD desiredAccess, DWORD shareMode, DWORD creationDisposition,
 		DWORD flagsAndAttributes, PDOKAN_FILE_INFO info)
 	{
-		InstanceData *thisInst = getInstByMountPoint(info->DokanOptions->MountPoint);
 		char fileNameB[MAX_PATH];
 		FileID parentID, *fileID = (FileID *)malloc(sizeof(FileID));
 		FilePkg filePkg;
@@ -154,7 +151,6 @@ namespace WinBtrfsDrv
 
 	int DOKAN_CALLBACK btrfsCleanup(LPCWSTR fileName, PDOKAN_FILE_INFO info)
 	{
-		InstanceData *thisInst = getInstByMountPoint(info->DokanOptions->MountPoint);
 		FileID *fileID = (FileID *)info->Context;
 	
 		std::list<FilePkg>::iterator it = thisInst->openFiles.begin(),
@@ -187,7 +183,6 @@ namespace WinBtrfsDrv
 
 	int DOKAN_CALLBACK btrfsCloseFile(LPCWSTR fileName, PDOKAN_FILE_INFO info)
 	{
-		InstanceData *thisInst = getInstByMountPoint(info->DokanOptions->MountPoint);
 		FileID *fileID = (FileID *)info->Context;
 	
 		std::list<FilePkg>::iterator it = thisInst->cleanedUpFiles.begin(),
@@ -219,7 +214,6 @@ namespace WinBtrfsDrv
 	int DOKAN_CALLBACK btrfsReadFile(LPCWSTR fileName, LPVOID buffer, DWORD numberOfBytesToRead, LPDWORD numberOfBytesRead,
 		LONGLONG offset, PDOKAN_FILE_INFO info)
 	{
-		InstanceData *thisInst = getInstByMountPoint(info->DokanOptions->MountPoint);
 		FileID *fileID = (FileID *)info->Context;
 		FilePkg *filePkg;
 	
@@ -428,7 +422,6 @@ namespace WinBtrfsDrv
 
 	int DOKAN_CALLBACK btrfsGetFileInformation(LPCWSTR fileName, LPBY_HANDLE_FILE_INFORMATION buffer, PDOKAN_FILE_INFO info)
 	{
-		InstanceData *thisInst = getInstByMountPoint(info->DokanOptions->MountPoint);
 		FileID *fileID = (FileID *)info->Context;
 	
 		/* Big Dokan Lock not needed here */
@@ -452,7 +445,6 @@ namespace WinBtrfsDrv
 
 	int DOKAN_CALLBACK btrfsFindFiles(LPCWSTR pathName, PFillFindData pFillFindData, PDOKAN_FILE_INFO info)
 	{
-		InstanceData *thisInst = getInstByMountPoint(info->DokanOptions->MountPoint);
 		char pathNameB[MAX_PATH];
 		FileID *fileID = (FileID *)info->Context;
 		FilePkg *filePkg;
@@ -600,7 +592,6 @@ namespace WinBtrfsDrv
 	int DOKAN_CALLBACK btrfsGetDiskFreeSpace(PULONGLONG freeBytesAvailable, PULONGLONG totalNumberOfBytes,
 		PULONGLONG totalNumberOfFreeBytes, PDOKAN_FILE_INFO info)
 	{
-		InstanceData *thisInst = getInstByMountPoint(info->DokanOptions->MountPoint);
 		ULONGLONG free, total;
 
 		/* Big Dokan Lock not needed here */
@@ -620,7 +611,6 @@ namespace WinBtrfsDrv
 		LPDWORD maximumComponentLength, LPDWORD fileSystemFlags, LPWSTR fileSystemNameBuffer, DWORD fileSystemNameSize,
 		PDOKAN_FILE_INFO info)
 	{
-		InstanceData *thisInst = getInstByMountPoint(info->DokanOptions->MountPoint);
 		CHAR labelS[MAX_PATH + 1];
 	
 		/* Big Dokan Lock not needed here */

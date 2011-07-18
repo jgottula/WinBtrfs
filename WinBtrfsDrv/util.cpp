@@ -17,7 +17,6 @@
 #include <dokan.h>
 #include "constants.h"
 #include "endian.h"
-#include "instance.h"
 
 namespace WinBtrfsDrv
 {
@@ -34,7 +33,6 @@ namespace WinBtrfsDrv
 
 	void convertMetadata(const FilePkg *input, void *output, bool dirList)
 	{
-		InstanceData *thisInst = getThisInst();
 		LPBY_HANDLE_FILE_INFORMATION fileInfo = (LPBY_HANDLE_FILE_INFORMATION)output;
 		PWIN32_FIND_DATAW dirListData = (PWIN32_FIND_DATAW)output;
 
