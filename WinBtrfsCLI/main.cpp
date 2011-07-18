@@ -144,7 +144,7 @@ namespace WinBtrfsCLI
 
 		/* in the future, find WinBtrfsService and communicate with it
 			and let it deal with WinBtrfsLib directly */
-		WinBtrfsLib::start(*mountData);
+		WinBtrfsLib::start(mountData);
 
 		free(mountData);
 	}

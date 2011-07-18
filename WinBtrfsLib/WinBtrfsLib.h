@@ -23,7 +23,7 @@
 
 namespace WinBtrfsLib
 {
-	void WINBTRFSLIB_API start(MountData mountData);
+	void WINBTRFSLIB_API start(const MountData *mountData);
 	void WINBTRFSLIB_API terminate();
 }
 

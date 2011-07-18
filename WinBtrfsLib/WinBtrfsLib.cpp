@@ -21,7 +21,7 @@
 
 namespace WinBtrfsLib
 {
-	void WINBTRFSLIB_API start(MountData mountData)
+	void WINBTRFSLIB_API start(const MountData *mountData)
 	{
 		DWORD thID = GetCurrentThreadId();
 		
@@ -36,9 +36,9 @@ namespace WinBtrfsLib
 		/* load the MountData struct we received into this thread's instance struct */
 		InstanceData *thisInst = (*(result.first)).second;
 		thisInst->mountData = (MountData *)malloc(sizeof(MountData) +
-			(mountData.numDevices * sizeof(wchar_t) * MAX_PATH));
-		memcpy(thisInst->mountData, &mountData,
-			sizeof(MountData) + (mountData.numDevices * sizeof(wchar_t) * MAX_PATH));
+			(mountData->numDevices * sizeof(wchar_t) * MAX_PATH));
+		memcpy(thisInst->mountData, mountData,
+			sizeof(MountData) + (mountData->numDevices * sizeof(wchar_t) * MAX_PATH));
 
 		init();
 	}
