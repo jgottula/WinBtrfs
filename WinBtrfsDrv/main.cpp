@@ -1,5 +1,5 @@
-/* WinBtrfsDrv/init.h
- * filesystem initialization code
+/* WinBtrfsDrv/main.cpp
+ * filesystem instance startup code
  *
  * WinBtrfs
  * Copyright (c) 2011 Justin Gottula
@@ -10,14 +10,7 @@
  * any later version.
  */
 
-#ifndef WINBTRFSDRV_INIT_H
-#define WINBTRFSDRV_INIT_H
-
-namespace WinBtrfsDrv
+int main(int argc, char **argv)
 {
-	extern MountData *mountData;
-	
-	void init();
+	/* required arg: pipe name */
 }
-
-#endif

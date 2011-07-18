@@ -105,10 +105,10 @@
     <ClCompile Include="..\zlib\zutil.c">
       <Filter>Source Files\zlib</Filter>
     </ClCompile>
-    <ClCompile Include="WinBtrfsLib.cpp">
+    <ClCompile Include="init.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="init.cpp">
+    <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -193,9 +193,6 @@
     </ClInclude>
     <ClInclude Include="..\zlib\zutil.h">
       <Filter>Header Files\zlib</Filter>
-    </ClInclude>
-    <ClInclude Include="WinBtrfsLib.h">
-      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="init.h">
       <Filter>Header Files</Filter>

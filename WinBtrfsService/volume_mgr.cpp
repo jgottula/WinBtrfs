@@ -30,5 +30,7 @@ namespace WinBtrfsService
 	{
 		log("unmountAll is a stub!\n");
 		// log on failure, this is nonfatal
+
+		/* use DokanRemoveMountPoint(...); */
 	}
 }

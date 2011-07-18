@@ -52,6 +52,8 @@ namespace WinBtrfsDrv
 		&btrfsSetFileSecurity
 	};
 
+	MountData *mountData;
+
 	void init()
 	{
 		DWORD error;
