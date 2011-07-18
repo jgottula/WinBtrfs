@@ -15,6 +15,7 @@
 #include "constants.h"
 #include "crc32c.h"
 #include "endian.h"
+#include "init.h"
 #include "roottree_parser.h"
 #include "util.h"
 

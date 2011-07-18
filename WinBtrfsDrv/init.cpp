@@ -20,7 +20,6 @@
 #include "fstree_parser.h"
 #include "roottree_parser.h"
 #include "util.h"
-#include "WinBtrfsDrv.h"
 
 namespace WinBtrfsDrv
 {

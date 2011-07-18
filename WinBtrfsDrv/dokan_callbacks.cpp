@@ -24,6 +24,8 @@
 
 namespace WinBtrfsDrv
 {
+	HANDLE hBigDokanLock = INVALID_HANDLE_VALUE;
+	
 	DWORD setupBigDokanLock()
 	{
 		hBigDokanLock = CreateMutex(NULL, FALSE, NULL);

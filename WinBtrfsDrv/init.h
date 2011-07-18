@@ -13,6 +13,8 @@
 #ifndef WINBTRFSDRV_INIT_H
 #define WINBTRFSDRV_INIT_H
 
+#include "types.h"
+
 namespace WinBtrfsDrv
 {
 	extern MountData *mountData;

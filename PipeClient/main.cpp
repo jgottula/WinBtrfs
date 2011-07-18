@@ -12,12 +12,11 @@
 
 #include <cstdio>
 #include <Windows.h>
-#include "../WinBtrfsLib/WinBtrfsLib.h"
 #include "../WinBtrfsService/WinBtrfsService.h"
 
 /* based on http://ist.marshall.edu/ist480acp/code/pipec.cpp */
 
-using namespace WinBtrfsLib;
+using namespace WinBtrfsDrv;
 using namespace WinBtrfsService;
 
 int main(int argc, char **argv)
@@ -50,7 +49,7 @@ int main(int argc, char **argv)
 	mountData->noDump = false;
 	mountData->useSubvolID = true;
 	mountData->useSubvolName = false;
-	mountData->subvolID = (WinBtrfsLib::BtrfsObjID)256;
+	mountData->subvolID = (BtrfsObjID)256;
 	mountData->subvolName[0] = 0;
 	wcscpy(mountData->mountPoint, L"X:");
 	mountData->numDevices = 2;

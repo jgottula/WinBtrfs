@@ -15,7 +15,7 @@
 
 #include <vector>
 #include <Windows.h>
-#include "../WinBtrfsLib/types.h"
+#include "../WinBtrfsDrv/types.h"
 
 namespace WinBtrfsService
 {
