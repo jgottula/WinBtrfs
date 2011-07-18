@@ -111,8 +111,6 @@ namespace WinBtrfsDrv
 		if (!thisInst->mountData->noDump)
 			printf("\n");
 
-		thisInst->mountedSubvol = (BtrfsObjID)0;
-
 		if (!thisInst->mountData->useSubvolID && !thisInst->mountData->useSubvolName)
 		{
 			int result;

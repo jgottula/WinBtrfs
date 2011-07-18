@@ -12,7 +12,6 @@
 
 #include "chunktree_parser.h"
 #include <cassert>
-#include <vector>
 #include "btrfs_system.h"
 #include "endian.h"
 #include "instance.h"
@@ -20,6 +19,8 @@
 
 namespace WinBtrfsDrv
 {
+	std::vector<KeyedItem> chunkTree;
+	
 	void parseChunkTreeRec(LogiAddr addr, CTOperation operation)
 	{
 		InstanceData *thisInst = getThisInst();

@@ -13,11 +13,17 @@
 #ifndef WINBTRFSDRV_BTRFS_SYSTEM_H
 #define WINBTRFSDRV_BTRFS_SYSTEM_H
 
+#include <vector>
 #include "block_reader.h"
 #include "types.h"
 
 namespace WinBtrfsDrv
 {
+	extern std::vector<BlockReader *> blockReaders;
+	extern std::vector<BtrfsSuperblock> supers;
+	extern std::vector<BtrfsSBChunk *> sbChunks;
+	extern BtrfsObjID mountedSubvol;
+	
 	void allocateBlockReaders();
 	void cleanUp();
 	PhysAddr *logiToPhys(LogiAddr logiAddr, unsigned __int64 len);

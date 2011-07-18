@@ -11,7 +11,6 @@
  */
 
 #include <cassert>
-#include <vector>
 #include "btrfs_system.h"
 #include "constants.h"
 #include "crc32c.h"
@@ -22,6 +21,11 @@
 
 namespace WinBtrfsDrv
 {
+	std::vector<BlockReader *> blockReaders;
+	std::vector<BtrfsSuperblock> supers;
+	std::vector<BtrfsSBChunk *> sbChunks; // using an array of ptrs because BtrfsSBChunk is variably sized
+	BtrfsObjID mountedSubvol = (BtrfsObjID)0;
+
 	void allocateBlockReaders()
 	{
 		InstanceData *thisInst = getThisInst();
