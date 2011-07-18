@@ -10,9 +10,14 @@
  * any later version.
  */
 
+#ifndef WINBTRFSDRV_ROOTTREE_PARSER_H
+#define WINBTRFSDRV_ROOTTREE_PARSER_H
+
 #include "types.h"
 
 namespace WinBtrfsDrv
 {
 	int parseRootTree(RTOperation operation, void *input0, void *output0);
 }
+
+#endif

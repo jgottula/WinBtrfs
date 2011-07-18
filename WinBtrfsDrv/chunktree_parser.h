@@ -10,9 +10,14 @@
  * any later version.
  */
 
+#ifndef WINBTRFSDRV_CHUNKTREE_PARSER_H
+#define WINBTRFSDRV_CHUNKTREE_PARSER_H
+
 #include "types.h"
 
 namespace WinBtrfsDrv
 {
 	void parseChunkTree(CTOperation operation);
 }
+
+#endif

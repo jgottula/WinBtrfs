@@ -10,8 +10,8 @@
  * any later version.
  */
 
-#ifndef WINBTRFSLIB_TYPES_H
-#define WINBTRFSLIB_TYPES_H
+#ifndef WINBTRFSDRV_TYPES_H
+#define WINBTRFSDRV_TYPES_H
 
 #include <Windows.h>
 

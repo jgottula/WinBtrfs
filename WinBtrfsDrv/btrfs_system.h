@@ -10,6 +10,9 @@
  * any later version.
  */
 
+#ifndef WINBTRFSDRV_BTRFS_SYSTEM_H
+#define WINBTRFSDRV_BTRFS_SYSTEM_H
+
 #include "block_reader.h"
 #include "types.h"
 
@@ -27,3 +30,5 @@ namespace WinBtrfsDrv
 	BlockReader *getBlockReader(unsigned __int64 devID);
 	DWORD readLogical(LogiAddr addr, unsigned __int64 len, unsigned char *dest);
 }
+
+#endif

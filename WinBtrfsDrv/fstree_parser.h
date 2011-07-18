@@ -10,6 +10,9 @@
  * any later version.
  */
 
+#ifndef WINBTRFSDRV_FSTREE_PARSER_H
+#define WINBTRFSDRV_FSTREE_PARSER_H
+
 #include "types.h"
 
 namespace WinBtrfsDrv
@@ -17,3 +20,5 @@ namespace WinBtrfsDrv
 	int parseFSTree(BtrfsObjID tree, FSOperation operation, void *input0, void *input1, void *input2,
 		void *output0, void *output1);
 }
+
+#endif

@@ -12,6 +12,9 @@
 
 #include <Windows.h>
 
+#ifndef WINBTRFSSERVICE_LOG_H
+#define WINBTRFSSERVICE_LOG_H
+
 namespace WinBtrfsService
 {
 	void logInit();
@@ -19,3 +22,5 @@ namespace WinBtrfsService
 	void logClose();
 	const char *getErrorMessage(DWORD error);
 }
+
+#endif

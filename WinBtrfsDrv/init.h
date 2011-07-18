@@ -10,7 +10,12 @@
  * any later version.
  */
 
+#ifndef WINBTRFSDRV_INIT_H
+#define WINBTRFSDRV_INIT_H
+
 namespace WinBtrfsDrv
 {
 	void init();
 }
+
+#endif

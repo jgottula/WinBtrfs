@@ -12,6 +12,9 @@
 
 #include <Windows.h>
 
+#ifndef WINBTRFSSERVICE_IPC_H
+#define WINBTRFSSERVICE_IPC_H
+
 namespace WinBtrfsService
 {
 	DWORD setUpIPC();
@@ -19,3 +22,5 @@ namespace WinBtrfsService
 	void handleIPC();
 	DWORD WINAPI watchIPC(LPVOID lpParameter);
 }
+
+#endif

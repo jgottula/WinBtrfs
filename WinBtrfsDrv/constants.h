@@ -10,8 +10,8 @@
  * any later version.
  */
 
-#ifndef WINBTRFSLIB_CONSTANTS_H
-#define WINBTRFSLIB_CONSTANTS_H
+#ifndef WINBTRFSDRV_CONSTANTS_H
+#define WINBTRFSDRV_CONSTANTS_H
 
 namespace WinBtrfsDrv
 {

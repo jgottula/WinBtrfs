@@ -10,6 +10,9 @@
  * any later version.
  */
 
+#ifndef WINBTRFSDRV_DOKAN_CALLBACKS_H
+#define WINBTRFSDRV_DOKAN_CALLBACKS_H
+
 #include <Windows.h>
 #include <dokan.h>
 
@@ -50,3 +53,5 @@ namespace WinBtrfsDrv
 	int DOKAN_CALLBACK btrfsSetFileSecurity(LPCWSTR fileName, PSECURITY_INFORMATION secInfo, PSECURITY_DESCRIPTOR secDesc,
 		ULONG secDescLen, PDOKAN_FILE_INFO info);
 }
+
+#endif

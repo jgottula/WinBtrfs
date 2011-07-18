@@ -10,6 +10,9 @@
  * any later version.
  */
 
+#ifndef WINBTRFSDRV_UTIL_H
+#define WINBTRFSDRV_UTIL_H
+
 #include "types.h"
 
 namespace WinBtrfsDrv
@@ -22,3 +25,5 @@ namespace WinBtrfsDrv
 	void bgFlagsToStr(BlockGroupFlags flags, char *dest);
 	void dokanError(int dokanResult);
 }
+
+#endif

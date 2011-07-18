@@ -21,7 +21,7 @@
 
 namespace WinBtrfsDrv
 {
-	void WINBTRFSLIB_API start(const MountData *mountData)
+	void WINBTRFSDRV_API start(const MountData *mountData)
 	{
 		DWORD thID = GetCurrentThreadId();
 		
@@ -43,7 +43,7 @@ namespace WinBtrfsDrv
 		init();
 	}
 
-	void WINBTRFSLIB_API terminate()
+	void WINBTRFSDRV_API terminate()
 	{
 		InstanceData *thisInst = getThisInst();
 		

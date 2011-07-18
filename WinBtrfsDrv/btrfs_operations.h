@@ -10,6 +10,9 @@
  * any later version.
  */
 
+#ifndef WINBTRFSDRV_BTRFS_OPERATIONS_H
+#define WINBTRFSDRV_BTRFS_OPERATIONS_H
+
 #include "types.h"
 
 namespace WinBtrfsDrv
@@ -18,3 +21,5 @@ namespace WinBtrfsDrv
 	unsigned int componentizePath(const char *path, char ***output);
 	int getPathID(BtrfsObjID mountedSubvol, const char *path, FileID *output, FileID *parent);
 }
+
+#endif

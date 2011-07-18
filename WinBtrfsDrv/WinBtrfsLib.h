@@ -10,21 +10,21 @@
  * any later version.
  */
 
-#ifndef WINBTRFSLIB_WINBTRFSLIB_H
-#define WINBTRFSLIB_WINBTRFSLIB_H
+#ifndef WINBTRFSDRV_WINBTRFSDRV_H
+#define WINBTRFSDRV_WINBTRFSDRV_H
 
-#ifdef WINBTRFSLIB_EXPORTS
-#define WINBTRFSLIB_API __declspec(dllexport)
+#ifdef WINBTRFSDRV_EXPORTS
+#define WINBTRFSDRV_API __declspec(dllexport)
 #else
-#define WINBTRFSLIB_API __declspec(dllimport)
+#define WINBTRFSDRV_API __declspec(dllimport)
 #endif
 
 #include "types.h"
 
 namespace WinBtrfsDrv
 {
-	void WINBTRFSLIB_API start(const MountData *mountData);
-	void WINBTRFSLIB_API terminate();
+	void WINBTRFSDRV_API start(const MountData *mountData);
+	void WINBTRFSDRV_API terminate();
 }
 
 #endif

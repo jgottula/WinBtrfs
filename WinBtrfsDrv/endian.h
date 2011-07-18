@@ -10,10 +10,10 @@
  * any later version.
  */
 
-#include <boost/detail/endian.hpp>
+#ifndef WINBTRFSDRV_ENDIAN_H
+#define WINBTRFSDRV_ENDIAN_H
 
-#ifndef WINBTRFSLIB_ENDIAN_H
-#define WINBTRFSLIB_ENDIAN_H
+#include <boost/detail/endian.hpp>
 
 #ifndef BOOST_LITTLE_ENDIAN
 #ifndef BOOST_BIG_ENDIAN

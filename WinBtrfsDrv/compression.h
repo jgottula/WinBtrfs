@@ -10,6 +10,8 @@
  * any later version.
  */
 
+#ifndef WINBTRFSDRV_COMPRESSION_H
+#define WINBTRFSDRV_COMPRESSION_H
 
 namespace WinBtrfsDrv
 {
@@ -18,3 +20,5 @@ namespace WinBtrfsDrv
 	int zlibDecompress(const unsigned char *compressed, unsigned char *decompressed,
 		unsigned __int64 cSize, unsigned __int64 dSize);
 }
+
+#endif

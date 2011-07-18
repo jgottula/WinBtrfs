@@ -10,10 +10,10 @@
  * any later version.
  */
 
-#include "types.h"
+#ifndef WINBTRFSDRV_BLOCK_READER_H
+#define WINBTRFSDRV_BLOCK_READER_H
 
-#ifndef WINBTRFSLIB_BLOCK_READER_H
-#define WINBTRFSLIB_BLOCK_READER_H
+#include "types.h"
 
 namespace WinBtrfsDrv
 {

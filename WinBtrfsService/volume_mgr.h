@@ -10,6 +10,9 @@
  * any later version.
  */
 
+#ifndef WINBTRFSSERVICE_VOLUME_MGR_H
+#define WINBTRFSSERVICE_VOLUME_MGR_H
+
 #include "../WinBtrfsLib/WinBtrfsLib.h"
 #include "WinBtrfsService.h"
 
@@ -18,3 +21,5 @@ namespace WinBtrfsService
 	int mount(WinBtrfsLib::MountData *mountData);
 	void unmountAll();
 }
+
+#endif
