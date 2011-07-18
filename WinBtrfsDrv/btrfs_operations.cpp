@@ -14,7 +14,6 @@
 #include "btrfs_system.h"
 #include "crc32c.h"
 #include "fstree_parser.h"
-#include "instance.h"
 
 namespace WinBtrfsDrv
 {

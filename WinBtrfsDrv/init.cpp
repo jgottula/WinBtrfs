@@ -18,7 +18,6 @@
 #include "chunktree_parser.h"
 #include "dokan_callbacks.h"
 #include "fstree_parser.h"
-#include "instance.h"
 #include "roottree_parser.h"
 #include "util.h"
 #include "WinBtrfsDrv.h"

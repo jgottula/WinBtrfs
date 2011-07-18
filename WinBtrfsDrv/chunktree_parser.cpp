@@ -14,7 +14,6 @@
 #include <cassert>
 #include "btrfs_system.h"
 #include "endian.h"
-#include "instance.h"
 #include "util.h"
 
 namespace WinBtrfsDrv

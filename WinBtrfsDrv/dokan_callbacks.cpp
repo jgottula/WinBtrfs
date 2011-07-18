@@ -20,7 +20,6 @@
 #include "constants.h"
 #include "endian.h"
 #include "fstree_parser.h"
-#include "instance.h"
 #include "util.h"
 
 namespace WinBtrfsDrv
