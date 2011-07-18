@@ -123,8 +123,8 @@ namespace WinBtrfsCLI
 					assert(mbstowcs_s(NULL, devicePath, MAX_PATH, argv[i], strlen(argv[i])) == 0);
 
 					mountData->numDevices++;
-					mountData = (MountData *)realloc(mountData->devicePaths,
-						sizeof(MountData) + (mountData->numDevices * sizeof(wchar_t) * MAX_PATH));
+					mountData = (MountData *)realloc(mountData, sizeof(MountData) +
+						(mountData->numDevices * sizeof(wchar_t) * MAX_PATH));
 					printf("handleArgs: warning, wcscpy!\n");
 					wcscpy(mountData->devicePaths[mountData->numDevices - 1], devicePath);
 				}
