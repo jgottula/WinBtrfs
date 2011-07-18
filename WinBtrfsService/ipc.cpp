@@ -15,6 +15,8 @@
 #include "log.h"
 #include "volume_mgr.h"
 
+using namespace WinBtrfsDrv;
+
 namespace WinBtrfsService
 {
 	extern HANDLE ipcEvent;

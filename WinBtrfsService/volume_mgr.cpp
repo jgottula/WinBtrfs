@@ -15,7 +15,7 @@
 
 namespace WinBtrfsService
 {
-	int mount(WinBtrfsLib::MountData *mountData)
+	int mount(WinBtrfsDrv::MountData *mountData)
 	{
 		int error = 0;
 		
