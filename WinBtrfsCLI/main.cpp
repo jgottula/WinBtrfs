@@ -11,23 +11,12 @@
  */
 
 #include <cassert>
+#include <cstdarg>
 #include <cstdio>
-#include "../WinBtrfsLib/WinBtrfsLib.h"
-
-using namespace WinBtrfsLib;
+#include <cstdlib>
 
 namespace WinBtrfsCLI
 {
-	BOOL WINAPI ctrlHandler(DWORD dwCtrlType)
-	{
-		printf("ctrlHandler: received 0x%x, terminating gracefully\n", dwCtrlType);
-
-		WinBtrfsLib::terminate();
-
-		/* here for completeness; should have terminated by this point */
-		return FALSE;
-	}
-
 	void usage()
 	{
 		printf("Usage: WinBtrfsCLI.exe [options] <mount point> <device> [<device> ...]\n\n"
@@ -50,7 +39,8 @@ namespace WinBtrfsCLI
 
 		usage();
 	}
-
+	
+#if 0
 	void handleArgs(int argc, char **argv)
 	{
 		MountData *mountData = (MountData *)malloc(sizeof(MountData));
@@ -148,23 +138,22 @@ namespace WinBtrfsCLI
 
 		free(mountData);
 	}
+#endif
 }
 
 using namespace WinBtrfsCLI;
 
 int main(int argc, char **argv)
 {
-	LoadLibraryA("WinBtrfsLib.dll");
-
-	/* ensure that Ctrl+C and other things will terminate the driver gracefully */
-	SetConsoleCtrlHandler(&WinBtrfsCLI::ctrlHandler, TRUE);
-
 	printf("WinBtrfsCLI (Transitional Version)\n"
 		"Copyright (c) 2011 Justin Gottula\n\n"
 		"WinBtrfs is under heavy development. If you encounter a bug, please go to\n"
 		"http://github.com/jgottula/WinBtrfs and file an issue!\n\n");
 
-	WinBtrfsCLI::handleArgs(argc, argv);
+	/*WinBtrfsCLI::handleArgs(argc, argv);*/
+
+	printf("The transitional version of WinBtrfsCLI has been deprecated.\n"
+		"WinBtrfsCLI will return as a client of WinBtrfsService.\n");
 
 	return 0;
 }
