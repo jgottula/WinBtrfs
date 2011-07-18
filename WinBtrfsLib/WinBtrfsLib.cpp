@@ -26,13 +26,15 @@ namespace WinBtrfsLib
 		DWORD thID = GetCurrentThreadId();
 		
 		/* ensure that no instance already exists under this thread ID */
-		assert(instances.find(thID) == instances.end());
+		assert(instances.count(thID) == 0);
 
 		/* create a new instance entry for this thread */
-		instances.insert(std::pair<DWORD, InstanceData *>(thID, new InstanceData()));
+		std::pair<std::map<DWORD, InstanceData *>::iterator, bool> result =
+			instances.insert(std::pair<DWORD, InstanceData *>(thID, new InstanceData()));
+		assert(result.second == true);
 
 		/* load the MountData struct we received into this thread's instance struct */
-		InstanceData *thisInst = getThisInst();
+		InstanceData *thisInst = (*(result.first)).second;
 		thisInst->mountData = (MountData *)malloc(sizeof(MountData) +
 			(mountData.numDevices * sizeof(wchar_t) * MAX_PATH));
 		memcpy(thisInst->mountData, &mountData,
