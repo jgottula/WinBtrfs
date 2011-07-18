@@ -36,6 +36,7 @@ namespace WinBtrfsLib
 	extern std::map<DWORD, InstanceData *> instances;
 
 	InstanceData *getThisInst();
+	InstanceData *getInstByMountPoint(const wchar_t *mountPoint);
 }
 
 #endif

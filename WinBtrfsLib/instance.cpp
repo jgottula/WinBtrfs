@@ -26,4 +26,20 @@ namespace WinBtrfsLib
 
 		return instances[thID];
 	}
+	
+	InstanceData *getInstByMountPoint(const wchar_t *mountPoint)
+	{
+		std::map<DWORD, InstanceData *>::iterator it = instances.begin(),
+			end = instances.end();
+		for ( ; it != end; ++it)
+		{
+			InstanceData *inst = it->second;
+
+			if (wcscmp(inst->mountData->mountPoint, mountPoint) == 0)
+				return inst;
+		}
+
+		/* if control gets here, we failed to find an instance for the given mount point */
+		assert(0);
+	}
 }

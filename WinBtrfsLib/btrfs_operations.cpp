@@ -103,9 +103,8 @@ namespace WinBtrfsLib
 		return numComponents;
 	}
 
-	int getPathID(const char *path, FileID *output, FileID *parent)
+	int getPathID(BtrfsObjID mountedSubvol, const char *path, FileID *output, FileID *parent)
 	{
-		InstanceData *thisInst = getThisInst();
 		char vPath[MAX_PATH], **components;
 		FileID fileID, childID;
 		unsigned int numComponents;
@@ -116,7 +115,7 @@ namespace WinBtrfsLib
 		numComponents = componentizePath(path, &components);
 
 		/* start at the root directory of the currently mounted subvolume */
-		fileID.treeID = childID.treeID = thisInst->mountedSubvol;
+		fileID.treeID = childID.treeID = mountedSubvol;
 		fileID.objectID = childID.objectID = OBJID_ROOT_DIR;
 
 		for (int i = 0; i < numComponents; i++)
