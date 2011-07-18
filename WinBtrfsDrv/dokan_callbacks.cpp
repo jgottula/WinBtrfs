@@ -25,6 +25,7 @@
 namespace WinBtrfsDrv
 {
 	HANDLE hBigDokanLock = INVALID_HANDLE_VALUE;
+	std::list<FilePkg> openFiles, cleanedUpFiles;
 	
 	DWORD setupBigDokanLock()
 	{
@@ -59,7 +60,7 @@ namespace WinBtrfsDrv
 			return -ERROR_SEM_TIMEOUT; // error code looks sketchy
 		}
 
-		if (getPathID(mountedSubvol, fileNameB, fileID, &parentID) != 0)
+		if (getPathID(fileNameB, fileID, &parentID) != 0)
 		{
 			ReleaseMutex(hBigDokanLock);
 			printf("%s: getPathID failed! [%S]\n",

@@ -12,6 +12,7 @@
 
 #include <cassert>
 #include "btrfs_system.h"
+#include "chunktree_parser.h"
 #include "constants.h"
 #include "crc32c.h"
 #include "endian.h"
