@@ -83,10 +83,10 @@ namespace WinBtrfsDrv
 		if (!dirList)
 		{
 			/* using the least significant 4 bytes of the UUID */
-			fileInfo->dwVolumeSerialNumber = thisInst->supers[0].fsUUID[0] +
-				(thisInst->supers[0].fsUUID[1] << 8) +
-				(thisInst->supers[0].fsUUID[2] << 16) +
-				(thisInst->supers[0].fsUUID[3] << 24);
+			fileInfo->dwVolumeSerialNumber = supers[0].fsUUID[0] +
+				(supers[0].fsUUID[1] << 8) +
+				(supers[0].fsUUID[2] << 16) +
+				(supers[0].fsUUID[3] << 24);
 		}
 
 		if (!dirList)

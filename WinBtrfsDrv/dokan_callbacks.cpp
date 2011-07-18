@@ -26,9 +26,9 @@ namespace WinBtrfsDrv
 {
 	DWORD setupBigDokanLock()
 	{
-		thisInst->hBigDokanLock = CreateMutex(NULL, FALSE, NULL);
+		hBigDokanLock = CreateMutex(NULL, FALSE, NULL);
 
-		if (thisInst->hBigDokanLock == INVALID_HANDLE_VALUE)
+		if (hBigDokanLock == INVALID_HANDLE_VALUE)
 			return GetLastError();
 		else
 			return ERROR_SUCCESS;
@@ -50,16 +50,16 @@ namespace WinBtrfsDrv
 		/* just in case */
 		info->Context = 0x0;
 		
-		if (WaitForSingleObject(thisInst->hBigDokanLock, 10000) != WAIT_OBJECT_0)
+		if (WaitForSingleObject(hBigDokanLock, 10000) != WAIT_OBJECT_0)
 		{
 			printf("%s: couldn't get ownership of the Big Dokan Lock! [%S]\n",
 				(dir ? "btrfsOpenDirectory" : "brtfsCreateFile"), fileName);
 			return -ERROR_SEM_TIMEOUT; // error code looks sketchy
 		}
 
-		if (getPathID(thisInst->mountedSubvol, fileNameB, fileID, &parentID) != 0)
+		if (getPathID(mountedSubvol, fileNameB, fileID, &parentID) != 0)
 		{
-			ReleaseMutex(thisInst->hBigDokanLock);
+			ReleaseMutex(hBigDokanLock);
 			printf("%s: getPathID failed! [%S]\n",
 				(dir ? "btrfsOpenDirectory" : "brtfsCreateFile"), fileName);
 			return -ERROR_FILE_NOT_FOUND;
@@ -68,13 +68,13 @@ namespace WinBtrfsDrv
 		int result2;
 		if ((result2 = parseFSTree(fileID->treeID, FSOP_GET_FILE_PKG, &fileID->objectID, NULL, NULL, &filePkg, NULL)) != 0)
 		{
-			ReleaseMutex(thisInst->hBigDokanLock);
+			ReleaseMutex(hBigDokanLock);
 			printf("%s: parseFSTree with FSOP_GET_FILE_PKG returned %d! [%S]\n",
 				(dir ? "btrfsOpenDirectory" : "brtfsCreateFile"), result2, fileName);
 			return -ERROR_FILE_NOT_FOUND;
 		}
 	
-		ReleaseMutex(thisInst->hBigDokanLock);
+		ReleaseMutex(hBigDokanLock);
 
 		/* populate the parent object ID */
 		memcpy(&filePkg.parentID, &parentID, sizeof(FileID));
@@ -84,14 +84,14 @@ namespace WinBtrfsDrv
 		if ((result3 = parseFSTree(filePkg.parentID.treeID, FSOP_GET_INODE, &filePkg.parentID.objectID,
 			NULL, NULL, &filePkg.parentInode, NULL)) != 0)
 		{
-			ReleaseMutex(thisInst->hBigDokanLock);
+			ReleaseMutex(hBigDokanLock);
 			printf("%s: parseFSTreewith FSOP_GET_INODE returned %d! [%S]\n",
 				(dir ? "btrfsOpenDirectory" : "brtfsCreateFile"), result3, fileName);
 			return -ERROR_FILE_NOT_FOUND;
 		}
 
-		std::list<FilePkg>::iterator it = thisInst->openFiles.begin(),
-			end = thisInst->openFiles.end();
+		std::list<FilePkg>::iterator it = openFiles.begin(),
+			end = openFiles.end();
 		for ( ; it != end; ++it)
 		{
 			/* there should not be any duplicate records in this array! */
@@ -106,7 +106,7 @@ namespace WinBtrfsDrv
 				break;
 		}
 
-		thisInst->openFiles.insert(it, filePkg);
+		openFiles.insert(it, filePkg);
 
 		info->Context = (unsigned __int64)fileID;
 
@@ -152,8 +152,8 @@ namespace WinBtrfsDrv
 	{
 		FileID *fileID = (FileID *)info->Context;
 	
-		std::list<FilePkg>::iterator it = thisInst->openFiles.begin(),
-			end = thisInst->openFiles.end();
+		std::list<FilePkg>::iterator it = openFiles.begin(),
+			end = openFiles.end();
 		for ( ; it != end; ++it)
 		{
 			if (it->fileID.treeID == fileID->treeID && it->fileID.objectID == fileID->objectID)
@@ -164,9 +164,9 @@ namespace WinBtrfsDrv
 		assert(it != end);
 
 		FilePkg filePkg = *it;
-		thisInst->openFiles.erase(it);
+		openFiles.erase(it);
 
-		it = thisInst->cleanedUpFiles.begin(), end = thisInst->cleanedUpFiles.end();
+		it = cleanedUpFiles.begin(), end = cleanedUpFiles.end();
 		for ( ; it != end; ++it)
 		{
 			if (it->fileID.treeID == fileID->treeID && it->fileID.objectID == fileID->objectID)
@@ -174,7 +174,7 @@ namespace WinBtrfsDrv
 		}
 	
 		/* insert the element such that the list is sorted in ascending object ID order */
-		thisInst->cleanedUpFiles.insert(it, filePkg);
+		cleanedUpFiles.insert(it, filePkg);
 	
 		printf("btrfsCleanup: OK [%s]\n", fileName);
 		return ERROR_SUCCESS;
@@ -184,8 +184,8 @@ namespace WinBtrfsDrv
 	{
 		FileID *fileID = (FileID *)info->Context;
 	
-		std::list<FilePkg>::iterator it = thisInst->cleanedUpFiles.begin(),
-			end = thisInst->cleanedUpFiles.end();
+		std::list<FilePkg>::iterator it = cleanedUpFiles.begin(),
+			end = cleanedUpFiles.end();
 		for ( ; it != end; ++it)
 		{
 			if (it->fileID.treeID == fileID->treeID && it->fileID.objectID == fileID->objectID)
@@ -201,7 +201,7 @@ namespace WinBtrfsDrv
 			free(it->extents[i].data);
 		free(it->extents);
 
-		thisInst->cleanedUpFiles.erase(it);
+		cleanedUpFiles.erase(it);
 
 		free(fileID);
 	
@@ -218,8 +218,8 @@ namespace WinBtrfsDrv
 	
 		/* Big Dokan Lock not needed here */
 
-		std::list<FilePkg>::iterator it = thisInst->openFiles.begin(),
-			end = thisInst->openFiles.end();
+		std::list<FilePkg>::iterator it = openFiles.begin(),
+			end = openFiles.end();
 		for ( ; it != end; ++it)
 		{
 			if (it->fileID.treeID == fileID->treeID && it->fileID.objectID == fileID->objectID)
@@ -228,7 +228,7 @@ namespace WinBtrfsDrv
 
 		if (it == end)
 		{
-			it = thisInst->cleanedUpFiles.begin(), end = thisInst->cleanedUpFiles.end();
+			it = cleanedUpFiles.begin(), end = cleanedUpFiles.end();
 			for ( ; it != end; ++it)
 			{
 				if (it->fileID.treeID == fileID->treeID && it->fileID.objectID == fileID->objectID)
@@ -425,8 +425,8 @@ namespace WinBtrfsDrv
 	
 		/* Big Dokan Lock not needed here */
 
-		std::list<FilePkg>::iterator it = thisInst->openFiles.begin(),
-			end = thisInst->openFiles.end();
+		std::list<FilePkg>::iterator it = openFiles.begin(),
+			end = openFiles.end();
 		for ( ; it != end; ++it)
 		{
 			if (it->fileID.treeID == fileID->treeID && it->fileID.objectID == fileID->objectID)
@@ -454,8 +454,8 @@ namespace WinBtrfsDrv
 		size_t result = wcstombs(pathNameB, pathName, MAX_PATH);
 		assert (result == wcslen(pathName));
 
-		std::list<FilePkg>::iterator it = thisInst->openFiles.begin(),
-			end = thisInst->openFiles.end();
+		std::list<FilePkg>::iterator it = openFiles.begin(),
+			end = openFiles.end();
 		for ( ; it != end; ++it)
 		{
 			if (it->fileID.treeID == fileID->treeID && it->fileID.objectID == fileID->objectID)
@@ -476,7 +476,7 @@ namespace WinBtrfsDrv
 
 		filePkg = &(*it);
 
-		if (WaitForSingleObject(thisInst->hBigDokanLock, 10000) != WAIT_OBJECT_0)
+		if (WaitForSingleObject(hBigDokanLock, 10000) != WAIT_OBJECT_0)
 		{
 			printf("btrfsFindFiles: couldn't get ownership of the Big Dokan Lock! [%S]\n", pathName);
 			return -ERROR_SEM_TIMEOUT; // error code looks sketchy
@@ -487,12 +487,12 @@ namespace WinBtrfsDrv
 		int result2;
 		if ((result2 = parseFSTree(fileID->treeID, FSOP_DIR_LIST, filePkg, &root, NULL, &dirList, NULL)) != 0)
 		{
-			ReleaseMutex(thisInst->hBigDokanLock);
+			ReleaseMutex(hBigDokanLock);
 			printf("btrfsFindFiles: parseFSTree with FSOP_DIR_LIST returned %d! [%S]\n", result2, pathName);
 			return -ERROR_PATH_NOT_FOUND; // probably not an adequate error code
 		}
 	
-		ReleaseMutex(thisInst->hBigDokanLock);
+		ReleaseMutex(hBigDokanLock);
 
 		for (size_t i = 0; i < dirList.numEntries; i++)
 		{
@@ -595,8 +595,8 @@ namespace WinBtrfsDrv
 
 		/* Big Dokan Lock not needed here */
 
-		total = endian64(thisInst->supers[0].totalBytes);
-		free =  total - endian64(thisInst->supers[0].bytesUsed);
+		total = endian64(supers[0].totalBytes);
+		free =  total - endian64(supers[0].bytesUsed);
 	
 		*freeBytesAvailable = free;
 		*totalNumberOfBytes = total;
@@ -619,12 +619,12 @@ namespace WinBtrfsDrv
 			the *_s functions are systematically preventing by padding with 0xfefefefe etc. */
 		printf("btrfsGetVolumeInformation: TODO: use secure string functions (1/2)\n");
 
-		strcpy(labelS, thisInst->supers[0].label);
+		strcpy(labelS, supers[0].label);
 		mbstowcs(volumeNameBuffer, labelS, volumeNameSize);
 
 		/* using the last 4 bytes of the FS UUID */
-		*volumeSerialNumber = thisInst->supers[0].fsUUID[0] + (thisInst->supers[0].fsUUID[1] << 8) +
-			(thisInst->supers[0].fsUUID[2] << 16) + (thisInst->supers[0].fsUUID[3] << 24);
+		*volumeSerialNumber = supers[0].fsUUID[0] + (supers[0].fsUUID[1] << 8) +
+			(supers[0].fsUUID[2] << 16) + (supers[0].fsUUID[3] << 24);
 
 		*maximumComponentLength = 255;
 

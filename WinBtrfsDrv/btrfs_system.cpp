@@ -28,11 +28,11 @@ namespace WinBtrfsDrv
 	void allocateBlockReaders()
 	{
 		/* allocate a block reader for each device */
-		size_t numDevices = thisInst->mountData->numDevices;
+		size_t numDevices = mountData->numDevices;
 		for (size_t i = 0; i < numDevices; i++)
 		{
-			BlockReader *blockReader = new BlockReader(thisInst->mountData->devicePaths[i]);
-			thisInst->blockReaders.push_back(blockReader);
+			BlockReader *blockReader = new BlockReader(mountData->devicePaths[i]);
+			blockReaders.push_back(blockReader);
 		}
 	}
 
@@ -41,20 +41,20 @@ namespace WinBtrfsDrv
 		printf("cleanUp: warning, this function may be very thread-unsafe\n");
 	
 		/* iterate backwards thru the block readers and destroy them */
-		for (size_t i = thisInst->blockReaders.size(); i > 0; --i)
+		for (size_t i = blockReaders.size(); i > 0; --i)
 		{
-			delete thisInst->blockReaders.back();
-			thisInst->blockReaders.pop_back();
+			delete blockReaders.back();
+			blockReaders.pop_back();
 		}
 	}
 
 	PhysAddr *logiToPhys(LogiAddr logiAddr, unsigned __int64 len)
 	{
 		/* try superblock chunks first */
-		size_t size = thisInst->sbChunks.size();
+		size_t size = sbChunks.size();
 		for (size_t i = 0; i < size; i++)
 		{
-			BtrfsSBChunk *chunk = thisInst->sbChunks.at(i);
+			BtrfsSBChunk *chunk = sbChunks.at(i);
 		
 			if (logiAddr >= chunk->key.offset && logiAddr + len <= chunk->key.offset + chunk->chunkItem.chunkSize)
 			{
@@ -71,10 +71,10 @@ namespace WinBtrfsDrv
 		}
 
 		/* next try the chunk tree */
-		size = thisInst->chunkTree.size();
+		size = chunkTree.size();
 		for (size_t i = 0; i < size; i++)
 		{
-			KeyedItem& kItem = thisInst->chunkTree.at(i);
+			KeyedItem& kItem = chunkTree.at(i);
 
 			if (kItem.key.type == TYPE_CHUNK_ITEM)
 			{
@@ -104,8 +104,8 @@ namespace WinBtrfsDrv
 		int error;
 	
 		/* load the superblock for each device */
-		std::vector<BlockReader *>::iterator it = thisInst->blockReaders.begin(),
-			end = thisInst->blockReaders.end();
+		std::vector<BlockReader *>::iterator it = blockReaders.begin(),
+			end = blockReaders.end();
 		for (int i = 0; it != end; ++it, i++)
 		{
 			BlockReader *blockReader = *it;
@@ -117,7 +117,7 @@ namespace WinBtrfsDrv
 				sizeof(BtrfsSuperblock), (unsigned char *)&sb1)) != ERROR_SUCCESS)
 			{
 				printf("loadSBs: could not read a device's primary superblock!\n"
-					"Device: %S\nWindows error code: %d\n", thisInst->mountData->devicePaths[i],
+					"Device: %S\nWindows error code: %d\n", mountData->devicePaths[i],
 					error);
 				return error;
 			}
@@ -130,15 +130,15 @@ namespace WinBtrfsDrv
 				break;
 			case 1:
 				printf("loadSBs: primary superblock is missing or invalid!\nDevice: %S\n",
-					thisInst->mountData->devicePaths[i]);
+					mountData->devicePaths[i]);
 				return error;
 			case 2:
 				printf("loadSBs: primary superblock checksum failed!\nDevice: %S\n",
-					thisInst->mountData->devicePaths[i]);
+					mountData->devicePaths[i]);
 				return error;
 			default:
 				printf("loadSBs: primary superblock failed to validate for unknown reasons!\nDevice: %S\n",
-					thisInst->mountData->devicePaths[i]);
+					mountData->devicePaths[i]);
 				return error;
 			}
 
@@ -169,13 +169,13 @@ namespace WinBtrfsDrv
 			}
 
 			/* add the most recent superblock to the array */
-			thisInst->supers.push_back(*sbBest);
+			supers.push_back(*sbBest);
 
 			if (dump)
 			{
 				char uuid[1024];
 
-				printf("\n[SB%d] from %S\n", sbBestIdx, thisInst->mountData->devicePaths[i]);
+				printf("\n[SB%d] from %S\n", sbBestIdx, mountData->devicePaths[i]);
 				uuidToStr(sbBest->fsUUID, uuid);
 				printf("  csum: 0x%04x csumType: %x fsUUID: %s\n", endian32(sbBest->csum.crc32c),
 					endian16(sbBest->csumType), uuid);
@@ -239,14 +239,14 @@ namespace WinBtrfsDrv
 	void loadSBChunks(bool dump)
 	{
 		/* using the first device's superblock here; it doesn't really matter */
-		unsigned char *sbPtr = thisInst->supers[0].chunkData,
-			*sbMax = sbPtr + endian32(thisInst->supers[0].n);
+		unsigned char *sbPtr = supers[0].chunkData,
+			*sbMax = sbPtr + endian32(supers[0].n);
 		BtrfsDiskKey *key;
 		BtrfsSBChunk *sbChunk;
 		unsigned short *numStripes;
 
 		if (dump)
-			printf("\n[SBChunks] n = 0x%03x\n", endian32(thisInst->supers[0].n));
+			printf("\n[SBChunks] n = 0x%03x\n", endian32(supers[0].n));
 
 		while (sbPtr < sbMax)
 		{
@@ -263,7 +263,7 @@ namespace WinBtrfsDrv
 			memcpy(sbChunk, sbPtr, sizeof(BtrfsSBChunk) + (*numStripes * sizeof(BtrfsChunkItemStripe)));
 			sbPtr += sizeof(BtrfsSBChunk) + (*numStripes * sizeof(BtrfsChunkItemStripe));
 
-			thisInst->sbChunks.push_back(sbChunk);
+			sbChunks.push_back(sbChunk);
 
 			if (dump)
 			{
@@ -282,7 +282,7 @@ namespace WinBtrfsDrv
 	unsigned char *loadNode(LogiAddr addr, BtrfsHeader **header)
 	{
 		/* seems to be a safe assumption that all devices share the same node size */
-		unsigned int blockSize = endian32(thisInst->supers[0].nodeSize);
+		unsigned int blockSize = endian32(supers[0].nodeSize);
 		unsigned char *nodeBlock = (unsigned char *)malloc(blockSize);
 	
 		/* this might not always be fatal, so in the future an assertion may be inappropriate */
@@ -312,40 +312,40 @@ namespace WinBtrfsDrv
 		unsigned __int64 numDevices, generation;
 	
 		/* must have at least one SB loaded */
-		assert(thisInst->supers.size() > 0);
+		assert(supers.size() > 0);
 
 		/* check that all the devices' FS UUIDs are identical */
-		std::vector<BtrfsSuperblock>::iterator it = thisInst->supers.begin(),
-			end = thisInst->supers.end();
+		std::vector<BtrfsSuperblock>::iterator it = supers.begin(),
+			end = supers.end();
 		memcpy(fsUUID, (it++)->fsUUID, 0x10);
 		for (int i = 1; it != end; ++it, i++)
 		{
 			if (memcmp(fsUUID, it->fsUUID, 0x10) != 0)
 			{
 				printf("verifyDevices: the following device is not part of this Btrfs volume!\n%S\n",
-					thisInst->mountData->devicePaths[i]);
+					mountData->devicePaths[i]);
 				return 1;
 			}
 		}
 
 		/* check for duplicate devices */
-		it = thisInst->supers.begin();
+		it = supers.begin();
 		for ( ; it != end; ++it)
 		{
-			std::vector<BtrfsSuperblock>::iterator it2 = thisInst->supers.begin();
+			std::vector<BtrfsSuperblock>::iterator it2 = supers.begin();
 			for (int i = 0; it2 != it; ++it2, i++)
 			{
 				if (memcmp(it->devItem.devUUID, it2->devItem.devUUID, 0x10) == 0)
 				{
 					printf("verifyDevices: the following device is specified more than once!\n%S\n",
-						thisInst->mountData->devicePaths[i]);
+						mountData->devicePaths[i]);
 					return 2;
 				}
 			}
 		}
 
 		/* check for agreement on the number of devices in the volume */
-		it = thisInst->supers.begin();
+		it = supers.begin();
 		numDevices = endian64((it++)->numDevices);
 		for ( ; it != end; ++it)
 		{
@@ -357,22 +357,22 @@ namespace WinBtrfsDrv
 		}
 	
 		/* check for the correct number of devices for the volume */
-		if (thisInst->blockReaders.size() < endian64(thisInst->supers[0].numDevices))
+		if (blockReaders.size() < endian64(supers[0].numDevices))
 		{
 			printf("verifyDevices: %d too few devices given!\n",
-				endian64(thisInst->supers[0].numDevices) - thisInst->blockReaders.size());
+				endian64(supers[0].numDevices) - blockReaders.size());
 			return 4;
 		}
-		else if (thisInst->blockReaders.size() > endian64(thisInst->supers[0].numDevices))
+		else if (blockReaders.size() > endian64(supers[0].numDevices))
 		{
 			/* this shouldn't ever happen, but we have an error message for it anyway */
 			printf("verifyDevices: %d too many devices given!\n",
-				thisInst->blockReaders.size() - endian64(thisInst->supers[0].numDevices));
+				blockReaders.size() - endian64(supers[0].numDevices));
 			return 5;
 		}
 
 		/* warn the user if the superblocks' generation numbers disagree */
-		it = thisInst->supers.begin();
+		it = supers.begin();
 		generation = (it++)->generation;
 		for ( ; it != end; ++it)
 		{
@@ -387,12 +387,12 @@ namespace WinBtrfsDrv
 
 	BlockReader *getBlockReader(unsigned __int64 devID)
 	{
-		std::vector<BtrfsSuperblock>::iterator it = thisInst->supers.begin(),
-			end = thisInst->supers.end();
+		std::vector<BtrfsSuperblock>::iterator it = supers.begin(),
+			end = supers.end();
 		for (int i = 0; it != end; ++it, i++)
 		{
 			if (it->devItem.devID == devID)
-				return thisInst->blockReaders[i];
+				return blockReaders[i];
 		}
 
 		/* getting here means we failed to find a block reader for the requested device */

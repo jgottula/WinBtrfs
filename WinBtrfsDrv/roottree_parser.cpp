@@ -154,11 +154,11 @@ namespace WinBtrfsDrv
 				else if (operation == RTOP_DEFAULT_SUBVOL)
 				{
 					if (item->key.type == TYPE_DIR_ITEM && endian64(item->key.objectID) ==
-						thisInst->supers[0].rootDirObjectID)
+						supers[0].rootDirObjectID)
 					{
 						BtrfsDirItem *dirItem = (BtrfsDirItem *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset));
 					
-						thisInst->mountedSubvol = (BtrfsObjID)endian64(dirItem->child.objectID);
+						mountedSubvol = (BtrfsObjID)endian64(dirItem->child.objectID);
 
 						*returnCode = 0;
 						*shortCircuit = true;
@@ -288,7 +288,7 @@ namespace WinBtrfsDrv
 			*exists = false;
 		}
 	
-		parseRootTreeRec(endian64(thisInst->supers[0].rtRoot), operation, input0, output0,
+		parseRootTreeRec(endian64(supers[0].rtRoot), operation, input0, output0,
 			&returnCode, &shortCircuit);
 
 		return returnCode;

@@ -55,7 +55,7 @@ namespace WinBtrfsDrv
 						kItem.data = malloc(endian32(item->size));
 						memcpy(kItem.data, nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset), endian32(item->size));
 
-						thisInst->chunkTree.push_back(kItem);
+						chunkTree.push_back(kItem);
 						break;
 					case TYPE_CHUNK_ITEM:
 						assert((endian32(item->size) - sizeof(BtrfsChunkItem)) % sizeof(BtrfsChunkItemStripe) == 0); // ensure proper 30+20n size
@@ -69,7 +69,7 @@ namespace WinBtrfsDrv
 						kItem.data = malloc(endian32(item->size));
 						memcpy(kItem.data, nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset), endian32(item->size));
 
-						thisInst->chunkTree.push_back(kItem);
+						chunkTree.push_back(kItem);
 						break;
 					default:
 						printf("parseChunkTreeRec: don't know how to load item of type 0x%02x!\n", item->key.type);
@@ -147,6 +147,6 @@ namespace WinBtrfsDrv
 
 	void parseChunkTree(CTOperation operation)
 	{
-		parseChunkTreeRec(endian64(thisInst->supers[0].ctRoot), operation);
+		parseChunkTreeRec(endian64(supers[0].ctRoot), operation);
 	}
 }

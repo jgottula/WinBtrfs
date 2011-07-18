@@ -74,7 +74,7 @@ namespace WinBtrfsDrv
 			exit(1);
 		}
 
-		if ((error = loadSBs(!thisInst->mountData->noDump)) != 0)
+		if ((error = loadSBs(!mountData->noDump)) != 0)
 		{
 			cleanUp();
 			exit(1);
@@ -86,30 +86,30 @@ namespace WinBtrfsDrv
 			exit(1);
 		}
 
-		loadSBChunks(!thisInst->mountData->noDump);
+		loadSBChunks(!mountData->noDump);
 
-		if (!thisInst->mountData->noDump) parseChunkTree(CTOP_DUMP_TREE);
+		if (!mountData->noDump) parseChunkTree(CTOP_DUMP_TREE);
 		parseChunkTree(CTOP_LOAD);
 
-		if (!thisInst->mountData->noDump) parseRootTree(RTOP_DUMP_TREE, NULL, NULL);
+		if (!mountData->noDump) parseRootTree(RTOP_DUMP_TREE, NULL, NULL);
 
-		if (!thisInst->mountData->noDump)
+		if (!mountData->noDump)
 		{
 			parseFSTree(OBJID_FS_TREE, FSOP_DUMP_TREE, NULL, NULL, NULL, NULL, NULL);
 			parseRootTree(RTOP_DUMP_SUBVOLS, NULL, NULL);
 		}
 
-		if (thisInst->mountData->dumpOnly)
+		if (mountData->dumpOnly)
 		{
 			cleanUp();
 			exit(0);
 		}
 	
 		/* aesthetic line break */
-		if (!thisInst->mountData->noDump)
+		if (!mountData->noDump)
 			printf("\n");
 
-		if (!thisInst->mountData->useSubvolID && !thisInst->mountData->useSubvolName)
+		if (!mountData->useSubvolID && !mountData->useSubvolName)
 		{
 			int result;
 			if ((result = parseRootTree(RTOP_DEFAULT_SUBVOL, NULL, NULL)) != 0)
@@ -119,18 +119,18 @@ namespace WinBtrfsDrv
 				exit(1);
 			}
 		}
-		else if (thisInst->mountData->useSubvolName)
+		else if (mountData->useSubvolName)
 		{
-			if (strcmp(thisInst->mountData->subvolName, "default") == 0)
-				thisInst->mountedSubvol = OBJID_FS_TREE;
+			if (strcmp(mountData->subvolName, "default") == 0)
+				mountedSubvol = OBJID_FS_TREE;
 			else
 			{
 				int result;
 				if ((result = parseRootTree(RTOP_GET_SUBVOL_ID,
-					thisInst->mountData->subvolName, &thisInst->mountedSubvol)) != 0)
+					mountData->subvolName, &mountedSubvol)) != 0)
 				{
 					printf("firstTasks: could not find the subvolume named '%s'!\n",
-						thisInst->mountData->subvolName);
+						mountData->subvolName);
 					cleanUp();
 					exit(1);
 				}
@@ -142,27 +142,27 @@ namespace WinBtrfsDrv
 		
 			/* we can be fairly certain that these constraints will always hold */
 			/* not enforcing these would allow the user to mount non-FS-type trees, which is definitely bad */
-			if ((thisInst->mountData->subvolID > (BtrfsObjID)0 && thisInst->mountData->subvolID < (BtrfsObjID)0x100) ||
-				(thisInst->mountData->subvolID > (BtrfsObjID)-0x100 && thisInst->mountData->subvolID < (BtrfsObjID)-1))
+			if ((mountData->subvolID > (BtrfsObjID)0 && mountData->subvolID < (BtrfsObjID)0x100) ||
+				(mountData->subvolID > (BtrfsObjID)-0x100 && mountData->subvolID < (BtrfsObjID)-1))
 			{
 				printf("firstTasks: %I64u is an impossible subvolume ID!\n",
-					(unsigned __int64)thisInst->mountData->subvolID);
+					(unsigned __int64)mountData->subvolID);
 				cleanUp();
 				exit(1);
 			}
 		
-			parseRootTree(RTOP_SUBVOL_EXISTS, &thisInst->mountData->subvolID, &subvolExists);
+			parseRootTree(RTOP_SUBVOL_EXISTS, &mountData->subvolID, &subvolExists);
 
 			if (!subvolExists)
 			{
 				printf("firstTasks: could not find the subvolume with ID %I64u!\n",
-					(unsigned __int64)thisInst->mountData->subvolID);
+					(unsigned __int64)mountData->subvolID);
 				cleanUp();
 				exit(1);
 			}
 
-			thisInst->mountedSubvol =
-				(thisInst->mountData->subvolID == (BtrfsObjID)0 ? OBJID_FS_TREE : thisInst->mountData->subvolID);
+			mountedSubvol =
+				(mountData->subvolID == (BtrfsObjID)0 ? OBJID_FS_TREE : mountData->subvolID);
 		}
 		
 		PDOKAN_OPTIONS dokanOptions = (PDOKAN_OPTIONS)malloc(sizeof(DOKAN_OPTIONS));
@@ -171,7 +171,7 @@ namespace WinBtrfsDrv
 		dokanOptions->ThreadCount = 1;			// eventually set this to zero or a user-definable count
 		dokanOptions->Options = 0;				// look into this later
 		dokanOptions->GlobalContext = 0;		// use this later if necessary
-		dokanOptions->MountPoint = thisInst->mountData->mountPoint;
+		dokanOptions->MountPoint = mountData->mountPoint;
 
 		int dokanResult = DokanMain(dokanOptions, const_cast<PDOKAN_OPERATIONS>(&btrfsOperations));
 		free(dokanOptions);
