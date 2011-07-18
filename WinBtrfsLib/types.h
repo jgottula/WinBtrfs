@@ -13,6 +13,8 @@
 #ifndef WINBTRFSLIB_TYPES_H
 #define WINBTRFSLIB_TYPES_H
 
+#include <Windows.h>
+
 /* pack structs the way they are on the disk */
 #pragma pack(1)
 
@@ -36,7 +38,7 @@ namespace WinBtrfsLib
 		OBJID_EXTENT_CSUM = (unsigned __int64)-0x0a,
 		OBJID_MULTIPLE = (unsigned __int64)-0x100
 	};
-
+	
 	enum BtrfsItemType : unsigned char
 	{
 		TYPE_INODE_ITEM = 0x01,
@@ -64,7 +66,7 @@ namespace WinBtrfsLib
 		TYPE_CHUNK_ITEM = 0xe4,
 		TYPE_STRING_ITEM = 0xfd
 	};
-
+	
 	enum BlockGroupFlags : unsigned __int64
 	{
 		BGFLAG_SINGLE = 0x0,
@@ -76,38 +78,38 @@ namespace WinBtrfsLib
 		BGFLAG_DUPLICATE = 0x20,
 		BGFLAG_RAID10 = 0x40
 	};
-
+	
 	enum FileDataType : unsigned char
 	{
 		FILEDATA_INLINE = 0,
 		FILEDATA_REGULAR = 1,
 		FILEDATA_PREALLOC = 2
 	};
-
+	
 	enum CompressionType : unsigned char
 	{
 		COMPRESSION_NONE = 0,
 		COMPRESSION_ZLIB = 1,
 		COMPRESSION_LZO = 2
 	};
-
+	
 	enum EncryptionType : unsigned char
 	{
 		ENCRYPTION_NONE = 0
 	};
-
+	
 	enum EncodingType : unsigned char
 	{
 		ENCODING_NONE = 0
 	};
-
+	
 	/* chunk tree operations */
 	enum CTOperation
 	{
 		CTOP_LOAD,
 		CTOP_DUMP_TREE
 	};
-
+	
 	/* root tree operations */
 	enum RTOperation
 	{
@@ -118,7 +120,7 @@ namespace WinBtrfsLib
 		RTOP_GET_ADDR,
 		RTOP_DUMP_SUBVOLS
 	};
-
+	
 	/* FS tree operations */
 	enum FSOperation
 	{
@@ -128,23 +130,23 @@ namespace WinBtrfsLib
 		FSOP_DIR_LIST,
 		FSOP_GET_INODE
 	};
-
+	
 	/* ALL multibyte integers in Btrfs_____ structs WILL ALWAYS be little-endian!
 		(use endian16(), endian32(), and endian64() to convert them)
 		any other struct members WILL ALWAYS be in native endian! */
-
+	
 	struct BtrfsTime
 	{
 		__int64					secSince1970;
 		unsigned int			nanoseconds;
 	};
-
+	
 	struct BtrfsChecksum
 	{
 		unsigned int			crc32c;
 		unsigned char			padding				[0x1c];
 	};
-
+	
 	struct BtrfsHeader
 	{
 		BtrfsChecksum			csum;
@@ -158,28 +160,28 @@ namespace WinBtrfsLib
 		unsigned int			nrItems;
 		unsigned char			level;
 	};
-
+	
 	struct BtrfsDiskKey
 	{
 		BtrfsObjID				objectID;
 		BtrfsItemType			type;
 		unsigned __int64		offset;
 	};
-
+	
 	struct BtrfsKeyPtr
 	{
 		BtrfsDiskKey			key;
 		unsigned __int64		blockNum;
 		unsigned __int64		generation;
 	};
-
+	
 	struct BtrfsItem
 	{
 		BtrfsDiskKey			key;
 		unsigned int			offset;
 		unsigned int			size;
 	};
-
+	
 	struct BtrfsInodeItem
 	{
 		unsigned __int64		generation;
@@ -200,14 +202,14 @@ namespace WinBtrfsLib
 		BtrfsTime				stMTime;
 		BtrfsTime				oTime;
 	};
-
+	
 	struct BtrfsInodeRef
 	{
 		unsigned __int64		index;
 		unsigned short			nameLen;
 		char					name				[0x0];
 	};
-
+	
 	/* this structure may be repeated if multiple items have the same hash */
 	struct BtrfsDirItem
 	{
@@ -217,15 +219,15 @@ namespace WinBtrfsLib
 		unsigned short			n;
 		unsigned char			childType;
 		char					namePlusData		[0x0];
-
+		
 		/* namePlusData encompasses the following two variable-size items: */
 		// char					name[n];
 		// unsigned char		data[m];
 	};
-
+	
 	/* same contents as BtrfsDirItem, but will never repeat */
 	typedef BtrfsDirItem BtrfsDirIndex;
-
+	
 	struct BtrfsExtentData
 	{
 		unsigned __int64		generation;
@@ -236,7 +238,7 @@ namespace WinBtrfsLib
 		unsigned char			type;
 		unsigned char			inlineData			[0x0];
 	};
-
+	
 	struct BtrfsExtentDataNonInline
 	{
 		unsigned __int64		extAddr;
@@ -244,7 +246,7 @@ namespace WinBtrfsLib
 		unsigned __int64		offset;
 		unsigned __int64		bytesInFile;
 	};
-
+	
 	struct BtrfsRootItem
 	{
 		BtrfsInodeItem			inodeItem;
@@ -260,7 +262,7 @@ namespace WinBtrfsLib
 		unsigned char			dropLevel;
 		unsigned char			rootLevel;
 	};
-
+	
 	struct BtrfsRootRef
 	{
 		BtrfsObjID				directoryID;
@@ -268,9 +270,9 @@ namespace WinBtrfsLib
 		unsigned short			n;
 		char					name				[0x0];
 	};
-
+	
 	typedef BtrfsRootRef BtrfsRootBackref;
-
+	
 	struct BtrfsDevItem
 	{
 		unsigned __int64		devID;
@@ -288,14 +290,14 @@ namespace WinBtrfsLib
 		unsigned char			devUUID				[0x10];
 		unsigned char			fsUUID				[0x10];
 	};
-
+	
 	struct BtrfsChunkItemStripe
 	{
 		unsigned __int64		devID;
 		unsigned __int64		offset;
 		unsigned char			devUUID				[0x10];
 	};
-
+	
 	struct BtrfsChunkItem
 	{
 		unsigned __int64		chunkSize;
@@ -309,13 +311,13 @@ namespace WinBtrfsLib
 		unsigned short			subStripes;
 		BtrfsChunkItemStripe	stripes				[0x0];
 	};
-
+	
 	struct BtrfsSBChunk
 	{
 		BtrfsDiskKey			key;
 		BtrfsChunkItem			chunkItem;
 	};
-
+	
 	struct BtrfsSuperblock
 	{
 		BtrfsChecksum			csum;
@@ -351,25 +353,25 @@ namespace WinBtrfsLib
 		unsigned char			chunkData			[0x800];
 		unsigned char			unused				[0x4d5];
 	};
-
+	
 	struct KeyedItem
 	{
 		BtrfsDiskKey			key;
 		void					*data;
 	};
-
+	
 	struct Root
 	{
 		BtrfsObjID				objectID;
 		BtrfsRootItem			rootItem;
 	};
-
+	
 	struct FileID
 	{
 		BtrfsObjID				treeID;
 		BtrfsObjID				objectID;
 	};
-
+	
 	struct FilePkg
 	{
 		FileID					fileID;
@@ -381,22 +383,32 @@ namespace WinBtrfsLib
 		char					name[256];
 		bool					hidden;
 	};
-
+	
 	struct DirList
 	{
 		size_t					numEntries;
 		FilePkg					*entries;
 	};
-
+	
+	struct MountData
+	{
+		bool noDump, dumpOnly, useSubvolID, useSubvolName;
+		BtrfsObjID subvolID;
+		char subvolName[256];
+		wchar_t mountPoint[MAX_PATH];
+		size_t numDevices;
+		wchar_t devicePaths[0][MAX_PATH];
+	};
+	
 	struct PhysAddr
 	{
 		unsigned __int64		offset;
 		unsigned __int64		len;
 		BtrfsChunkItem			chunkItem;
 	};
-
+	
 	typedef unsigned __int64 LogiAddr;
-
+	
 	/* size checks for on-disk types and structs */
 	static_assert(sizeof(BtrfsObjID) == sizeof(unsigned __int64), "BtrfsObjID has an unexpected size!");
 	static_assert(sizeof(BtrfsItemType) == sizeof(unsigned char), "BtrfsItemType has an unexpected size!");

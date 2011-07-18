@@ -10,7 +10,6 @@
  * any later version.
  */
 
-#include <Windows.h>
 #include "block_reader.h"
 #include "types.h"
 

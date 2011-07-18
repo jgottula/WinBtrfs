@@ -10,7 +10,6 @@
  * any later version.
  */
 
-#include <Windows.h>
 #include "types.h"
 
 #ifndef WINBTRFSLIB_BLOCK_READER_H

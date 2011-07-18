@@ -11,29 +11,46 @@
  */
 
 #include "WinBtrfsLib.h"
+#include <cassert>
 #include <cstdio>
+#include <map>
 #include <dokan.h>
 #include "btrfs_system.h"
 #include "init.h"
+#include "instance.h"
 
 namespace WinBtrfsLib
 {
-	extern std::vector<const wchar_t *> *devicePaths;
-	
-	VolumeInfo volumeInfo;
-
-	void WINBTRFSLIB_API start(VolumeInfo v)
+	void WINBTRFSLIB_API start(MountData mountData)
 	{
-		memcpy(&volumeInfo, &v, sizeof(VolumeInfo));
-		devicePaths = &volumeInfo.devicePaths;
+		DWORD thID = GetCurrentThreadId();
+		
+		/* ensure that no instance already exists under this thread ID */
+		assert(instances.find(thID) == instances.end());
+
+		/* create a new instance entry for this thread */
+		instances.insert(std::pair<DWORD, InstanceData *>(thID, new InstanceData()));
+
+		/* load the MountData struct we received into this thread's instance struct */
+		InstanceData *thisInst = getThisInst();
+		thisInst->mountData = (MountData *)malloc(sizeof(MountData) +
+			(mountData.numDevices * sizeof(wchar_t) * MAX_PATH));
+		memcpy(thisInst->mountData, &mountData,
+			sizeof(MountData) + (mountData.numDevices * sizeof(wchar_t) * MAX_PATH));
 
 		init();
 	}
 
 	void WINBTRFSLIB_API terminate()
 	{
+		InstanceData *thisInst = getThisInst();
+		
 		cleanUp();
-		DokanRemoveMountPoint(volumeInfo.mountPoint); // DokanUnmount only allows drive letters
+		DokanRemoveMountPoint(thisInst->mountData->mountPoint); // DokanUnmount only allows drive letters
+
+
+		instances.erase(GetCurrentThreadId());
+
 		exit(0);
 	}
 }

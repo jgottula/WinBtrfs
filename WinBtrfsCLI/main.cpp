@@ -14,6 +14,8 @@
 #include <cstdio>
 #include "../WinBtrfsLib/WinBtrfsLib.h"
 
+using namespace WinBtrfsLib;
+
 namespace WinBtrfsCLI
 {
 	BOOL WINAPI ctrlHandler(DWORD dwCtrlType)
@@ -51,30 +53,31 @@ namespace WinBtrfsCLI
 
 	void handleArgs(int argc, char **argv)
 	{
-		WinBtrfsLib::VolumeInfo volumeInfo;
+		MountData *mountData = (MountData *)malloc(sizeof(MountData));
 		int argState = 0;
 
-		volumeInfo.noDump = false;
-		volumeInfo.dumpOnly = false;
-		volumeInfo.useSubvolID = false;
-		volumeInfo.useSubvolName = false;
+		mountData->noDump = false;
+		mountData->dumpOnly = false;
+		mountData->useSubvolID = false;
+		mountData->useSubvolName = false;
+		mountData->numDevices = 0;
 
 		for (int i = 1; i < argc; i++)
 		{
 			if (argv[i][0] == '-')
 			{
 				if (strcmp(argv[i], "--no-dump") == 0)
-					volumeInfo.noDump = true;
+					mountData->noDump = true;
 				else if (strcmp(argv[i], "--dump-only") == 0)
-					volumeInfo.dumpOnly = true;
+					mountData->dumpOnly = true;
 				else if (strncmp(argv[i], "--subvol-id=", 12) == 0)
 				{
 					if (strlen(argv[i]) > 12)
 					{
-						if (!volumeInfo.useSubvolID && !volumeInfo.useSubvolName)
+						if (!mountData->useSubvolID && !mountData->useSubvolName)
 						{
-							if (sscanf(argv[i] + 12, "%I64u ", &volumeInfo.subvolID) == 1)
-								volumeInfo.useSubvolID = true;
+							if (sscanf(argv[i] + 12, "%I64u ", &mountData->subvolID) == 1)
+								mountData->useSubvolID = true;
 							else
 								usageError("You entered an indecipherable subvolume object ID!\n\n");
 						}
@@ -88,10 +91,11 @@ namespace WinBtrfsCLI
 				{
 					if (strlen(argv[i]) > 9)
 					{
-						if (!volumeInfo.useSubvolID && !volumeInfo.useSubvolName)
+						if (!mountData->useSubvolID && !mountData->useSubvolName)
 						{
-							volumeInfo.subvolName = argv[i] + 9;
-							volumeInfo.useSubvolName = true;
+							printf("handleArgs: warning, strcpy!\n");
+							strcpy(mountData->subvolName, argv[i] + 9);
+							mountData->useSubvolName = true;
 						}
 						else
 							usageError("You specified more than one subvolume to mount!\n\n");
@@ -107,7 +111,7 @@ namespace WinBtrfsCLI
 				if (argState == 0)
 				{
 					/* isn't fatal, shouldn't be an assertion really */
-					assert(mbstowcs_s(NULL, volumeInfo.mountPoint, MAX_PATH, argv[i], strlen(argv[i])) == 0);
+					assert(mbstowcs_s(NULL, mountData->mountPoint, MAX_PATH, argv[i], strlen(argv[i])) == 0);
 
 					argState++;
 				}
@@ -118,25 +122,31 @@ namespace WinBtrfsCLI
 					/* isn't fatal, shouldn't be an assertion really */
 					assert(mbstowcs_s(NULL, devicePath, MAX_PATH, argv[i], strlen(argv[i])) == 0);
 
-					volumeInfo.devicePaths.push_back(devicePath);
+					mountData->numDevices++;
+					mountData = (MountData *)realloc(mountData->devicePaths,
+						sizeof(MountData) + (mountData->numDevices * sizeof(wchar_t) * MAX_PATH));
+					printf("handleArgs: warning, wcscpy!\n");
+					wcscpy(mountData->devicePaths[mountData->numDevices - 1], devicePath);
 				}
 			}
 
 			assert(argState == 0 || argState == 1);
 		}
 
-		if (volumeInfo.noDump && volumeInfo.dumpOnly)
+		if (mountData->noDump && mountData->dumpOnly)
 			usageError("You cannot specify both --no-dump and --dump-only on a single run!\n\n");
 
 		if (argState == 0)
 			usageError("You didn't specify a mount point or devices to load!\n\n");
 
-		if (volumeInfo.devicePaths.size() == 0)
+		if (mountData->numDevices == 0)
 			usageError("You didn't specify one or more devices to load!\n\n");
 
 		/* in the future, find WinBtrfsService and communicate with it
 			and let it deal with WinBtrfsLib directly */
-		WinBtrfsLib::start(volumeInfo);
+		WinBtrfsLib::start(*mountData);
+
+		free(mountData);
 	}
 }
 

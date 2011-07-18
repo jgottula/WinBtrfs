@@ -10,10 +10,11 @@
  * any later version.
  */
 
+#include "../WinBtrfsLib/WinBtrfsLib.h"
 #include "WinBtrfsService.h"
 
 namespace WinBtrfsService
 {
-	int mount(MountData *mountData);
+	int mount(WinBtrfsLib::MountData *mountData);
 	void unmountAll();
 }

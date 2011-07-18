@@ -15,26 +15,24 @@
 #include <vector>
 #include "btrfs_system.h"
 #include "endian.h"
+#include "instance.h"
 #include "util.h"
 
 namespace WinBtrfsLib
 {
-	extern std::vector<BtrfsSuperblock> supers;
-
-	std::vector<KeyedItem> chunkTree;
-
 	void parseChunkTreeRec(LogiAddr addr, CTOperation operation)
 	{
+		InstanceData *thisInst = getThisInst();
 		unsigned char *nodeBlock, *nodePtr;
 		BtrfsHeader *header;
 		BtrfsItem *item;
 		KeyedItem kItem;
 		unsigned short *temp;
-	
+		
 		nodeBlock = loadNode(addr, &header);
 
 		assert(header->tree == OBJID_CHUNK_TREE);
-	
+		
 		nodePtr = nodeBlock + sizeof(BtrfsHeader);
 
 		if (operation == CTOP_DUMP_TREE)
@@ -58,7 +56,7 @@ namespace WinBtrfsLib
 						kItem.data = malloc(endian32(item->size));
 						memcpy(kItem.data, nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset), endian32(item->size));
 
-						chunkTree.push_back(kItem);
+						thisInst->chunkTree.push_back(kItem);
 						break;
 					case TYPE_CHUNK_ITEM:
 						assert((endian32(item->size) - sizeof(BtrfsChunkItem)) % sizeof(BtrfsChunkItemStripe) == 0); // ensure proper 30+20n size
@@ -72,7 +70,7 @@ namespace WinBtrfsLib
 						kItem.data = malloc(endian32(item->size));
 						memcpy(kItem.data, nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset), endian32(item->size));
 
-						chunkTree.push_back(kItem);
+						thisInst->chunkTree.push_back(kItem);
 						break;
 					default:
 						printf("parseChunkTreeRec: don't know how to load item of type 0x%02x!\n", item->key.type);
@@ -150,6 +148,8 @@ namespace WinBtrfsLib
 
 	void parseChunkTree(CTOperation operation)
 	{
-		parseChunkTreeRec(endian64(supers[0].ctRoot), operation);
+		InstanceData *thisInst = getThisInst();
+		
+		parseChunkTreeRec(endian64(thisInst->supers[0].ctRoot), operation);
 	}
 }

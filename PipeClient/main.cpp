@@ -12,10 +12,12 @@
 
 #include <cstdio>
 #include <Windows.h>
+#include "../WinBtrfsLib/WinBtrfsLib.h"
 #include "../WinBtrfsService/WinBtrfsService.h"
 
 /* based on http://ist.marshall.edu/ist480acp/code/pipec.cpp */
 
+using namespace WinBtrfsLib;
 using namespace WinBtrfsService;
 
 int main(int argc, char **argv)
@@ -52,8 +54,8 @@ int main(int argc, char **argv)
 	mountData->subvolName[0] = 0;
 	wcscpy(mountData->mountPoint, L"X:");
 	mountData->numDevices = 2;
-	wcscpy(mountData->devicePaths, L"..\\..\\test_images\\btrfs_multiA.img");
-	wcscpy(mountData->devicePaths + MAX_PATH, L"..\\..\\test_images\\btrfs_multiB.img");
+	wcscpy(mountData->devicePaths[0], L"..\\..\\test_images\\btrfs_multiA.img");
+	wcscpy(mountData->devicePaths[1], L"..\\..\\test_images\\btrfs_multiB.img");
 
 	msg->type = MSG_REQ_MOUNT;
 	msg->dataLen = DATA_LEN;

@@ -10,7 +10,6 @@
  * any later version.
  */
 
-#include <Windows.h>
 #include "types.h"
 
 namespace WinBtrfsLib

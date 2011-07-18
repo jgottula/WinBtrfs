@@ -16,16 +16,15 @@
 #include "btrfs_system.h"
 #include "endian.h"
 #include "fstree_parser.h"
+#include "instance.h"
 #include "util.h"
 
 namespace WinBtrfsLib
 {
-	extern std::vector<BtrfsSuperblock> supers;
-	extern BtrfsObjID mountedSubvol;
-
 	void parseRootTreeRec(LogiAddr addr, RTOperation operation, void *input0, void *output0,
 		int *returnCode, bool *shortCircuit)
 	{
+		InstanceData *thisInst = getThisInst();
 		unsigned char *nodeBlock, *nodePtr;
 		BtrfsHeader *header;
 		BtrfsItem *item;
@@ -156,11 +155,12 @@ namespace WinBtrfsLib
 				}
 				else if (operation == RTOP_DEFAULT_SUBVOL)
 				{
-					if (item->key.type == TYPE_DIR_ITEM && endian64(item->key.objectID) == supers[0].rootDirObjectID)
+					if (item->key.type == TYPE_DIR_ITEM && endian64(item->key.objectID) ==
+						thisInst->supers[0].rootDirObjectID)
 					{
 						BtrfsDirItem *dirItem = (BtrfsDirItem *)(nodeBlock + sizeof(BtrfsHeader) + endian32(item->offset));
 					
-						mountedSubvol = (BtrfsObjID)endian64(dirItem->child.objectID);
+						thisInst->mountedSubvol = (BtrfsObjID)endian64(dirItem->child.objectID);
 
 						*returnCode = 0;
 						*shortCircuit = true;
@@ -268,6 +268,7 @@ namespace WinBtrfsLib
 
 	int parseRootTree(RTOperation operation, void *input0, void *output0)
 	{
+		InstanceData *thisInst = getThisInst();
 		int returnCode;
 		bool shortCircuit = false;
 	
@@ -290,7 +291,7 @@ namespace WinBtrfsLib
 			*exists = false;
 		}
 	
-		parseRootTreeRec(endian64(supers[0].rtRoot), operation, input0, output0,
+		parseRootTreeRec(endian64(thisInst->supers[0].rtRoot), operation, input0, output0,
 			&returnCode, &shortCircuit);
 
 		return returnCode;

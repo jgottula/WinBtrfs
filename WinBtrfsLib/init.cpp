@@ -18,13 +18,14 @@
 #include "chunktree_parser.h"
 #include "dokan_callbacks.h"
 #include "fstree_parser.h"
+#include "instance.h"
 #include "roottree_parser.h"
 #include "util.h"
 #include "WinBtrfsLib.h"
 
 namespace WinBtrfsLib
 {
-	DOKAN_OPERATIONS btrfsOperations = {
+	const DOKAN_OPERATIONS btrfsOperations = {
 		&btrfsCreateFile,
 		&btrfsOpenDirectory,
 		&btrfsCreateDirectory,
@@ -52,13 +53,9 @@ namespace WinBtrfsLib
 		&btrfsSetFileSecurity
 	};
 
-	extern VolumeInfo volumeInfo;
-	extern BtrfsObjID mountedSubvol;
-
-	std::vector<const wchar_t *> *devicePaths;
-
 	void init()
 	{
+		InstanceData *thisInst = getThisInst();
 		DWORD error;
 
 #ifndef BOOST_DETAIL_ENDIAN_HPP
@@ -79,7 +76,7 @@ namespace WinBtrfsLib
 			exit(1);
 		}
 
-		if ((error = loadSBs(!volumeInfo.noDump)) != 0)
+		if ((error = loadSBs(!thisInst->mountData->noDump)) != 0)
 		{
 			cleanUp();
 			exit(1);
@@ -91,30 +88,32 @@ namespace WinBtrfsLib
 			exit(1);
 		}
 
-		loadSBChunks(!volumeInfo.noDump);
+		loadSBChunks(!thisInst->mountData->noDump);
 
-		if (!volumeInfo.noDump) parseChunkTree(CTOP_DUMP_TREE);
+		if (!thisInst->mountData->noDump) parseChunkTree(CTOP_DUMP_TREE);
 		parseChunkTree(CTOP_LOAD);
 
-		if (!volumeInfo.noDump) parseRootTree(RTOP_DUMP_TREE, NULL, NULL);
+		if (!thisInst->mountData->noDump) parseRootTree(RTOP_DUMP_TREE, NULL, NULL);
 
-		if (!volumeInfo.noDump)
+		if (!thisInst->mountData->noDump)
 		{
 			parseFSTree(OBJID_FS_TREE, FSOP_DUMP_TREE, NULL, NULL, NULL, NULL, NULL);
 			parseRootTree(RTOP_DUMP_SUBVOLS, NULL, NULL);
 		}
 
-		if (volumeInfo.dumpOnly)
+		if (thisInst->mountData->dumpOnly)
 		{
 			cleanUp();
 			exit(0);
 		}
 	
 		/* aesthetic line break */
-		if (!volumeInfo.noDump)
+		if (!thisInst->mountData->noDump)
 			printf("\n");
 
-		if (!volumeInfo.useSubvolID && !volumeInfo.useSubvolName)
+		thisInst->mountedSubvol = (BtrfsObjID)0;
+
+		if (!thisInst->mountData->useSubvolID && !thisInst->mountData->useSubvolName)
 		{
 			int result;
 			if ((result = parseRootTree(RTOP_DEFAULT_SUBVOL, NULL, NULL)) != 0)
@@ -124,17 +123,18 @@ namespace WinBtrfsLib
 				exit(1);
 			}
 		}
-		else if (volumeInfo.useSubvolName)
+		else if (thisInst->mountData->useSubvolName)
 		{
-			if (strcmp(volumeInfo.subvolName, "default") == 0)
-				mountedSubvol = OBJID_FS_TREE;
+			if (strcmp(thisInst->mountData->subvolName, "default") == 0)
+				thisInst->mountedSubvol = OBJID_FS_TREE;
 			else
 			{
 				int result;
-				if ((result = parseRootTree(RTOP_GET_SUBVOL_ID, volumeInfo.subvolName, &mountedSubvol)) != 0)
+				if ((result = parseRootTree(RTOP_GET_SUBVOL_ID,
+					thisInst->mountData->subvolName, &thisInst->mountedSubvol)) != 0)
 				{
 					printf("firstTasks: could not find the subvolume named '%s'!\n",
-						volumeInfo.subvolName);
+						thisInst->mountData->subvolName);
 					cleanUp();
 					exit(1);
 				}
@@ -146,26 +146,27 @@ namespace WinBtrfsLib
 		
 			/* we can be fairly certain that these constraints will always hold */
 			/* not enforcing these would allow the user to mount non-FS-type trees, which is definitely bad */
-			if ((volumeInfo.subvolID > (BtrfsObjID)0 && volumeInfo.subvolID < (BtrfsObjID)0x100) ||
-				(volumeInfo.subvolID > (BtrfsObjID)-0x100 && volumeInfo.subvolID < (BtrfsObjID)-1))
+			if ((thisInst->mountData->subvolID > (BtrfsObjID)0 && thisInst->mountData->subvolID < (BtrfsObjID)0x100) ||
+				(thisInst->mountData->subvolID > (BtrfsObjID)-0x100 && thisInst->mountData->subvolID < (BtrfsObjID)-1))
 			{
 				printf("firstTasks: %I64u is an impossible subvolume ID!\n",
-					(unsigned __int64)volumeInfo.subvolID);
+					(unsigned __int64)thisInst->mountData->subvolID);
 				cleanUp();
 				exit(1);
 			}
 		
-			parseRootTree(RTOP_SUBVOL_EXISTS, &volumeInfo.subvolID, &subvolExists);
+			parseRootTree(RTOP_SUBVOL_EXISTS, &thisInst->mountData->subvolID, &subvolExists);
 
 			if (!subvolExists)
 			{
 				printf("firstTasks: could not find the subvolume with ID %I64u!\n",
-					(unsigned __int64)volumeInfo.subvolID);
+					(unsigned __int64)thisInst->mountData->subvolID);
 				cleanUp();
 				exit(1);
 			}
 
-			mountedSubvol = (volumeInfo.subvolID == (BtrfsObjID)0 ? OBJID_FS_TREE : volumeInfo.subvolID);
+			thisInst->mountedSubvol =
+				(thisInst->mountData->subvolID == (BtrfsObjID)0 ? OBJID_FS_TREE : thisInst->mountData->subvolID);
 		}
 		
 		PDOKAN_OPTIONS dokanOptions = (PDOKAN_OPTIONS)malloc(sizeof(DOKAN_OPTIONS));
@@ -174,9 +175,9 @@ namespace WinBtrfsLib
 		dokanOptions->ThreadCount = 1;			// eventually set this to zero or a user-definable count
 		dokanOptions->Options = 0;				// look into this later
 		dokanOptions->GlobalContext = 0;		// use this later if necessary
-		dokanOptions->MountPoint = volumeInfo.mountPoint;
+		dokanOptions->MountPoint = thisInst->mountData->mountPoint;
 
-		int dokanResult = DokanMain(dokanOptions, &btrfsOperations);
+		int dokanResult = DokanMain(dokanOptions, const_cast<PDOKAN_OPERATIONS>(&btrfsOperations));
 		free(dokanOptions);
 
 		cleanUp();

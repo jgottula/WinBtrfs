@@ -17,11 +17,10 @@
 #include <dokan.h>
 #include "constants.h"
 #include "endian.h"
+#include "instance.h"
 
 namespace WinBtrfsLib
 {
-	extern std::vector<BtrfsSuperblock> supers;
-
 	void convertTime(const BtrfsTime *bTime, PFILETIME wTime)
 	{
 		LONGLONG s64 = 116444736000000000; // 1601-to-1970 correction factor
@@ -35,6 +34,7 @@ namespace WinBtrfsLib
 
 	void convertMetadata(const FilePkg *input, void *output, bool dirList)
 	{
+		InstanceData *thisInst = getThisInst();
 		LPBY_HANDLE_FILE_INFORMATION fileInfo = (LPBY_HANDLE_FILE_INFORMATION)output;
 		PWIN32_FIND_DATAW dirListData = (PWIN32_FIND_DATAW)output;
 
@@ -85,8 +85,10 @@ namespace WinBtrfsLib
 		if (!dirList)
 		{
 			/* using the least significant 4 bytes of the UUID */
-			fileInfo->dwVolumeSerialNumber = supers[0].fsUUID[0] + (supers[0].fsUUID[1] << 8) +
-				(supers[0].fsUUID[2] << 16) + (supers[0].fsUUID[3] << 24);
+			fileInfo->dwVolumeSerialNumber = thisInst->supers[0].fsUUID[0] +
+				(thisInst->supers[0].fsUUID[1] << 8) +
+				(thisInst->supers[0].fsUUID[2] << 16) +
+				(thisInst->supers[0].fsUUID[3] << 24);
 		}
 
 		if (!dirList)

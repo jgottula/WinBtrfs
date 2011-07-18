@@ -12,9 +12,11 @@
 
 #include "ipc.h"
 #include <cassert>
+#include "../WinBtrfsLib/WinBtrfsLib.h"
 #include "log.h"
 #include "volume_mgr.h"
-#include "WinBtrfsService.h"
+
+using namespace WinBtrfsLib;
 
 namespace WinBtrfsService
 {

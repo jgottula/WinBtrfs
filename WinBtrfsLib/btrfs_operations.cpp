@@ -11,14 +11,12 @@
  */
 
 #include "btrfs_operations.h"
-#include <Windows.h>
 #include "crc32c.h"
 #include "fstree_parser.h"
+#include "instance.h"
 
 namespace WinBtrfsLib
 {
-	extern BtrfsObjID mountedSubvol;
-
 	void validatePath(const char *input, char *output)
 	{
 		size_t c = 0, len = strlen(input);
@@ -107,6 +105,7 @@ namespace WinBtrfsLib
 
 	int getPathID(const char *path, FileID *output, FileID *parent)
 	{
+		InstanceData *thisInst = getThisInst();
 		char vPath[MAX_PATH], **components;
 		FileID fileID, childID;
 		unsigned int numComponents;
@@ -117,7 +116,7 @@ namespace WinBtrfsLib
 		numComponents = componentizePath(path, &components);
 
 		/* start at the root directory of the currently mounted subvolume */
-		fileID.treeID = childID.treeID = mountedSubvol;
+		fileID.treeID = childID.treeID = thisInst->mountedSubvol;
 		fileID.objectID = childID.objectID = OBJID_ROOT_DIR;
 
 		for (int i = 0; i < numComponents; i++)
