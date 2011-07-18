@@ -1,4 +1,4 @@
-/* WinBtrfsLib/block_reader.h
+/* WinBtrfsDrv/block_reader.h
  * low-level block reading and caching
  *
  * WinBtrfs
@@ -15,7 +15,7 @@
 #ifndef WINBTRFSLIB_BLOCK_READER_H
 #define WINBTRFSLIB_BLOCK_READER_H
 
-namespace WinBtrfsLib
+namespace WinBtrfsDrv
 {
 	class BlockReader
 	{

@@ -1,4 +1,4 @@
-/* WinBtrfsLib/block_reader.cpp
+/* WinBtrfsDrv/block_reader.cpp
  * low-level block reading and caching
  *
  * WinBtrfs
@@ -14,7 +14,7 @@
 #include <cassert>
 #include "btrfs_system.h"
 
-namespace WinBtrfsLib
+namespace WinBtrfsDrv
 {
 	BlockReader::BlockReader(const wchar_t *devicePath)
 	{

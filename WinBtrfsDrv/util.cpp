@@ -1,4 +1,4 @@
-/* WinBtrfsLib/util.cpp
+/* WinBtrfsDrv/util.cpp
  * utility functions
  *
  * WinBtrfs
@@ -19,7 +19,7 @@
 #include "endian.h"
 #include "instance.h"
 
-namespace WinBtrfsLib
+namespace WinBtrfsDrv
 {
 	void convertTime(const BtrfsTime *bTime, PFILETIME wTime)
 	{

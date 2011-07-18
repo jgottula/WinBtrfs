@@ -1,4 +1,4 @@
-/* WinBtrfsLib/instance.h
+/* WinBtrfsDrv/instance.h
  * infrastructure to handle multiple instances
  *
  * WinBtrfs
@@ -17,9 +17,9 @@
 #include <map>
 #include <vector>
 #include "block_reader.h"
-#include "WinBtrfsLib.h"
+#include "WinBtrfsDrv.h"
 
-namespace WinBtrfsLib
+namespace WinBtrfsDrv
 {
 	struct InstanceData
 	{

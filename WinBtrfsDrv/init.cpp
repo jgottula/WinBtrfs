@@ -1,4 +1,4 @@
-/* WinBtrfsLib/init.cpp
+/* WinBtrfsDrv/init.cpp
  * filesystem initialization code
  *
  * WinBtrfs
@@ -21,9 +21,9 @@
 #include "instance.h"
 #include "roottree_parser.h"
 #include "util.h"
-#include "WinBtrfsLib.h"
+#include "WinBtrfsDrv.h"
 
-namespace WinBtrfsLib
+namespace WinBtrfsDrv
 {
 	const DOKAN_OPERATIONS btrfsOperations = {
 		&btrfsCreateFile,

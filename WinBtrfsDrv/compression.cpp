@@ -1,4 +1,4 @@
-/* WinBtrfsLib/compression.cpp
+/* WinBtrfsDrv/compression.cpp
  * data compression algorithms
  *
  * WinBtrfs
@@ -15,7 +15,7 @@
 #include "../zlib/zlib.h"
 #include "endian.h"
 
-namespace WinBtrfsLib
+namespace WinBtrfsDrv
 {
 	int lzoDecompress(const unsigned char *compressed, unsigned char *decompressed,
 		unsigned __int64 cSize, unsigned __int64 dSize)

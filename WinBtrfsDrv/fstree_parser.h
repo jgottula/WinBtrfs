@@ -1,5 +1,5 @@
-/* WinBtrfsLib/init.h
- * filesystem initialization code
+/* WinBtrfsDrv/fstree_parser.h
+ * fs tree parser
  *
  * WinBtrfs
  * Copyright (c) 2011 Justin Gottula
@@ -10,7 +10,10 @@
  * any later version.
  */
 
-namespace WinBtrfsLib
+#include "types.h"
+
+namespace WinBtrfsDrv
 {
-	void init();
+	int parseFSTree(BtrfsObjID tree, FSOperation operation, void *input0, void *input1, void *input2,
+		void *output0, void *output1);
 }

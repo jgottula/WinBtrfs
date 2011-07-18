@@ -1,4 +1,4 @@
-/* WinBtrfsLib/dokan_callbacks.cpp
+/* WinBtrfsDrv/dokan_callbacks.cpp
  * implementations of Dokan callback functions
  *
  * WinBtrfs
@@ -23,7 +23,7 @@
 #include "instance.h"
 #include "util.h"
 
-namespace WinBtrfsLib
+namespace WinBtrfsDrv
 {
 	DWORD setupBigDokanLock()
 	{

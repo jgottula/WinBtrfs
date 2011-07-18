@@ -1,5 +1,5 @@
-/* WinBtrfsLib/roottree_parser.h
- * root tree parser
+/* WinBtrfsDrv/btrfs_operations.h
+ * high-level filesystem operations
  *
  * WinBtrfs
  * Copyright (c) 2011 Justin Gottula
@@ -12,7 +12,9 @@
 
 #include "types.h"
 
-namespace WinBtrfsLib
+namespace WinBtrfsDrv
 {
-	int parseRootTree(RTOperation operation, void *input0, void *output0);
+	void validatePath(const char *input, char *output);
+	unsigned int componentizePath(const char *path, char ***output);
+	int getPathID(BtrfsObjID mountedSubvol, const char *path, FileID *output, FileID *parent);
 }

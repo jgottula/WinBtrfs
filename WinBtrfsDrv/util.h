@@ -1,4 +1,4 @@
-/* WinBtrfsLib/util.h
+/* WinBtrfsDrv/util.h
  * utility functions
  *
  * WinBtrfs
@@ -12,7 +12,7 @@
 
 #include "types.h"
 
-namespace WinBtrfsLib
+namespace WinBtrfsDrv
 {
 	void convertTime(const BtrfsTime *bTime, PFILETIME wTime);
 	void convertMetadata(const FilePkg *input, void *output, bool dirList);

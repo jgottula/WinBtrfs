@@ -1,4 +1,4 @@
-/* WinBtrfsLib/constants.h
+/* WinBtrfsDrv/constants.h
  * symbolic constant definitions
  *
  * WinBtrfs
@@ -13,7 +13,7 @@
 #ifndef WINBTRFSLIB_CONSTANTS_H
 #define WINBTRFSLIB_CONSTANTS_H
 
-namespace WinBtrfsLib
+namespace WinBtrfsDrv
 {
 	/* Btrfs superblock physical addresses */
 	const unsigned __int64 SUPERBLOCK_1_PADDR = 0x10000;

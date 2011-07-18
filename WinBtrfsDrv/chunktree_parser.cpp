@@ -1,4 +1,4 @@
-/* WinBtrfsLib/chunktree_parser.cpp
+/* WinBtrfsDrv/chunktree_parser.cpp
  * chunk tree parser
  *
  * WinBtrfs
@@ -18,7 +18,7 @@
 #include "instance.h"
 #include "util.h"
 
-namespace WinBtrfsLib
+namespace WinBtrfsDrv
 {
 	void parseChunkTreeRec(LogiAddr addr, CTOperation operation)
 	{

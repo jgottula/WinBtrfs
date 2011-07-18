@@ -9,7 +9,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "VolumeLister", "VolumeListe
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WinBtrfsGUI", "WinBtrfsGUI\WinBtrfsGUI.csproj", "{EFDD22B2-7143-4EDA-A267-B88433E1BE20}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "WinBtrfsLib", "WinBtrfsLib\WinBtrfsLib.vcxproj", "{B6810100-D89C-4DAB-9FD7-C82A2AD52831}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "WinBtrfsDrv", "WinBtrfsDrv\WinBtrfsDrv.vcxproj", "{B6810100-D89C-4DAB-9FD7-C82A2AD52831}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "WinBtrfsService", "WinBtrfsService\WinBtrfsService.vcxproj", "{ECE512A9-A96D-41D8-8137-DE31E62FE102}"
 	ProjectSection(ProjectDependencies) = postProject

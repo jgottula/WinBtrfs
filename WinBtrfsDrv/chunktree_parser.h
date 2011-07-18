@@ -1,4 +1,4 @@
-/* WinBtrfsLib/chunktree_parser.h
+/* WinBtrfsDrv/chunktree_parser.h
  * chunk tree parser
  *
  * WinBtrfs
@@ -12,7 +12,7 @@
 
 #include "types.h"
 
-namespace WinBtrfsLib
+namespace WinBtrfsDrv
 {
 	void parseChunkTree(CTOperation operation);
 }

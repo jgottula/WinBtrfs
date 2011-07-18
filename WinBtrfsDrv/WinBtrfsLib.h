@@ -1,4 +1,4 @@
-/* WinBtrfsLib/WinBtrfsLib.h
+/* WinBtrfsDrv/WinBtrfsDrv.h
  * public DLL interfaces
  *
  * WinBtrfs
@@ -21,7 +21,7 @@
 
 #include "types.h"
 
-namespace WinBtrfsLib
+namespace WinBtrfsDrv
 {
 	void WINBTRFSLIB_API start(const MountData *mountData);
 	void WINBTRFSLIB_API terminate();

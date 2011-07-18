@@ -1,4 +1,4 @@
-/* WinBtrfsLib/btrfs_system.cpp
+/* WinBtrfsDrv/btrfs_system.cpp
  * low-level filesystem code
  *
  * WinBtrfs
@@ -20,7 +20,7 @@
 #include "roottree_parser.h"
 #include "util.h"
 
-namespace WinBtrfsLib
+namespace WinBtrfsDrv
 {
 	void allocateBlockReaders()
 	{

@@ -1,4 +1,4 @@
-/* WinBtrfsLib/btrfs_system.h
+/* WinBtrfsDrv/btrfs_system.h
  * low-level filesystem code
  *
  * WinBtrfs
@@ -13,7 +13,7 @@
 #include "block_reader.h"
 #include "types.h"
 
-namespace WinBtrfsLib
+namespace WinBtrfsDrv
 {
 	void allocateBlockReaders();
 	void cleanUp();

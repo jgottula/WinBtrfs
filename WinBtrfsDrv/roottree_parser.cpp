@@ -1,4 +1,4 @@
-/* WinBtrfsLib/roottree_parser.cpp
+/* WinBtrfsDrv/roottree_parser.cpp
  * root tree parser
  *
  * WinBtrfs
@@ -19,7 +19,7 @@
 #include "instance.h"
 #include "util.h"
 
-namespace WinBtrfsLib
+namespace WinBtrfsDrv
 {
 	void parseRootTreeRec(LogiAddr addr, RTOperation operation, void *input0, void *output0,
 		int *returnCode, bool *shortCircuit)

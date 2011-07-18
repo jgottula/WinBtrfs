@@ -1,4 +1,4 @@
-/* WinBtrfsLib/types.h
+/* WinBtrfsDrv/types.h
  * user type and struct definitions
  *
  * WinBtrfs
@@ -18,7 +18,7 @@
 /* pack structs the way they are on the disk */
 #pragma pack(1)
 
-namespace WinBtrfsLib
+namespace WinBtrfsDrv
 {
 	enum BtrfsObjID : unsigned __int64
 	{

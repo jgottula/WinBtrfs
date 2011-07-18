@@ -1,4 +1,4 @@
-/* WinBtrfsLib/btrfs_operations.cpp
+/* WinBtrfsDrv/btrfs_operations.cpp
  * high-level filesystem operations
  *
  * WinBtrfs
@@ -15,7 +15,7 @@
 #include "fstree_parser.h"
 #include "instance.h"
 
-namespace WinBtrfsLib
+namespace WinBtrfsDrv
 {
 	void validatePath(const char *input, char *output)
 	{

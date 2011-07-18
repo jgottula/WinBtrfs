@@ -1,5 +1,5 @@
-/* WinBtrfsLib/fstree_parser.h
- * fs tree parser
+/* WinBtrfsDrv/roottree_parser.h
+ * root tree parser
  *
  * WinBtrfs
  * Copyright (c) 2011 Justin Gottula
@@ -12,8 +12,7 @@
 
 #include "types.h"
 
-namespace WinBtrfsLib
+namespace WinBtrfsDrv
 {
-	int parseFSTree(BtrfsObjID tree, FSOperation operation, void *input0, void *input1, void *input2,
-		void *output0, void *output1);
+	int parseRootTree(RTOperation operation, void *input0, void *output0);
 }

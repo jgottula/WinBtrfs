@@ -1,4 +1,4 @@
-/* WinBtrfsLib/instance.cpp
+/* WinBtrfsDrv/instance.cpp
  * infrastructure to handle multiple instances
  *
  * WinBtrfs
@@ -13,7 +13,7 @@
 #include "instance.h"
 #include <cassert>
 
-namespace WinBtrfsLib
+namespace WinBtrfsDrv
 {
 	std::map<DWORD, InstanceData *> instances;
 	

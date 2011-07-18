@@ -1,4 +1,4 @@
-/* WinBtrfsLib/fstree_parser.cpp
+/* WinBtrfsDrv/fstree_parser.cpp
  * fs tree parser
  *
  * WinBtrfs
@@ -18,7 +18,7 @@
 #include "endian.h"
 #include "util.h"
 
-namespace WinBtrfsLib
+namespace WinBtrfsDrv
 {
 	void parseFSTreeRec(LogiAddr addr, BtrfsObjID tree, FSOperation operation, void *input0, void *input1, void *input2,
 		void *output0, void *output1, int *returnCode, bool *shortCircuit)

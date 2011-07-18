@@ -1,4 +1,4 @@
-/* WinBtrfsLib/compression.h
+/* WinBtrfsDrv/compression.h
  * data compression algorithms
  *
  * WinBtrfs
@@ -11,7 +11,7 @@
  */
 
 
-namespace WinBtrfsLib
+namespace WinBtrfsDrv
 {
 	int lzoDecompress(const unsigned char *compressed, unsigned char *decompressed,
 		unsigned __int64 cSize, unsigned __int64 dSize);

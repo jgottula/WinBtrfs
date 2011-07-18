@@ -1,4 +1,4 @@
-/* WinBtrfsLib/endian.h
+/* WinBtrfsDrv/endian.h
  * functions to deal with disk/CPU endianness differences
  *
  * WinBtrfs
@@ -21,7 +21,7 @@
 #endif
 #endif
 
-namespace WinBtrfsLib
+namespace WinBtrfsDrv
 {
 	inline unsigned short endian16(unsigned short _leFromDisk)
 	{

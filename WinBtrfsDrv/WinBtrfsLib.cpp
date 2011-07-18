@@ -1,4 +1,4 @@
-/* WinBtrfsLib/WinBtrfsLib.cpp
+/* WinBtrfsDrv/WinBtrfsDrv.cpp
  * public DLL interfaces
  *
  * WinBtrfs
@@ -10,7 +10,7 @@
  * any later version.
  */
 
-#include "WinBtrfsLib.h"
+#include "WinBtrfsDrv.h"
 #include <cassert>
 #include <cstdio>
 #include <map>
@@ -19,7 +19,7 @@
 #include "init.h"
 #include "instance.h"
 
-namespace WinBtrfsLib
+namespace WinBtrfsDrv
 {
 	void WINBTRFSLIB_API start(const MountData *mountData)
 	{
@@ -57,7 +57,7 @@ namespace WinBtrfsLib
 	}
 }
 
-using namespace WinBtrfsLib;
+using namespace WinBtrfsDrv;
 
 BOOL WINAPI DLLMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
