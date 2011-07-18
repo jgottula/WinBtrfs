@@ -22,7 +22,7 @@ namespace WinBtrfsLib
 		DWORD thID = GetCurrentThreadId();
 		
 		/* ensure that a structure for this instance exists in the array */
-		assert(instances.find(thID) == instances.end());
+		assert(instances.count(thID) > 0);
 
 		return instances[thID];
 	}
