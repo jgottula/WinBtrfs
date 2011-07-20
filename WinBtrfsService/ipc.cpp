@@ -78,7 +78,7 @@ namespace WinBtrfsService
 			
 			msg = (ServiceMsg *)buffer;
 
-			if (msg->type == MSG_REQ_MOUNT)
+			if (msg->type == MSG_QUERY_MOUNT)
 			{
 				MountData *mountData = (MountData *)msg->data;
 
@@ -86,7 +86,7 @@ namespace WinBtrfsService
 				assert(msg->dataLen >= sizeof(MountData) +
 					(mountData->numDevices * sizeof(wchar_t) * MAX_PATH));
 				
-				log("Received MSG_REQ_MOUNT.\n");
+				log("Received MSG_QUERY_MOUNT.\n");
 				
 				if ((errorCode = mount(mountData)) == 0)
 					respOK = true;
@@ -98,10 +98,10 @@ namespace WinBtrfsService
 			{
 				ServiceMsg msg;
 
-				msg.type = MSG_RESP_OK;
+				msg.type = MSG_REPLY_OK;
 				msg.dataLen = 0;
 				
-				log("Sending MSG_RESP_OK.\n");
+				log("Sending MSG_REPLY_OK.\n");
 				if ((error = WriteFile(hPipe, &msg, sizeof(msg), &bytesWritten, NULL)) == 0)
 					log("Attempting to write to the pipe returned error %u: %s",
 						error, getErrorMessage(error));
@@ -111,11 +111,11 @@ namespace WinBtrfsService
 			{
 				ServiceMsg *msg = (ServiceMsg *)malloc(sizeof(ServiceMsg) + sizeof(int));
 
-				msg->type = MSG_RESP_ERROR;
+				msg->type = MSG_REPLY_ERROR;
 				msg->dataLen = sizeof(int);
 				*((int *)msg->data) = errorCode;
 				
-				log("Sending MSG_RESP_ERROR.\n");
+				log("Sending MSG_REPLY_ERROR.\n");
 				if ((error = WriteFile(hPipe, &msg, sizeof(msg), &bytesWritten, NULL)) == 0)
 					log("Attempting to write to the pipe returned error %u: %s",
 						error, getErrorMessage(error));

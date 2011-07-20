@@ -57,7 +57,7 @@ int main(int argc, char **argv)
 	wcscpy(mountData->devicePaths[0], L"..\\..\\test_images\\btrfs_multiA.img");
 	wcscpy(mountData->devicePaths[1], L"..\\..\\test_images\\btrfs_multiB.img");
 
-	msg->type = MSG_REQ_MOUNT;
+	msg->type = MSG_QUERY_MOUNT;
 	msg->dataLen = DATA_LEN;
 
 	if (WriteFile(hPipe, msg, sizeof(ServiceMsg) + DATA_LEN, &bytesWritten, NULL) == 0)
@@ -81,10 +81,10 @@ int main(int argc, char **argv)
 		return 4;
 	}
 
-	if (msg->type == MSG_RESP_OK)
-		printf("Received MSG_RESP_OK.\n");
-	else if (msg->type == MSG_RESP_ERROR)
-		printf("Received MSG_RESP_ERROR (%d).\n", *((int *)msg->data));
+	if (msg->type == MSG_REPLY_OK)
+		printf("Received MSG_REPLY_OK.\n");
+	else if (msg->type == MSG_REPLY_ERROR)
+		printf("Received MSG_REPLY_ERROR (%d).\n", *((int *)msg->data));
 
 	free(msg);
 

@@ -22,8 +22,6 @@ namespace WinBtrfsService
 	{
 		int error = 0;
 		
-		/* CreateProcess on WinBtrfsDrv, set env vars for WinBtrfsService's PID
-			and the pipe name */
 		/* wait for the process to request a MountData struct */
 		/* have it ensure that this FS UUID isn't already mounted somewhere else */
 		
