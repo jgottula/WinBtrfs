@@ -17,6 +17,20 @@
 
 namespace WinBtrfsService
 {
+	enum InstState
+	{
+		INST_DEAD,
+		INST_PROC_STARTED,
+		INST_MOUNTED
+	};
+	
+	struct VolEntry
+	{
+		InstState state;
+		PROCESS_INFORMATION procInfo;
+		WinBtrfsDrv::MountData *mountData;
+	};
+	
 	int mount(WinBtrfsDrv::MountData *mountData);
 	void unmountAll();
 }

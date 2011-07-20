@@ -126,7 +126,7 @@ int main(int argc, char **argv)
 		{ NULL, NULL }
 	};
 
-	/* services start in C:\windows\system32 by default, which is bad for logging */
+	/* services start in C:\windows\system32 by default, which is not what we want */
 	GetModuleFileNameA(NULL, exePath, MAX_PATH);
 	*strrchr(exePath, '\\') = 0; // chop off everything after the directory
 	SetCurrentDirectoryA(exePath);

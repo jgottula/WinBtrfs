@@ -11,18 +11,38 @@
  */
 
 #include "volume_mgr.h"
+#include <vector>
 #include "log.h"
 
 namespace WinBtrfsService
 {
+	std::vector<VolEntry> volumes;
+	
 	int mount(WinBtrfsDrv::MountData *mountData)
 	{
 		int error = 0;
 		
-		/* spawn a new instance of WinBtrfsLib */
-		/* ensure that this FS UUID isn't already mounted somewhere else */
+		/* CreateProcess on WinBtrfsDrv, set env vars for WinBtrfsService's PID
+			and the pipe name */
+		/* wait for the process to request a MountData struct */
+		/* have it ensure that this FS UUID isn't already mounted somewhere else */
+		
+		VolEntry entry;
+		entry.state = INST_PROC_STARTED;
+		entry.mountData = mountData;
 
-		log("mount: stub, returning %d\n", error);
+		const char env[] = "WinBtrfsService=1\0NamedPipe=\\\\.\\pipe\\WinBtrfsService\0";
+		STARTUPINFO startUpInfo = { sizeof(STARTUPINFO) };
+		if ((error = CreateProcess(L".\\WinBtrfsDrv.exe", NULL, NULL, NULL, FALSE,
+			CREATE_NO_WINDOW, (LPVOID)env, NULL, &startUpInfo, &entry.procInfo)) = 0)
+		{
+			log("Could not start a new instance of WinBtrfsDrv.exe: %s", getErrorMessage(error));
+			return error;
+		}
+
+		volumes.push_back(entry);
+
+		log("mount: OK\n");
 		return error;
 	}
 	
@@ -31,6 +51,9 @@ namespace WinBtrfsService
 		log("unmountAll is a stub!\n");
 		// log on failure, this is nonfatal
 
-		/* use DokanRemoveMountPoint(...); */
+		/* iterate across all mounted volumes
+			- send a message to trigger an unmount
+			- after a timeout, kill the process
+			- call DokanRemoveMountPoint to make sure */
 	}
 }

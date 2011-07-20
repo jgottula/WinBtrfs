@@ -10,7 +10,29 @@
  * any later version.
  */
 
+#include <cstdio>
+#include <Windows.h>
+
+namespace WinBtrfsDrv
+{
+	void improperInvocation()
+	{
+		fprintf(stderr, "WinBtrfsDrv must be run by WinBtrfsService.\n");
+		exit(1);
+	}
+}
+
+using namespace WinBtrfsDrv;
+
 int main(int argc, char **argv)
 {
-	/* required arg: pipe name */
+	wchar_t *env = GetEnvironmentStrings();
+
+	if (memcmp(L"WinBtrfsService=1\0NamedPipe=\\\\.\\pipe\\WinBtrfsService\0",
+		env, 54 * sizeof(wchar_t)) != 0)
+		improperInvocation();
+
+	FreeEnvironmentStrings(env);
+
+	return 0;
 }
