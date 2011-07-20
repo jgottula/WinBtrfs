@@ -12,7 +12,8 @@
 
 #include <cstdio>
 #include <Windows.h>
-#include "../WinBtrfsService/WinBtrfsService.h"
+#include "../WinBtrfsDrv/types.h"
+#include "../WinBtrfsService/ipc.h"
 
 /* based on http://ist.marshall.edu/ist480acp/code/pipec.cpp */
 
