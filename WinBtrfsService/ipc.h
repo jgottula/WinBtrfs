@@ -17,6 +17,20 @@
 
 namespace WinBtrfsService
 {
+	enum MsgType
+	{
+		MSG_RESP_OK = 0,
+		MSG_RESP_ERROR = 1,
+		MSG_REQ_MOUNT = 2
+	};
+	
+	struct ServiceMsg
+	{
+		MsgType type;
+		size_t dataLen;
+		char data[0];
+	};
+
 	DWORD setUpIPC();
 	void cleanUpIPC();
 	void handleIPC();

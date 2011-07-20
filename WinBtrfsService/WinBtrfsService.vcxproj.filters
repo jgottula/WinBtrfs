@@ -38,8 +38,5 @@
     <ClInclude Include="ipc.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="WinBtrfsService.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
   </ItemGroup>
 </Project>

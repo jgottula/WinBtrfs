@@ -13,7 +13,7 @@
 #ifndef WINBTRFSSERVICE_VOLUME_MGR_H
 #define WINBTRFSSERVICE_VOLUME_MGR_H
 
-#include "WinBtrfsService.h"
+#include "../WinBtrfsDrv/types.h"
 
 namespace WinBtrfsService
 {
