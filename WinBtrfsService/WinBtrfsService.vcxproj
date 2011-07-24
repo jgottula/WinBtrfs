@@ -91,13 +91,12 @@
       </Command>
     </CustomBuildStep>
     <PostBuildEvent>
-      <Command>sc \\localhost stop WinBtrfsService
-rmdir /s /q C:\WinBtrfsService
-mkdir C:\WinBtrfsService
-copy J:\Programming\WinBtrfs\WinBtrfs\Debug\* C:\WinBtrfsService\*</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
     <PostBuildEvent>
-      <Message>Copying to C:\WinBtrfsService</Message>
+      <Message>
+      </Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -126,11 +125,10 @@ copy J:\Programming\WinBtrfs\WinBtrfs\Debug\* C:\WinBtrfsService\*</Command>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
     </Link>
     <PostBuildEvent>
-      <Command>sc \\localhost stop WinBtrfsService
-rmdir /s /q C:\WinBtrfsService
-mkdir C:\WinBtrfsService
-copy J:\Programming\WinBtrfs\WinBtrfs\Debug\* C:\WinBtrfsService\*</Command>
-      <Message>Copying to C:\WinBtrfsService</Message>
+      <Command>
+      </Command>
+      <Message>
+      </Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
