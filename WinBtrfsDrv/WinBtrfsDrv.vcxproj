@@ -99,11 +99,13 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>J:\Programming\WinBtrfs\dokan\dokan;J:\Programming\WinBtrfs\boost_1_46_1;$(IncludePath)</IncludePath>
+    <IncludePath>..\..\dokan\dokan;..\..\boost_1_46_1;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Program Files (x86)\Dokan\DokanLibrary;$(VCInstallDir)lib;$(VCInstallDir)atlmfc\lib;$(WindowsSdkDir)lib;$(FrameworkSDKDir)\lib</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>J:\Programming\WinBtrfs\dokan\dokan;J:\Programming\WinBtrfs\boost_1_46_1;$(IncludePath)</IncludePath>
+    <IncludePath>..\..\dokan\dokan;..\..\boost_1_46_1;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Program Files (x86)\Dokan\DokanLibrary;$(VCInstallDir)lib;$(VCInstallDir)atlmfc\lib;$(WindowsSdkDir)lib;$(FrameworkSDKDir)\lib</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -126,7 +128,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>"C:\Program Files\Dokan\DokanLibrary\dokan.lib";%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>dokan.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
       <Profile>true</Profile>
       <OptimizeReferences>false</OptimizeReferences>
@@ -154,7 +156,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>"C:\Program Files\Dokan\DokanLibrary\dokan.lib";%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>dokan.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
     </Link>
   </ItemDefinitionGroup>
