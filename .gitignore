@@ -9,3 +9,5 @@ ipch/
 *.sln.docstates
 *.vcxproj.user
 *.psess
+*.sdf
+*.opensdf
