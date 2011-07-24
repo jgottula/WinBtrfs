@@ -10,10 +10,10 @@
  * any later version.
  */
 
-#include <Windows.h>
-
 #ifndef WINBTRFSSERVICE_LOG_H
 #define WINBTRFSSERVICE_LOG_H
+
+#include <Windows.h>
 
 namespace WinBtrfsService
 {

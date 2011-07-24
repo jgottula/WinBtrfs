@@ -10,10 +10,10 @@
  * any later version.
  */
 
-#include <Windows.h>
-
 #ifndef WINBTRFSSERVICE_IPC_H
 #define WINBTRFSSERVICE_IPC_H
+
+#include <Windows.h>
 
 namespace WinBtrfsService
 {
