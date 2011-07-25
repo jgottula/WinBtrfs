@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO.Pipes;
+using System.Threading;
 
 namespace WinBtrfsCLI
 {
@@ -145,7 +146,8 @@ namespace WinBtrfsCLI
 
 		static void SendMessage(string msg)
 		{
-			var pipeClient = new NamedPipeClientStream(".", "WinBtrfsService", PipeDirection.InOut, PipeOptions.None);
+			var pipeClient = new NamedPipeClientStream(".", "WinBtrfsService", PipeDirection.InOut,
+				PipeOptions.Asynchronous);
 
 			try
 			{
@@ -167,8 +169,13 @@ namespace WinBtrfsCLI
 			pipeClient.Write(msgBytes, 0, msgBytes.Length);
 
 			byte[] reply = new byte[102400];
-			int replyLen = pipeClient.Read(reply, 0, reply.Length);
+			var eventGotRead = new ManualResetEvent(false);
+			var result = pipeClient.BeginRead(reply, 0, reply.Length, _ => eventGotRead.Set(), null);
 
+			if (!eventGotRead.WaitOne(1000))
+				Error("Did not receive a reply from WinBtrfsService (timed out).", 4);
+
+			int replyLen = pipeClient.EndRead(result);
 			Console.Write("Reply: " + System.Text.Encoding.Unicode.GetString(reply, 0, replyLen));
 		}
 
