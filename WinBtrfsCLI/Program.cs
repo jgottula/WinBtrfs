@@ -31,7 +31,7 @@ namespace WinBtrfsCLI
 
 		static void MountArgs(string[] args)
 		{
-			bool argMountPoint = false, argDevice = false;
+			bool argCommand = false, argMountPoint = false, argDevice = false;
 			bool optSubvol = false, optSubvolID = false, optDump = false, optTestRun = false;
 			string mountPoint = "", subvolName = "", dumpFile = "";
 			ulong subvolID = 256;
@@ -39,6 +39,12 @@ namespace WinBtrfsCLI
 
 			foreach (string arg in args)
 			{
+				if (!argCommand) // skip the first arg (the command)
+				{
+					argCommand = true;
+					continue;
+				}
+				
 				if (arg[0] == '-') // option
 				{
 					if (arg.Substring(0, 9) == "--subvol=")
