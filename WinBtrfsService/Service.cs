@@ -43,26 +43,32 @@ namespace WinBtrfsService
 		{
 			while (true)
 			{
+				bool wait = true;
 				var result = pipeServer.BeginWaitForConnection(_ => eventPipeConnection.Set(), null);
 				
 				WaitHandle[] events = { eventTerm, eventPipeConnection };
 
-			wait:
-				switch (WaitHandle.WaitAny(events))
+				do
 				{
-				case 0: // eventTerm
-					return;
-				case 1: // eventPipeConnection
-					if (result.IsCompleted)
+					switch (WaitHandle.WaitAny(events))
 					{
-						pipeServer.EndWaitForConnection(result);
-						GotConnection();
-						pipeServer.Disconnect();
+					case 0: // eventTerm
+						return;
+					case 1: // eventPipeConnection
+						if (result.IsCompleted)
+						{
+							pipeServer.EndWaitForConnection(result);
+							GotConnection();
+							pipeServer.Disconnect();
+							eventPipeConnection.Reset();
+							wait = false;
+						}
+						break;
+					case WaitHandle.WaitTimeout:
 						break;
 					}
-					else
-						goto wait;
 				}
+				while (wait);
 			}
 		}
 
@@ -151,7 +157,13 @@ namespace WinBtrfsService
 				Program.eventLog.WriteEntry("Received a List message.",
 					EventLogEntryType.Information);
 
-				reply = "Data\nno data yet";
+				reply = "Data\n";
+				
+				foreach (var entry in VolumeManager.volumeTable)
+				{
+					reply += "Entry\n";
+					reply += "fsUUID|" + entry.fsUUID.ToString() + "\n";
+				}
 			}
 			else
 			{
