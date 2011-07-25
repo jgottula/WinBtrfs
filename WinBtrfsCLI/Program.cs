@@ -24,6 +24,9 @@ namespace WinBtrfsCLI
 			case "mount":
 				MountArgs(args);
 				break;
+			case "list":
+				ListArgs(args);
+				break;
 			default:
 				UsageError("'" + args[0] + "' is not a recognized command!");
 				break;
@@ -141,10 +144,28 @@ namespace WinBtrfsCLI
 			foreach (string device in devices)
 				msg += "Device|" + device.Length + "|" + device + "\n";
 
+			msg.TrimEnd('\n');
+
 			SendMessage(msg);
 		}
 
-		static void SendMessage(string msg)
+		static void ListArgs(string[] args)
+		{
+			if (args.Length > 1)
+				Console.Error.Write("Ignoring extraneous options after the list command.\n\n");
+
+			string data = SendMessage("List");
+
+			if (data == null)
+				Error("WinBtrfsService sent a bad reply (no data).", 6);
+
+			string[] lines = data.Split('\n');
+
+			/* remove this */
+			Console.Write("Data:\n" + data);
+		}
+
+		static string SendMessage(string msg)
 		{
 			var pipeClient = new NamedPipeClientStream(".", "WinBtrfsService", PipeDirection.InOut,
 				PipeOptions.Asynchronous);
@@ -178,24 +199,21 @@ namespace WinBtrfsCLI
 			int replyLen = pipeClient.EndRead(result);
 			string replyStr = System.Text.Encoding.Unicode.GetString(reply, 0, replyLen);
 
-			if (replyLen >= 3 && replyStr.Substring(0, 2) == "OK")
+			if (replyLen > 2 && replyStr.Substring(0, 2) == "OK")
 				Console.Write("OK.\n");
-			else if (replyLen >= 6 && replyStr.Substring(0, 5) == "Error")
+			else if (replyLen > 5 && replyStr.Substring(0, 4) == "Data")
+				return replyStr.Substring(5);
+			else if (replyLen > 5 && replyStr.Substring(0, 5) == "Error")
 			{
-				if (replyLen > 7 && replyStr[5] == ' ')
-				{
-					int code;
-
-					if (int.TryParse(replyStr.Substring(6), out code))
-						Console.Error.Write("Error (" + code.ToString() + ").\n");
-					else
-						Console.Error.Write("Error (unintelligible error code).\n");
-				}
+				if (replyLen > 6)
+					Console.Error.Write("Error: " + replyStr.Substring(6) + "\n");
 				else
-					Console.Error.Write("Error (no error code).\n");
+					Console.Error.Write("Error.\n");
 			}
 			else
 				Error("WinBtrsService replied with an unintelligible message:\n" + replyStr, 5);
+
+			return null;
 		}
 
 		static void Error(string error, int exitCode)
