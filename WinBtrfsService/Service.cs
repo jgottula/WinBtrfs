@@ -67,14 +67,14 @@ namespace WinBtrfsService
 
 		private void GotConnection()
 		{
-			Program.eventLog.WriteEntry("Got a pipe connection.", EventLogEntryType.Information);
-
 			byte[] buffer = new byte[1024];
 
 			pipeServer.Read(buffer, 0, 1024);
 
-			String str = System.Text.Encoding.ASCII.GetString(buffer);
-			Program.eventLog.WriteEntry("Message on pipe: " + str, EventLogEntryType.Information);
+			String str = System.Text.Encoding.Unicode.GetString(buffer);
+			Program.eventLog.WriteEntry("Got a pipe conneciton. Message: " + str, EventLogEntryType.Information);
+
+			pipeServer.Write(System.Text.Encoding.Unicode.GetBytes("OK"), 0, 3);
 
 			pipeServer.Disconnect();
 		}
