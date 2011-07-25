@@ -99,13 +99,13 @@ namespace WinBtrfsService
 				String str = System.Text.Encoding.Unicode.GetString(buffer, 0, bufferLen);
 				Program.eventLog.WriteEntry("Got a pipe connection. Message: " + str, EventLogEntryType.Information);
 
-				/* take me out! */
-				Thread.Sleep(9000);
-
 				byte[] response = System.Text.Encoding.Unicode.GetBytes("OK");
 				try
 				{
 					pipeServer.Write(response, 0, response.Length);
+
+					/* don't disconnect prematurely */
+					pipeServer.WaitForPipeDrain();
 				}
 				catch (ObjectDisposedException)
 				{
