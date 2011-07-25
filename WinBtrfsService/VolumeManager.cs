@@ -5,16 +5,16 @@ namespace WinBtrfsService
 {
 	class VolumeEntry
 	{
-		MountOptions mountOptions = new MountOptions();
-		byte[] fsUUID = new byte[0x10];
+		public MountOptions mountOptions = new MountOptions();
+		public Guid fsUUID = new Guid();
 	}
 
 	class MountOptions
 	{
-		bool optSubvol = false, optSubvolID = false, optDump = false, optTestRun = false;
-		string mountPoint = "", subvolName = "", dumpFile = "";
-		ulong subvolID = 256;
-		List<string> devices = new List<string>();
+		public bool optSubvol = false, optSubvolID = false, optDump = false, optTestRun = false;
+		public string mountPoint = "", subvolName = "", dumpFile = "";
+		public ulong subvolID = 256;
+		public List<string> devices = new List<string>();
 	}
 	
 	static class VolumeManager
