@@ -38,7 +38,7 @@ namespace WinBtrfsService
 			loopThread = new Thread(ServiceLoop);
 			loopThread.Start();
 
-			eventLog.WriteEntry("Service started at " + DateTime.Now.ToString() + ".", EventLogEntryType.Information);
+			eventLog.WriteEntry("Service started.", EventLogEntryType.Information);
 		}
 
 		protected override void OnStop()
@@ -46,7 +46,7 @@ namespace WinBtrfsService
 			lock (this)
 				terminate = true;
 			
-			eventLog.WriteEntry("Service stopped at " + DateTime.Now.ToString() + ".", EventLogEntryType.Information);
+			eventLog.WriteEntry("Service stopped.", EventLogEntryType.Information);
 		}
 
 		private bool CheckTerm()
