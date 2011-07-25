@@ -33,6 +33,7 @@
     <ProjectGuid>{ECE512A9-A96D-41D8-8137-DE31E62FE102}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>WinBtrfsService</RootNamespace>
+    <ProjectName>WinBtrfsServiceDeprecated</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
