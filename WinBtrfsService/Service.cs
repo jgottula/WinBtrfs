@@ -97,7 +97,9 @@ namespace WinBtrfsService
 			if (pipeServer.IsMessageComplete)
 			{
 				String str = System.Text.Encoding.Unicode.GetString(buffer, 0, bufferLen);
-				Program.eventLog.WriteEntry("Got a pipe connection. Message: " + str, EventLogEntryType.Information);
+				Program.eventLog.WriteEntry("Got a pipe connection. Message:\n" + str,
+					EventLogEntryType.Information);
+				HandleMessage(str);
 
 				byte[] response = System.Text.Encoding.Unicode.GetBytes("OK");
 				try
@@ -131,6 +133,11 @@ namespace WinBtrfsService
 				Program.eventLog.WriteEntry("A message larger than 100K arrived; discarding.",
 					EventLogEntryType.Warning);
 			}
+		}
+
+		private void HandleMessage(string msg)
+		{
+
 		}
 	}
 }
