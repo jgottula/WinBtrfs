@@ -43,7 +43,8 @@ namespace WinBtrfsService
 				Exception exception = (Exception)e.ExceptionObject;
 
 				if (eventLog != null)
-					eventLog.WriteEntry("Caught an unhandled exception! Message:\n" + exception.Message,
+					eventLog.WriteEntry("Caught an unhandled exception: " + exception.Message +
+						"\n" + exception.StackTrace,
 						EventLogEntryType.Error);
 			}
 			finally
