@@ -95,3 +95,6 @@ Provide a means to deal with the situation where WinBtrfsService is killed and i
 	we probably want either (a) the orphans to detect that their parent was killed and self-abort, or (b) have future new instances of
 	WinBtrfsService kill orphans or re-adopt them as proper children
 Remove WinBtrfsService 32-bit lib dependencies so we can compile for x64 mode (dokan.lib is the culprit)
+Replace printf("..."); with puts, fprintf with fputs
+If communication with WinBtrfsService fails on the CLI/GUI side, try (1) killing the process if it exists, (2) restarting the
+	service, and (3) deleting & installing the service
