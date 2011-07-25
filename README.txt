@@ -1,6 +1,6 @@
 WinBtrfs — Readme/FAQ
 
-Last updated 2011.07.24
+Last updated 2011.07.25
 
 
 NOTE: WinBtrfs is in NO WAY a finished product and is NOT ready for general use. At this time, it should only really be used by people interested in testing, experimentation, or development. See [03] below for details on which features have been implemented.
@@ -49,20 +49,21 @@ These features are NOT supported yet:
 [04] What dependencies are required for WinBtrfs?
 
 Building WinBtrfs requires:
-— Microsoft Visual Studio 2010 (for greatest ease)
+— Microsoft Visual Studio 2010 or later
 — Dokan 0.6.0 or later [http://dokan-dev.net/en/]
 — The Boost C++ libraries [http://www.boost.org/]
 The zlib and minilzo libraries are distributed with WinBtrfs.
 
 Running WinBtrfs requires:
 — Microsoft Visual C++ 2010 runtime [http://www.microsoft.com/downloads/en/details.aspx?FamilyID=a7b7a05e-6de6-4d3a-a423-37bf0912db84]
+— Microsoft .NET Framework 4.0 [http://www.microsoft.com/download/en/details.aspx?id=17851]
 — Dokan 0.6.0 or later [http://dokan-dev.net/en/]
 
 
 [05] How do I build WinBtrfs?
 
-See [04] for information on the software and libraries required to build WinBtrfs. If you are using Visual Studio, load up the solution file and hit Build. Provided you have fulfilled the dependencies, it should build successfully. You will probably need to adjust the WinBtrfsLib project settings so that the include directories and linker inputs are pointed toward Dokan's and Boost's headers and libs.
-If you are using a non-Microsoft compiler to build WinBtrfs, you are pretty much on your own at this point, until the developer finds the time to try out other compilers himself. There isn't a Makefile prepared, but no atypical compiler options should be necessary at this time. You will probably have to fix several instances where the developer has relied on Microsoft-specific language extensions.
+See [04] for information on the software and libraries required to build WinBtrfs. Load Visual Studio, open the solution file and hit Build. Provided you have fulfilled the dependencies, it should build successfully. You will probably need to adjust the WinBtrfsDrv project settings so that the include directories and linker inputs are pointed toward Dokan's and Boost's headers and libs.
+If you are using a non-Microsoft compiler to build WinBtrfs, you are pretty much on your own at this point, until the developer finds the time to try out other compilers himself. There isn't a Makefile prepared, but no atypical compiler options should be necessary at this time. You will probably have to fix several instances where the developer has relied on Microsoft-specific C++ language extensions. Good luck getting Mono to compile .NET 4.0 code; I have absolutely no idea how well that will work.
 
 
 [06] How do I use WinBtrfs?
