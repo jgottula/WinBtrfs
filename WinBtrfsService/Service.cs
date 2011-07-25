@@ -10,8 +10,8 @@ namespace WinBtrfsService
 	public partial class Service : ServiceBase
 	{
 		NamedPipeServerStream pipeServer;
-		Thread loopThread;
-		bool terminate = false;
+		Thread threadPipeLoop;
+		ManualResetEvent eventTerm, eventPipeConnection;
 		
 		public Service()
 		{
@@ -21,51 +21,62 @@ namespace WinBtrfsService
 		protected override void OnStart(string[] args)
 		{
 			pipeServer = new NamedPipeServerStream("WinBtrfsService", PipeDirection.InOut, 1,
-				PipeTransmissionMode.Message, PipeOptions.None);
+				PipeTransmissionMode.Message, PipeOptions.Asynchronous);
+
+			eventTerm = new ManualResetEvent(false);
+			eventPipeConnection = new ManualResetEvent(false);
 			
-			loopThread = new Thread(ServiceLoop);
-			loopThread.Start();
+			threadPipeLoop = new Thread(PipeLoop);
+			threadPipeLoop.Start();
 
 			Program.eventLog.WriteEntry("Service started.", EventLogEntryType.Information);
 		}
 
 		protected override void OnStop()
 		{
-			lock (this)
-				terminate = true;
+			eventTerm.Set();
 			
 			Program.eventLog.WriteEntry("Service stopped.", EventLogEntryType.Information);
 		}
 
-		private bool CheckTerm()
+		private void PipeLoop()
 		{
-			lock (this)
-				return terminate;
-		}
-
-		private void ServiceLoop()
-		{
-			var result = pipeServer.BeginWaitForConnection(null, null);
-			
-			while (!CheckTerm())
+			while (true)
 			{
-				if (result.AsyncWaitHandle.WaitOne(100))
+				var result = pipeServer.BeginWaitForConnection(_ => eventPipeConnection.Set(), null);
+				
+				WaitHandle[] events = { eventTerm, eventPipeConnection };
+
+			wait:
+				switch (WaitHandle.WaitAny(events))
 				{
-					pipeServer.EndWaitForConnection(result);
-
-					Program.eventLog.WriteEntry("Got a pipe connection.", EventLogEntryType.Information);
-
-
-					result = pipeServer.BeginWaitForConnection(null, null);
+				case 0:
+					return;
+				case 1:
+					if (result.IsCompleted)
+					{
+						pipeServer.EndWaitForConnection(result);
+						GotConnection();
+					}
+					else
+						goto wait;
+					break;
 				}
-
-				/*Thread.Sleep(10);*/
 			}
 		}
 
-		/*private void GotConnection(IAsyncResult result)
+		private void GotConnection()
 		{
+			Program.eventLog.WriteEntry("Got a pipe connection.", EventLogEntryType.Information);
 
-		}*/
+			byte[] buffer = new byte[1024];
+
+			pipeServer.Read(buffer, 0, 1024);
+
+			String str = System.Text.Encoding.ASCII.GetString(buffer);
+			Program.eventLog.WriteEntry("Message on pipe: " + str, EventLogEntryType.Information);
+
+			pipeServer.Disconnect();
+		}
 	}
 }
