@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO.Pipes;
 
 namespace WinBtrfsCLI
 {
@@ -133,17 +134,58 @@ namespace WinBtrfsCLI
 			foreach (string device in devices)
 				msg += "Device|" + device.Length + "|" + device + "\n";
 
-			Mount(msg);
+			SendMessage(msg);
 		}
 
-		static void Mount(string msg)
+		static void SendMessage(string msg)
 		{
-			/* send msg over the pipe and wait for 'OK' */
+			var pipeClient = new NamedPipeClientStream(".", "WinBtrfsService", PipeDirection.InOut, PipeOptions.None);
+
+			try
+			{
+				pipeClient.Connect(1000);
+			}
+			catch (TimeoutException)
+			{
+				Error("Could not communicate with WinBtrfsService (timed out).", 2);
+			}
+			catch
+			{
+				Error("Could not communicate with WinBtrfsService.", 2);
+			}
+
+			if (!pipeClient.IsConnected)
+				Error("Lost connection to WinBtrfsService.", 3);
+			
+			pipeClient.WriteTimeout = 1000;
+			pipeClient.ReadTimeout = 1000;
+
+			byte[] msgBytes = System.Text.Encoding.Unicode.GetBytes(msg);
+			pipeClient.Write(msgBytes, 0, msgBytes.Length);
+
+			byte[] reply = new byte[102400];
+			pipeClient.Read(reply, 0, reply.Length);
+
+			Console.Write("Reply: " + System.Text.Encoding.Unicode.GetString(reply));
+		}
+
+		static void Error(string error, int exitCode)
+		{
+			Console.Error.Write(error + "\n");
+
+			Environment.Exit(exitCode);
+		}
+
+		static void UsageError(string error)
+		{
+			Console.Error.Write(error);
+
+			Usage();
 		}
 
 		static void Usage()
 		{
-			Console.Write("\n\nUsage: WinBtrfsCLI.exe <command> [parameters]\n\n" +
+			Console.Error.Write("\n\nUsage: WinBtrfsCLI.exe <command> [parameters]\n\n" +
 				"Commands: mount, [more to be added]\n\n" +
 				"WinBtrfsCLI.exe mount [options] <mount point> <device> [<device> ...]\n" +
 				"Options:\n" +
@@ -151,15 +193,8 @@ namespace WinBtrfsCLI
 				"--subvol-id=<id> mount the subvolume with the given ID\n" +
 				"--dump=<file>    dump filesystem trees to the given file\n" +
 				"--test-run       stop just short of actually mounting the volume\n");
-			
+
 			Environment.Exit(1);
-		}
-
-		static void UsageError(string error)
-		{
-			Console.Write(error + "\n\n");
-
-			Usage();
 		}
 	}
 }
