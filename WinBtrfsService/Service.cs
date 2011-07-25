@@ -57,10 +57,27 @@ namespace WinBtrfsService
 
 		private void ServiceLoop()
 		{
+			var result = pipeServer.BeginWaitForConnection(null, null);
+			
 			while (!CheckTerm())
 			{
-				
+				if (result.AsyncWaitHandle.WaitOne(100))
+				{
+					pipeServer.EndWaitForConnection(result);
+
+					eventLog.WriteEntry("Got a pipe connection.", EventLogEntryType.Information);
+
+
+					result = pipeServer.BeginWaitForConnection(null, null);
+				}
+
+				/*Thread.Sleep(10);*/
 			}
 		}
+
+		/*private void GotConnection(IAsyncResult result)
+		{
+
+		}*/
 	}
 }
