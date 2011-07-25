@@ -25,7 +25,7 @@ namespace WinBtrfsService
 
 			eventTerm = new ManualResetEvent(false);
 			eventPipeConnection = new ManualResetEvent(false);
-			
+
 			threadPipeLoop = new Thread(PipeLoop);
 			threadPipeLoop.Start();
 

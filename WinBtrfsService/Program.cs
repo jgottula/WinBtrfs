@@ -6,13 +6,16 @@ namespace WinBtrfsService
 {
 	static class Program
 	{
-		public static EventLog eventLog;
+		public static EventLog eventLog = null;
 
 		/// <summary>
 		/// The main entry point for the application.
 		/// </summary>
 		static void Main()
 		{
+			AppDomain.CurrentDomain.UnhandledException +=
+				new UnhandledExceptionEventHandler(CurrentDomain_UnhandledException);
+			
 			if (!EventLog.SourceExists("WinBtrfsService"))
 			{
 				EventLog.CreateEventSource("WinBtrfsService", "WinBtrfsService");
@@ -30,13 +33,29 @@ namespace WinBtrfsService
 				new Service()
 			};
 
-			try
-			{
+			/*try
+			{*/
 				ServiceBase.Run(ServicesToRun);
-			}
+			/*}
 			catch (Exception e)
 			{
 				eventLog.WriteEntry("Caught an unhandled exception! Message:\n" + e.Message, EventLogEntryType.Error);
+			}*/
+		}
+
+		static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
+		{
+			try
+			{
+				Exception exception = (Exception)e.ExceptionObject;
+
+				if (eventLog != null)
+					eventLog.WriteEntry("Caught an unhandled exception! Message:\n" + exception.Message,
+						EventLogEntryType.Error);
+			}
+			finally
+			{
+				Environment.Exit(2);
 			}
 		}
 	}
