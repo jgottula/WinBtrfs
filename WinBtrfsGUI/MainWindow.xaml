@@ -1,8 +1,12 @@
 ﻿<Window x:Class="WinBtrfsGUI.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="MainWindow" Height="350" Width="525">
+        Title="WinBtrfs" Height="258" Width="525" WindowStartupLocation="CenterScreen">
     <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="29" />
+        </Grid.RowDefinitions>
         <ListView Height="160" HorizontalAlignment="Left" Name="listView1" VerticalAlignment="Top" Width="503">
             <ListView.View>
                 <GridView>
@@ -15,5 +19,7 @@
             </ListView.View>
         </ListView>
         <Button Content="Refresh" Height="23" HorizontalAlignment="Left" Margin="12,166,0,0" Name="buttonRefresh" VerticalAlignment="Top" Width="75" IsDefault="True" Click="buttonRefresh_Click" />
+        <Button Content="Mount..." Height="23" HorizontalAlignment="Left" Margin="416,166,0,0" Name="buttonMount" VerticalAlignment="Top" Width="75" />
+        <Button Content="Unmount" Height="23" HorizontalAlignment="Left" Margin="335,166,0,0" Name="button1" VerticalAlignment="Top" Width="75" IsEnabled="False" />
     </Grid>
 </Window>

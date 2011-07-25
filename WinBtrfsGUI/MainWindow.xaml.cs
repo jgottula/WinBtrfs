@@ -1,4 +1,6 @@
 ﻿using System;
+using System.IO;
+using System.IO.Pipes;
 using System.Windows;
 
 namespace WinBtrfsGUI
@@ -15,7 +17,7 @@ namespace WinBtrfsGUI
 
 		private void buttonRefresh_Click(object sender, RoutedEventArgs e)
 		{
-
+		
 		}
     }
 }
