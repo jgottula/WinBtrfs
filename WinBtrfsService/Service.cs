@@ -26,12 +26,12 @@ namespace WinBtrfsService
 
 		protected override void OnStart(string[] args)
 		{
-			eventLog.WriteEntry("Service started at " + DateTime.Now.ToString(), EventLogEntryType.Information);
+			eventLog.WriteEntry("Service started at " + DateTime.Now.ToString() + ".", EventLogEntryType.Information);
 		}
 
 		protected override void OnStop()
 		{
-			eventLog.WriteEntry("Service stopped at " + DateTime.Now.ToString(), EventLogEntryType.Information);
+			eventLog.WriteEntry("Service stopped at " + DateTime.Now.ToString() + ".", EventLogEntryType.Information);
 		}
 	}
 }
