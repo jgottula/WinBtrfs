@@ -3,13 +3,16 @@ using System.Collections.Generic;
 
 namespace WinBtrfsService
 {
-	struct VolumeEntry
+	class VolumeEntry
 	{
-
+		bool optSubvol = false, optSubvolID = false, optDump = false, optTestRun = false;
+		string mountPoint = "", subvolName = "", dumpFile = "";
+		ulong subvolID = 256;
+		List<string> devices = new List<string>();
 	}
 	
 	static class VolumeManager
 	{
-		static List<VolumeEntry> volumeTable = new List<VolumeEntry>();
+		public static List<VolumeEntry> volumeTable = new List<VolumeEntry>();
 	}
 }
