@@ -3,6 +3,17 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="MainWindow" Height="350" Width="525">
     <Grid>
-        
+        <ListView Height="160" HorizontalAlignment="Left" Name="listView1" VerticalAlignment="Top" Width="503">
+            <ListView.View>
+                <GridView>
+                    <GridViewColumn Header="Mount Point" />
+                    <GridViewColumn Header="Label" />
+                    <GridViewColumn Header="UUID" />
+                    <GridViewColumn Header="Options" />
+                    <GridViewColumn Header="Devices" />
+                </GridView>
+            </ListView.View>
+        </ListView>
+        <Button Content="Refresh" Height="23" HorizontalAlignment="Left" Margin="12,166,0,0" Name="buttonRefresh" VerticalAlignment="Top" Width="75" IsDefault="True" Click="buttonRefresh_Click" />
     </Grid>
 </Window>
