@@ -33,14 +33,7 @@ namespace WinBtrfsService
 				new Service()
 			};
 
-			/*try
-			{*/
-				ServiceBase.Run(ServicesToRun);
-			/*}
-			catch (Exception e)
-			{
-				eventLog.WriteEntry("Caught an unhandled exception! Message:\n" + e.Message, EventLogEntryType.Error);
-			}*/
+			ServiceBase.Run(ServicesToRun);
 		}
 
 		static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
