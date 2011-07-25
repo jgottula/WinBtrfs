@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Diagnostics;
-using System.IO;
 using System.IO.Pipes;
 using System.ServiceProcess;
 using System.Threading;
@@ -67,14 +66,23 @@ namespace WinBtrfsService
 
 		private void GotConnection()
 		{
-			byte[] buffer = new byte[1024];
+			byte[] buffer = new byte[102400];
 
-			pipeServer.Read(buffer, 0, 1024);
+			pipeServer.Read(buffer, 0, 102400);
 
-			String str = System.Text.Encoding.Unicode.GetString(buffer);
-			Program.eventLog.WriteEntry("Got a pipe conneciton. Message: " + str, EventLogEntryType.Information);
+			if (pipeServer.IsMessageComplete)
+			{
+				String str = System.Text.Encoding.Unicode.GetString(buffer);
+				Program.eventLog.WriteEntry("Got a pipe connection. Message: " + str, EventLogEntryType.Information);
 
-			pipeServer.Write(System.Text.Encoding.Unicode.GetBytes("OK"), 0, 3);
+				byte[] response = System.Text.Encoding.Unicode.GetBytes("OK");
+				pipeServer.Write(response, 0, response.Length);
+			}
+			else
+			{
+				Program.eventLog.WriteEntry("A message larger than 100K arrived; discarding.",
+					EventLogEntryType.Warning);
+			}
 
 			pipeServer.Disconnect();
 		}
