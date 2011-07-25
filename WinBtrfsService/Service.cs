@@ -68,7 +68,7 @@ namespace WinBtrfsService
 		{
 			byte[] buffer = new byte[102400];
 
-			pipeServer.Read(buffer, 0, 102400);
+			pipeServer.Read(buffer, 0, buffer.Length);
 
 			if (pipeServer.IsMessageComplete)
 			{
