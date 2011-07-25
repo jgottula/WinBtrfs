@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
+using System.IO;
+using System.IO.Pipes;
 using System.ServiceProcess;
 using System.Threading;
 
@@ -7,9 +9,9 @@ namespace WinBtrfsService
 {
 	public partial class Service : ServiceBase
 	{
-		Thread loopThread;
 		EventLog eventLog;
-		Object mutex;
+		NamedPipeServerStream pipeServer;
+		Thread loopThread;
 		bool terminate = false;
 		
 		public Service()
@@ -30,6 +32,9 @@ namespace WinBtrfsService
 
 		protected override void OnStart(string[] args)
 		{
+			pipeServer = new NamedPipeServerStream("WinBtrfsService", PipeDirection.InOut, 1,
+				PipeTransmissionMode.Message, PipeOptions.None);
+			
 			loopThread = new Thread(ServiceLoop);
 			loopThread.Start();
 
@@ -38,7 +43,7 @@ namespace WinBtrfsService
 
 		protected override void OnStop()
 		{
-			lock (mutex)
+			lock (this)
 				terminate = true;
 			
 			eventLog.WriteEntry("Service stopped at " + DateTime.Now.ToString() + ".", EventLogEntryType.Information);
@@ -48,7 +53,7 @@ namespace WinBtrfsService
 		{
 			while (true)
 			{
-				lock (mutex)
+				lock (this)
 				{
 					if (terminate)
 						break;
