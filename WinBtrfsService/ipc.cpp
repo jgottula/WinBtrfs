@@ -88,7 +88,7 @@ namespace WinBtrfsService
 				
 				log("Received MSG_QUERY_MOUNT.\n");
 				
-				if ((errorCode = mount(mountData)) == 0)
+				if (mount(mountData, (MountError *)&errorCode))
 					respOK = true;
 				else
 					respError = true;

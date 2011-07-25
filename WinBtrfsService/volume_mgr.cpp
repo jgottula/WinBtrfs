@@ -12,15 +12,16 @@
 
 #include "volume_mgr.h"
 #include <vector>
+#include "ipc.h"
 #include "log.h"
 
 namespace WinBtrfsService
 {
 	std::vector<VolEntry> volumes;
 	
-	int mount(WinBtrfsDrv::MountData *mountData)
+	bool mount(WinBtrfsDrv::MountData *mountData, MountError *mError)
 	{
-		int error = 0;
+		DWORD error;
 		
 		/* wait for the process to request a MountData struct */
 		/* have it ensure that this FS UUID isn't already mounted somewhere else */
@@ -35,13 +36,14 @@ namespace WinBtrfsService
 			CREATE_NO_WINDOW, (LPVOID)env, NULL, &startUpInfo, &entry.procInfo)) = 0)
 		{
 			log("Could not start a new instance of WinBtrfsDrv.exe: %s", getErrorMessage(error));
-			return error;
+			*mError = MOUNT_ERROR_CREATE_PROCESS_FAILURE;
+			return false;
 		}
 
 		volumes.push_back(entry);
 
 		log("mount: OK\n");
-		return error;
+		return true;
 	}
 	
 	void unmountAll()

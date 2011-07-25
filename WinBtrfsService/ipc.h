@@ -37,7 +37,8 @@ namespace WinBtrfsService
 
 	enum MountError : int
 	{
-		MOUNT_ERROR_ALREADY_MOUNTED
+		MOUNT_ERROR_ALREADY_MOUNTED,
+		MOUNT_ERROR_CREATE_PROCESS_FAILURE
 	};
 	
 	struct ServiceMsg

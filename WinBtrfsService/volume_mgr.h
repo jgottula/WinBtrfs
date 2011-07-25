@@ -13,7 +13,10 @@
 #ifndef WINBTRFSSERVICE_VOLUME_MGR_H
 #define WINBTRFSSERVICE_VOLUME_MGR_H
 
+#include "ipc.h"
 #include "../WinBtrfsDrv/types.h"
+
+using namespace WinBtrfsDrv;
 
 namespace WinBtrfsService
 {
@@ -31,7 +34,7 @@ namespace WinBtrfsService
 		WinBtrfsDrv::MountData *mountData;
 	};
 	
-	int mount(WinBtrfsDrv::MountData *mountData);
+	bool mount(MountData *mountData, MountError *mError);
 	void unmountAll();
 }
 
