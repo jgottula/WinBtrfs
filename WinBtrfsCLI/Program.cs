@@ -9,7 +9,7 @@ namespace WinBtrfsCLI
 	{
 		static void Main(string[] args)
 		{
-			Console.WriteLine("WinBtrfsCLI: .NET Variant");
+			Console.Write("WinBtrfsCLI: .NET Variant\n\n");
 
 			ParseArgs(args);
 		}
@@ -176,7 +176,26 @@ namespace WinBtrfsCLI
 				Error("Did not receive a reply from WinBtrfsService (timed out).", 4);
 
 			int replyLen = pipeClient.EndRead(result);
-			Console.Write("Reply: " + System.Text.Encoding.Unicode.GetString(reply, 0, replyLen));
+			string replyStr = System.Text.Encoding.Unicode.GetString(reply, 0, replyLen);
+
+			if (replyLen >= 3 && replyStr.Substring(0, 2) == "OK")
+				Console.Write("OK.\n");
+			else if (replyLen >= 6 && replyStr.Substring(0, 5) == "Error")
+			{
+				if (replyLen > 7 && replyStr[5] == ' ')
+				{
+					int code;
+
+					if (int.TryParse(replyStr.Substring(6), out code))
+						Console.Error.Write("Error (" + code.ToString() + ").\n");
+					else
+						Console.Error.Write("Error (unintelligible error code).\n");
+				}
+				else
+					Console.Error.Write("Error (no error code).\n");
+			}
+			else
+				Error("WinBtrsService replied with an unintelligible message:\n" + replyStr, 5);
 		}
 
 		static void Error(string error, int exitCode)
