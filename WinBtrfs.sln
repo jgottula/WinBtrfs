@@ -13,8 +13,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "WinBtrfsDrv", "WinBtrfsDrv\
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "WinBtrfsService", "WinBtrfsService\WinBtrfsService.vcxproj", "{ECE512A9-A96D-41D8-8137-DE31E62FE102}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PipeClient", "PipeClient\PipeClient.vcxproj", "{2C798BED-F141-4469-9B6C-92F55857E540}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ThreadLocalTest", "ThreadLocalTest\ThreadLocalTest.vcxproj", "{A3275EDB-0DD2-404B-B9F3-8B2E164D7AA1}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{61D7151D-ED19-4132-97EC-BD22D268A5AF}"
@@ -122,20 +120,6 @@ Global
 		{ECE512A9-A96D-41D8-8137-DE31E62FE102}.Release|x64.ActiveCfg = Release|x64
 		{ECE512A9-A96D-41D8-8137-DE31E62FE102}.Release|x64.Build.0 = Release|x64
 		{ECE512A9-A96D-41D8-8137-DE31E62FE102}.Release|x86.ActiveCfg = Release|Win32
-		{2C798BED-F141-4469-9B6C-92F55857E540}.Debug|Mixed Platforms.ActiveCfg = Debug|Win32
-		{2C798BED-F141-4469-9B6C-92F55857E540}.Debug|Mixed Platforms.Build.0 = Debug|Win32
-		{2C798BED-F141-4469-9B6C-92F55857E540}.Debug|Win32.ActiveCfg = Debug|Win32
-		{2C798BED-F141-4469-9B6C-92F55857E540}.Debug|Win32.Build.0 = Debug|Win32
-		{2C798BED-F141-4469-9B6C-92F55857E540}.Debug|x64.ActiveCfg = Debug|x64
-		{2C798BED-F141-4469-9B6C-92F55857E540}.Debug|x64.Build.0 = Debug|x64
-		{2C798BED-F141-4469-9B6C-92F55857E540}.Debug|x86.ActiveCfg = Debug|Win32
-		{2C798BED-F141-4469-9B6C-92F55857E540}.Release|Mixed Platforms.ActiveCfg = Release|Win32
-		{2C798BED-F141-4469-9B6C-92F55857E540}.Release|Mixed Platforms.Build.0 = Release|Win32
-		{2C798BED-F141-4469-9B6C-92F55857E540}.Release|Win32.ActiveCfg = Release|Win32
-		{2C798BED-F141-4469-9B6C-92F55857E540}.Release|Win32.Build.0 = Release|Win32
-		{2C798BED-F141-4469-9B6C-92F55857E540}.Release|x64.ActiveCfg = Release|x64
-		{2C798BED-F141-4469-9B6C-92F55857E540}.Release|x64.Build.0 = Release|x64
-		{2C798BED-F141-4469-9B6C-92F55857E540}.Release|x86.ActiveCfg = Release|Win32
 		{A3275EDB-0DD2-404B-B9F3-8B2E164D7AA1}.Debug|Mixed Platforms.ActiveCfg = Debug|Win32
 		{A3275EDB-0DD2-404B-B9F3-8B2E164D7AA1}.Debug|Mixed Platforms.Build.0 = Debug|Win32
 		{A3275EDB-0DD2-404B-B9F3-8B2E164D7AA1}.Debug|Win32.ActiveCfg = Debug|Win32
