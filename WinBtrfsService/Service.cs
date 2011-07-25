@@ -107,11 +107,11 @@ namespace WinBtrfsService
 					EventLogEntryType.Information);
 				string reply = HandleMessage(str);
 
-				byte[] response = System.Text.Encoding.Unicode.GetBytes(reply);
+				byte[] replyBytes = System.Text.Encoding.Unicode.GetBytes(reply.TrimEnd('\n'));
 
 				try
 				{
-					pipeServer.Write(response, 0, response.Length);
+					pipeServer.Write(replyBytes, 0, replyBytes.Length);
 
 					/* don't disconnect prematurely */
 					pipeServer.WaitForPipeDrain();
@@ -158,11 +158,16 @@ namespace WinBtrfsService
 					EventLogEntryType.Information);
 
 				reply = "Data\n";
-				
-				foreach (var entry in VolumeManager.volumeTable)
+
+				if (VolumeManager.volumeTable.Count == 0)
+					reply += "No Entries";
+				else
 				{
-					reply += "Entry\n";
-					reply += "fsUUID|" + entry.fsUUID.ToString() + "\n";
+					foreach (var entry in VolumeManager.volumeTable)
+					{
+						reply += "Entry\n";
+						reply += "fsUUID|" + entry.fsUUID.ToString() + "\n";
+					}
 				}
 			}
 			else
