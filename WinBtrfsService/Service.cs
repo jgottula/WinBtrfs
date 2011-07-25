@@ -9,7 +9,6 @@ namespace WinBtrfsService
 {
 	public partial class Service : ServiceBase
 	{
-		EventLog eventLog;
 		NamedPipeServerStream pipeServer;
 		Thread loopThread;
 		bool terminate = false;
@@ -17,17 +16,6 @@ namespace WinBtrfsService
 		public Service()
 		{
 			InitializeComponent();
-
-			if (!EventLog.SourceExists("WinBtrfsService"))
-			{
-				EventLog.CreateEventSource("WinBtrfsService", "WinBtrfsService");
-
-				/* the method above needs the application to restart, apparently */
-				throw new Exception("EventLog source did not exist. " +
-					"Run WinBtrfsService again so event logging will work.");
-			}
-
-			eventLog = new EventLog("WinBtrfsService", ".", "WinBtrfsService");
 		}
 
 		protected override void OnStart(string[] args)
@@ -38,7 +26,7 @@ namespace WinBtrfsService
 			loopThread = new Thread(ServiceLoop);
 			loopThread.Start();
 
-			eventLog.WriteEntry("Service started.", EventLogEntryType.Information);
+			Program.eventLog.WriteEntry("Service started.", EventLogEntryType.Information);
 		}
 
 		protected override void OnStop()
@@ -46,7 +34,7 @@ namespace WinBtrfsService
 			lock (this)
 				terminate = true;
 			
-			eventLog.WriteEntry("Service stopped.", EventLogEntryType.Information);
+			Program.eventLog.WriteEntry("Service stopped.", EventLogEntryType.Information);
 		}
 
 		private bool CheckTerm()
@@ -65,7 +53,7 @@ namespace WinBtrfsService
 				{
 					pipeServer.EndWaitForConnection(result);
 
-					eventLog.WriteEntry("Got a pipe connection.", EventLogEntryType.Information);
+					Program.eventLog.WriteEntry("Got a pipe connection.", EventLogEntryType.Information);
 
 
 					result = pipeServer.BeginWaitForConnection(null, null);
