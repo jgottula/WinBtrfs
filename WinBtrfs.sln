@@ -1,8 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "WinBtrfsCLI", "WinBtrfsCLI\WinBtrfsCLI.vcxproj", "{BB6E39AC-8DF6-414E-924D-A190E2D15939}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DirLister", "DirLister\DirLister.vcxproj", "{B9FE42F3-762E-4425-9DDD-CEE1CBC9E394}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "VolumeLister", "VolumeLister\VolumeLister.vcxproj", "{DDA5288A-01C5-4C01-92FB-FBD22EC47DD6}"
@@ -24,6 +22,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WinBtrfsService", "WinBtrfsService\WinBtrfsService.csproj", "{C3BE3510-E80D-4E9F-B62D-E3339E1E5562}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WinBtrfsCLI", "WinBtrfsCLI\WinBtrfsCLI.csproj", "{BE31DD6E-005D-4F6B-8C14-0A57AE31DD40}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Mixed Platforms = Debug|Mixed Platforms
@@ -36,20 +36,6 @@ Global
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{BB6E39AC-8DF6-414E-924D-A190E2D15939}.Debug|Mixed Platforms.ActiveCfg = Debug|Win32
-		{BB6E39AC-8DF6-414E-924D-A190E2D15939}.Debug|Mixed Platforms.Build.0 = Debug|Win32
-		{BB6E39AC-8DF6-414E-924D-A190E2D15939}.Debug|Win32.ActiveCfg = Debug|Win32
-		{BB6E39AC-8DF6-414E-924D-A190E2D15939}.Debug|Win32.Build.0 = Debug|Win32
-		{BB6E39AC-8DF6-414E-924D-A190E2D15939}.Debug|x64.ActiveCfg = Debug|x64
-		{BB6E39AC-8DF6-414E-924D-A190E2D15939}.Debug|x64.Build.0 = Debug|x64
-		{BB6E39AC-8DF6-414E-924D-A190E2D15939}.Debug|x86.ActiveCfg = Debug|Win32
-		{BB6E39AC-8DF6-414E-924D-A190E2D15939}.Release|Mixed Platforms.ActiveCfg = Release|Win32
-		{BB6E39AC-8DF6-414E-924D-A190E2D15939}.Release|Mixed Platforms.Build.0 = Release|Win32
-		{BB6E39AC-8DF6-414E-924D-A190E2D15939}.Release|Win32.ActiveCfg = Release|Win32
-		{BB6E39AC-8DF6-414E-924D-A190E2D15939}.Release|Win32.Build.0 = Release|Win32
-		{BB6E39AC-8DF6-414E-924D-A190E2D15939}.Release|x64.ActiveCfg = Release|x64
-		{BB6E39AC-8DF6-414E-924D-A190E2D15939}.Release|x64.Build.0 = Release|x64
-		{BB6E39AC-8DF6-414E-924D-A190E2D15939}.Release|x86.ActiveCfg = Release|Win32
 		{B9FE42F3-762E-4425-9DDD-CEE1CBC9E394}.Debug|Mixed Platforms.ActiveCfg = Debug|Win32
 		{B9FE42F3-762E-4425-9DDD-CEE1CBC9E394}.Debug|Mixed Platforms.Build.0 = Debug|Win32
 		{B9FE42F3-762E-4425-9DDD-CEE1CBC9E394}.Debug|Win32.ActiveCfg = Debug|Win32
@@ -132,6 +118,19 @@ Global
 		{C3BE3510-E80D-4E9F-B62D-E3339E1E5562}.Release|x64.ActiveCfg = Release|x86
 		{C3BE3510-E80D-4E9F-B62D-E3339E1E5562}.Release|x86.ActiveCfg = Release|x86
 		{C3BE3510-E80D-4E9F-B62D-E3339E1E5562}.Release|x86.Build.0 = Release|x86
+		{BE31DD6E-005D-4F6B-8C14-0A57AE31DD40}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
+		{BE31DD6E-005D-4F6B-8C14-0A57AE31DD40}.Debug|Mixed Platforms.Build.0 = Debug|x86
+		{BE31DD6E-005D-4F6B-8C14-0A57AE31DD40}.Debug|Win32.ActiveCfg = Debug|x86
+		{BE31DD6E-005D-4F6B-8C14-0A57AE31DD40}.Debug|x64.ActiveCfg = Debug|x64
+		{BE31DD6E-005D-4F6B-8C14-0A57AE31DD40}.Debug|x64.Build.0 = Debug|x64
+		{BE31DD6E-005D-4F6B-8C14-0A57AE31DD40}.Debug|x86.ActiveCfg = Debug|x86
+		{BE31DD6E-005D-4F6B-8C14-0A57AE31DD40}.Debug|x86.Build.0 = Debug|x86
+		{BE31DD6E-005D-4F6B-8C14-0A57AE31DD40}.Release|Mixed Platforms.ActiveCfg = Release|x86
+		{BE31DD6E-005D-4F6B-8C14-0A57AE31DD40}.Release|Mixed Platforms.Build.0 = Release|x86
+		{BE31DD6E-005D-4F6B-8C14-0A57AE31DD40}.Release|Win32.ActiveCfg = Release|x86
+		{BE31DD6E-005D-4F6B-8C14-0A57AE31DD40}.Release|x64.ActiveCfg = Release|x86
+		{BE31DD6E-005D-4F6B-8C14-0A57AE31DD40}.Release|x86.ActiveCfg = Release|x86
+		{BE31DD6E-005D-4F6B-8C14-0A57AE31DD40}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
