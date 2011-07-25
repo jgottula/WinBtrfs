@@ -10,12 +10,13 @@ Multi-drive volumes
 Extended attributes?
 Preallocated files (torrents maybe)
 Data corruption resiliency (detect checksum issues and read from other copies if possible)
-Concurrent callback support (threadsafety)
+Concurrent callback support (threadsafety) (this also involves setting DOKANOPTIONS.ThreadCount)
 GUI (C#: which .NET version?)
 Installer (NSIS)
 MinGW/Cygwin[/Mono] build support
 UI translations
 OS testing: Win9x and ReactOS (provided Dokan supports these)
+Caching?
 
 Tests:
 Symlinks to files and directories
@@ -30,6 +31,9 @@ Write an fopen (or Win32) test to determine if CREATE_ALWAYS or OPEN_ALWAYS will
 Try different Win32 apis (specifically ones that correspond with callbacks that should NEVER BE CALLED) and see if eliciting a crash
 	is possible; also, see if removing the callbacks (putting NULL in the callback array) does what we ultimately want
 Mount a test image in SSD mode and then see if WinBtrfs uses a secondary superblock
+See how linux btrfs handles cross-subvolume symlinks and hardlinks; verify that WinBtrfs uses the same behavior, good or bad
+Verify that two requests to WinBtrfsService to mount a volume in quick succession will both be fulfilled (especially with a Sleep(5000)
+	in WinBtrfsService::mount to make sure)
 
 Bugs:
 Mounting btrfs_symlinks.img to C:\mount and dirlisting C:\mount\dir results in a getPathID failure
@@ -39,6 +43,8 @@ Dirlisting an empty subvolume (e.g. X:\a2 or X:\a1\b2 in btrfs_nestsubvol.img) r
 
 Profile:
 Check out how bad my overuse of realloc really is
+Take a close look at how logical-to-physical, chunk-interpreting code performs (this underlies every read operation)
+In branch per_thread_struct, check how much time is spent in getThisInst
 
 Code stuff:
 Add overflow checks for program arguments
@@ -77,3 +83,14 @@ Decompress only the nodes of an extent that are going to be read in part or in w
 Find better Windows error codes for failure conditions in Dokan callbacks
 Be more consistent about whether error output is in the caller or the callee (currently they are both, somewhat randomly)
 Look thru <WinError.h> and adjust Win32 error codes based on the message they will present to the user
+One organizational possibility: we would have WinBtrfsLib become WinBtrfsDrv and be essentially what WinBtrfsCLI was, and simply have
+	WinBtrfsService run instances of that program with proper command line parameters; this would allow an advanced user to still
+	run WinBtrfsDrv from the command line to mount individual volumes (and would make debugging a bit easier); however, this would
+	reduce the ability of WinBtrfsService to interact with WinBtrfsDrv to control it; also, these manually-run WinBtrfsDrv instances
+	would be outside of the realm of WinBtrfsService to track, list, and control, which seems messy
+Use const_iterators wherever possible (when not changing elements of a vector/list/whatever)
+Add a stack trace dump upon assertion failure (Google breakpad?)
+Replace explicit GetLastError error messages with user-friendly messages in all projects
+Provide a means to deal with the situation where WinBtrfsService is killed and instances of WinBtrfsDrv are orphaned:
+	we probably want either (a) the orphans to detect that their parent was killed and self-abort, or (b) have future new instances of
+	WinBtrfsService kill orphans or re-adopt them as proper children
