@@ -49,17 +49,17 @@ namespace WinBtrfsService
 			eventLog.WriteEntry("Service stopped at " + DateTime.Now.ToString() + ".", EventLogEntryType.Information);
 		}
 
+		private bool CheckTerm()
+		{
+			lock (this)
+				return terminate;
+		}
+
 		private void ServiceLoop()
 		{
-			while (true)
+			while (!CheckTerm())
 			{
-				lock (this)
-				{
-					if (terminate)
-						break;
-				}
-
-
+				
 			}
 		}
 	}
