@@ -32,7 +32,12 @@ namespace WinBtrfsService
 		MSG_REPLY_OK_DATA,		/* indicates success; also carries data
 									data depends on the query */
 		MSG_REPLY_ERROR			/* indicates an error
-									data is an int representing an error code */
+									data is an int representing an error code (may be MountError or other enum) */
+	};
+
+	enum MountError : int
+	{
+		MOUNT_ERROR_ALREADY_MOUNTED
 	};
 	
 	struct ServiceMsg
