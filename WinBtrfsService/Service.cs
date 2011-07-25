@@ -130,15 +130,25 @@ namespace WinBtrfsService
 				}
 			}
 			else
-			{
 				Program.eventLog.WriteEntry("A message larger than 100K arrived; discarding.",
 					EventLogEntryType.Warning);
-			}
 		}
 
 		private string HandleMessage(string msg)
 		{
+			string[] lines = msg.Split('\n');
 			string reply = "OK";
+
+			if (lines[0] == "Mount")
+			{
+				Program.eventLog.WriteEntry("Received a Mount message.",
+					EventLogEntryType.Information);
+
+
+			}
+			else
+				Program.eventLog.WriteEntry("Received an unknown message: " + lines[0] + ".",
+					EventLogEntryType.Warning);
 
 			return reply;
 		}
