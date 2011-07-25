@@ -98,3 +98,4 @@ Remove WinBtrfsService 32-bit lib dependencies so we can compile for x64 mode (d
 Replace printf("..."); with puts, fprintf with fputs
 If communication with WinBtrfsService fails on the CLI/GUI side, try (1) killing the process if it exists, (2) restarting the
 	service, and (3) deleting & installing the service
+Do tree dumping in a separate thread or something, so that the loading of the filesystem is never delayed
