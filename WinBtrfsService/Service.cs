@@ -137,18 +137,29 @@ namespace WinBtrfsService
 		private string HandleMessage(string msg)
 		{
 			string[] lines = msg.Split('\n');
-			string reply = "OK";
+			string reply;
 
 			if (lines[0] == "Mount")
 			{
 				Program.eventLog.WriteEntry("Received a Mount message.",
 					EventLogEntryType.Information);
 
+				reply = "OK";
+			}
+			else if (lines[0] == "List")
+			{
+				Program.eventLog.WriteEntry("Received a List message.",
+					EventLogEntryType.Information);
 
+				reply = "Data\nno data yet";
 			}
 			else
+			{
 				Program.eventLog.WriteEntry("Received an unknown message: " + lines[0] + ".",
 					EventLogEntryType.Warning);
+
+				reply = "Error\nBad message type.";
+			}
 
 			return reply;
 		}
