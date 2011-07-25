@@ -99,9 +99,10 @@ namespace WinBtrfsService
 				String str = System.Text.Encoding.Unicode.GetString(buffer, 0, bufferLen);
 				Program.eventLog.WriteEntry("Got a pipe connection. Message:\n" + str,
 					EventLogEntryType.Information);
-				HandleMessage(str);
+				string reply = HandleMessage(str);
 
-				byte[] response = System.Text.Encoding.Unicode.GetBytes("OK");
+				byte[] response = System.Text.Encoding.Unicode.GetBytes(reply);
+
 				try
 				{
 					pipeServer.Write(response, 0, response.Length);
@@ -135,9 +136,11 @@ namespace WinBtrfsService
 			}
 		}
 
-		private void HandleMessage(string msg)
+		private string HandleMessage(string msg)
 		{
+			string reply = "OK";
 
+			return reply;
 		}
 	}
 }
