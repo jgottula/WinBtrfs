@@ -15,10 +15,10 @@
 #include <cstdio>
 #include <cstdlib>
 #include "../WinBtrfsDrv/types.h"
-#include "../WinBtrfsService/ipc.h"
+/*#include "../WinBtrfsService/ipc.h"*/
 
 using namespace WinBtrfsDrv;
-using namespace WinBtrfsService;
+/*using namespace WinBtrfsService;*/
 
 namespace WinBtrfsCLI
 {
@@ -71,6 +71,10 @@ namespace WinBtrfsCLI
 			0, NULL, OPEN_EXISTING, 0, NULL)) == INVALID_HANDLE_VALUE)
 			pipeError(GetLastError(), "CreateFile failed: %u\n", GetLastError());
 		
+		/* remove me */
+		DWORD bytesWritten = 0;
+		WriteFile(hPipe, "Hello!", 7, &bytesWritten, NULL);
+
 #if 0
 		const size_t DATA_LEN = sizeof(MountData) + (2 * MAX_PATH * sizeof(wchar_t));
 		ServiceMsg *msg = (ServiceMsg *)malloc(sizeof(ServiceMsg) + DATA_LEN);
