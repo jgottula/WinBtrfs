@@ -162,17 +162,14 @@ namespace WinBtrfsCLI
 
 			if (!pipeClient.IsConnected)
 				Error("Lost connection to WinBtrfsService.", 3);
-			
-			pipeClient.WriteTimeout = 1000;
-			pipeClient.ReadTimeout = 1000;
 
 			byte[] msgBytes = System.Text.Encoding.Unicode.GetBytes(msg);
 			pipeClient.Write(msgBytes, 0, msgBytes.Length);
 
 			byte[] reply = new byte[102400];
-			pipeClient.Read(reply, 0, reply.Length);
+			int replyLen = pipeClient.Read(reply, 0, reply.Length);
 
-			Console.Write("Reply: " + System.Text.Encoding.Unicode.GetString(reply));
+			Console.Write("Reply: " + System.Text.Encoding.Unicode.GetString(reply, 0, replyLen));
 		}
 
 		static void Error(string error, int exitCode)
