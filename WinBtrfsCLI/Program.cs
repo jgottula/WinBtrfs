@@ -34,7 +34,7 @@ namespace WinBtrfsCLI
 			bool optSubvol = false, optSubvolID = false, optDump = false, optTestRun = false;
 			string mountPoint = "", subvolName = "", dumpFile = "";
 			ulong subvolID = 256;
-			var mountPoints = new List<string>();
+			var devices = new List<string>();
 
 			foreach (string arg in args)
 			{
@@ -104,7 +104,7 @@ namespace WinBtrfsCLI
 						if (!argDevice)
 							argDevice = true;
 
-						mountPoints.Add(arg);
+						devices.Add(arg);
 					}
 				}
 			}
@@ -114,7 +114,26 @@ namespace WinBtrfsCLI
 			else if (!argDevice)
 				UsageError("You didn't specify one or more devices to mount!");
 
-			/* collect the information gathered into a 'string msg', then call Mount with it */
+			string msg = "Mount\n";
+
+			if (optSubvol)
+				msg += "Option|Subvol|" + subvolName.Length + "|" + subvolName + "\n";
+
+			if (optSubvolID)
+				msg += "Option|SubvolID|" + subvolID.ToString() + "\n";
+
+			if (optDump)
+				msg += "Option|Dump|" + dumpFile.Length + "|" + dumpFile + "\n";
+
+			if (optTestRun)
+				msg += "Option|TestRun\n";
+
+			msg += "MountPoint|" + mountPoint.Length + "|" + mountPoint + "\n";
+
+			foreach (string device in devices)
+				msg += "Device|" + device.Length + "|" + device + "\n";
+
+			Mount(msg);
 		}
 
 		static void Mount(string msg)
