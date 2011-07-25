@@ -1,0 +1,3 @@
+btrfsCreateFile: getPathID failed! [\MSI9e72.tmp]
+btrfsCreateDirectory: SHOULD NEVER BE CALLED!! [\]
+Assertion failed: it != end, file j:\programming\winbtrfs\winbtrfs\winbtrfscli\dokan_callbacks.cpp, line 187
