@@ -10,6 +10,6 @@ namespace WinBtrfsService
 	
 	static class VolumeManager
 	{
-		List<VolumeEntry> volumeTable = new List<VolumeEntry>();
+		static List<VolumeEntry> volumeTable = new List<VolumeEntry>();
 	}
 }
