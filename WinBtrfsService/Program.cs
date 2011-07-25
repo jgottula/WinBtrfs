@@ -25,7 +25,7 @@ namespace WinBtrfsService
 
 			eventLog = new EventLog("WinBtrfsService", ".", "WinBtrfsService");
 			
-			ServiceBase[] ServicesToRun  = new ServiceBase[]
+			ServiceBase[] ServicesToRun = new ServiceBase[]
 			{
 				new Service()
 			};
