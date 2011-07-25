@@ -50,17 +50,17 @@ namespace WinBtrfsService
 			wait:
 				switch (WaitHandle.WaitAny(events))
 				{
-				case 0:
+				case 0: // eventTerm
 					return;
-				case 1:
+				case 1: // eventPipeConnection
 					if (result.IsCompleted)
 					{
 						pipeServer.EndWaitForConnection(result);
 						GotConnection();
+						break;
 					}
 					else
 						goto wait;
-					break;
 				}
 			}
 		}
