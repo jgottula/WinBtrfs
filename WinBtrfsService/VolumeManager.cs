@@ -8,6 +8,7 @@ namespace WinBtrfsService
 {
 	class VolumeEntry
 	{
+		public ulong instanceID;
 		public MountData mountData = new MountData();
 		public Guid fsUUID = new Guid();
 		public Process drvProc = null;
@@ -67,7 +68,30 @@ namespace WinBtrfsService
 
 		public static string Mount(string[] lines)
 		{
+			bool uniqueID;
 			var entry = new VolumeEntry();
+			var rnd = new Random();
+
+			/* assign a random, unique ID to the new entry */
+			do
+			{
+				byte[] bytes = new byte[8];
+				rnd.NextBytes(bytes);
+
+				entry.instanceID = BitConverter.ToUInt64(bytes, 0);
+
+				uniqueID = true;
+
+				foreach (var otherEntry in volumeTable)
+				{
+					if (otherEntry.instanceID == entry.instanceID)
+					{
+						uniqueID = false;
+						break;
+					}
+				}
+			}
+			while (!uniqueID);
 
 			for (int i = 1; i < lines.Length; i++)
 			{
@@ -134,8 +158,8 @@ namespace WinBtrfsService
 				}
 			}
 
-			var startInfo = new ProcessStartInfo("WinBtrfsDrv.exe",
-					"--pipe-name=WinBtrfsService --parent-pid=" + Process.GetCurrentProcess().Id.ToString());
+			var startInfo = new ProcessStartInfo("WinBtrfsDrv.exe", "--id=" + entry.instanceID.ToString("x") +
+				" --pipe-name=WinBtrfsService --parent-pid=" + Process.GetCurrentProcess().Id.ToString());
 			startInfo.UseShellExecute = false;
 			startInfo.CreateNoWindow = true;
 			startInfo.ErrorDialog = false;

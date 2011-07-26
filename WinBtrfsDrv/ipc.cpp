@@ -15,8 +15,9 @@
 
 namespace WinBtrfsDrv
 {
+	unsigned __int64 instanceID;
 	wchar_t pipeName[MAX_PATH];
-	int parentPID = -1;
+	int parentPID;
 	
 	int sendMessage(const wchar_t *msg, wchar_t *buffer, size_t bufLen, size_t *bufWritten)
 	{

@@ -17,6 +17,7 @@
 
 namespace WinBtrfsDrv
 {
+	extern unsigned __int64 instanceID;
 	extern wchar_t pipeName[MAX_PATH];
 	extern int parentPID;
 	

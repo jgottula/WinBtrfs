@@ -32,14 +32,17 @@ int main(int argc, char **argv)
 		"Please report bugs at http://github.com/jgottula/WinBtrfs\n\n\n");
 
 	/* check arguments for validity */
-	if (argc != 3 || strlen(argv[1]) <= 12 || strncmp(argv[1], "--pipe-name=", 12) != 0 ||
-		strlen(argv[2]) <= 13 || strncmp(argv[2], "--parent-pid=", 13) != 0)
+	if (argc != 4 || strlen(argv[1]) <= 5 || strncmp(argv[1], "--id=", 5) != 0 ||
+		strlen(argv[2]) <= 12 || strncmp(argv[2], "--pipe-name=", 12) != 0 ||
+		strlen(argv[3]) <= 13 || strncmp(argv[3], "--parent-pid=", 13) != 0)
 		improperInvocation();
 	
 	/* load argument values */
+	if (sscanf(argv[1] + 5, "%I64x", &instanceID) != 1)
+		improperInvocation();
 	wcscpy(pipeName, L"\\\\.\\pipe\\");
-	mbstowcs(pipeName + 9, argv[1] + 12, MAX_PATH - 9);
-	if (sscanf(argv[2] + 13, "%d", &parentPID) != 1)
+	mbstowcs(pipeName + 9, argv[2] + 12, MAX_PATH - 9);
+	if (sscanf(argv[3] + 13, "%d", &parentPID) != 1)
 		improperInvocation();
 	
 	/* sleep for now */
@@ -50,9 +53,7 @@ int main(int argc, char **argv)
 	size_t bufWritten;
 	sendMessage(msg, buffer, sizeof(buffer), &bufWritten);
 
-	/* TODO: establish a pipe connection
-		then, request mount data for driver purposes
-		then, shove it into mountData (extern from init.cpp)
+	/* TODO: shove the data we received into mountData (extern from init.cpp)
 		then, call init */
 
 	return 0;
