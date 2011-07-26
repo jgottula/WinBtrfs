@@ -226,7 +226,9 @@ namespace WinBtrfsCLI
 		static void Usage()
 		{
 			Console.Error.Write("\n\nUsage: WinBtrfsCLI.exe <command> [parameters]\n\n" +
-				"Commands: mount, [more to be added]\n\n" +
+				"Commands: list, mount\n\n" +
+				"WinBtrfsCLI.exe list\n" +
+				"No options.\n\n" +
 				"WinBtrfsCLI.exe mount [options] <mount point> <device> [<device> ...]\n" +
 				"Options:\n" +
 				"--subvol=<name>  mount the subvolume with the given name (case-sensitive)\n" +
