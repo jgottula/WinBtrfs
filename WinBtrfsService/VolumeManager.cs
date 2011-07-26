@@ -10,6 +10,7 @@ namespace WinBtrfsService
 	{
 		public ulong instanceID;
 		public MountData mountData = new MountData();
+		public string label = "";
 		public Guid fsUUID = new Guid();
 		public Process drvProc = null;
 
