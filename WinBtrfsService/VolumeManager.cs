@@ -9,10 +9,10 @@ namespace WinBtrfsService
 	class VolumeEntry
 	{
 		public ulong instanceID;
-		public MountData mountData = new MountData();
-		public string label = "";
 		public Guid fsUUID = new Guid();
+		public string label = "";
 		public Process drvProc = null;
+		public MountData mountData = new MountData();
 
 		public void Process_OutputDataReceived(object sender, DataReceivedEventArgs e)
 		{ }
@@ -44,7 +44,9 @@ namespace WinBtrfsService
 				foreach (var entry in VolumeManager.volumeTable)
 				{
 					reply += "Entry\n";
+					reply += "instanceID|" + entry.instanceID.ToString("x") + "\n";
 					reply += "fsUUID|" + entry.fsUUID.ToString() + "\n";
+					reply += "label|" + entry.label.Length + "|" + entry.label + "\n";
 					reply += "mountData|optSubvol|" + entry.mountData.optSubvol.ToString() + "\n";
 					reply += "mountData|optSubvolID|" + entry.mountData.optSubvolID.ToString() + "\n";
 					reply += "mountData|optDump|" + entry.mountData.optDump.ToString() + "\n";
