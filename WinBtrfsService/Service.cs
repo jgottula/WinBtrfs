@@ -150,7 +150,7 @@ namespace WinBtrfsService
 				Program.eventLog.WriteEntry("Received a Mount message.",
 					EventLogEntryType.Information);
 
-				reply = "OK";
+				reply = VolumeManager.Mount(lines);
 			}
 			else if (lines[0] == "List")
 			{
