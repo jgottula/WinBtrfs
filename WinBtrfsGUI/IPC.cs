@@ -7,7 +7,7 @@ namespace WinBtrfsGUI
 {
 	static class IPC
 	{
-		static string SendMessage(string msg)
+		public static string SendMessage(string msg)
 		{
 			var pipeClient = new NamedPipeClientStream(".", "WinBtrfsService", PipeDirection.InOut,
 				PipeOptions.Asynchronous);
@@ -20,16 +20,21 @@ namespace WinBtrfsGUI
 			{
 				MessageBox.Show("Could not communicate with WinBtrfsService (timed out).",
 					"Communication Error", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+				return null;
 			}
 			catch
 			{
 				MessageBox.Show("Could not communicate with WinBtrfsService.",
 					"Communication Error", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+				return null;
 			}
 
 			if (!pipeClient.IsConnected)
+			{
 				MessageBox.Show("Lost the connection to WinBtrfsService. Try again.",
 					"Lost Connection", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+				return null;
+			}
 
 			byte[] msgBytes = System.Text.Encoding.Unicode.GetBytes(msg);
 			pipeClient.Write(msgBytes, 0, msgBytes.Length);
@@ -39,8 +44,11 @@ namespace WinBtrfsGUI
 			var result = pipeClient.BeginRead(reply, 0, reply.Length, _ => eventGotRead.Set(), null);
 
 			if (!eventGotRead.WaitOne(1000))
+			{
 				MessageBox.Show("Did not receive a reply from WinBtrfsService (timed out).",
 					"Communication Error", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+				return null;
+			}
 
 			int replyLen = pipeClient.EndRead(result);
 			string replyStr = System.Text.Encoding.Unicode.GetString(reply, 0, replyLen);
