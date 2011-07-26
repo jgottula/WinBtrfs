@@ -22,16 +22,32 @@ namespace WinBtrfsCLI
 
 			switch (args[0].ToLower()) // case insensitive
 			{
-			case "mount":
-				MountArgs(args);
-				break;
 			case "list":
 				ListArgs(args);
+				break;
+			case "mount":
+				MountArgs(args);
 				break;
 			default:
 				UsageError("'" + args[0] + "' is not a recognized command!");
 				break;
 			}
+		}
+
+		static void ListArgs(string[] args)
+		{
+			if (args.Length > 1)
+				Console.Error.Write("Ignoring extraneous options after the list command.\n\n");
+
+			string data = SendMessage("List");
+
+			if (data == null)
+				Error("WinBtrfsService sent a bad reply (no data).", 6);
+
+			string[] lines = data.Split('\n');
+
+			/* print this nicely in the future */
+			Console.Write("Data:\n" + data);
 		}
 
 		static void MountArgs(string[] args)
@@ -140,22 +156,6 @@ namespace WinBtrfsCLI
 				msg += "Device|" + device.Length + "|" + device + "\n";
 
 			SendMessage(msg.TrimEnd('\n'));
-		}
-
-		static void ListArgs(string[] args)
-		{
-			if (args.Length > 1)
-				Console.Error.Write("Ignoring extraneous options after the list command.\n\n");
-
-			string data = SendMessage("List");
-
-			if (data == null)
-				Error("WinBtrfsService sent a bad reply (no data).", 6);
-
-			string[] lines = data.Split('\n');
-
-			/* print this nicely in the future */
-			Console.Write("Data:\n" + data);
 		}
 
 		static string SendMessage(string msg)
