@@ -14,6 +14,9 @@ namespace WinBtrfsService
 		/// </summary>
 		static void Main()
 		{
+			Console.Write("WinBtrfsService | Copyright (c) 2011 Justin Gottula\n" +
+				"Please report bugs at http://github.com/jgottula/WinBtrfs\n\n\n");
+
 			/* change the working directory to the directory containing the executable */
 			string modulePath = Process.GetCurrentProcess().MainModule.FileName;
 			Directory.SetCurrentDirectory(modulePath.Substring(0, modulePath.LastIndexOf('\\')));
