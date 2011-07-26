@@ -17,10 +17,10 @@
 
 namespace WinBtrfsDrv
 {
-	extern char pipeName[MAX_PATH];
+	extern wchar_t pipeName[MAX_PATH];
 	extern int parentPID;
 	
-	int sendMessage(const char *msg, size_t len, char *buffer, size_t bufLen);
+	int sendMessage(const wchar_t *msg, wchar_t *buffer, size_t bufLen, size_t *bufWritten);
 }
 
 #endif

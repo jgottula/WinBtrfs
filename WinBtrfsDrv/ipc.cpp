@@ -15,21 +15,21 @@
 
 namespace WinBtrfsDrv
 {
-	char pipeName[MAX_PATH];
+	wchar_t pipeName[MAX_PATH];
 	int parentPID = -1;
 	
-	int sendMessage(const char *msg, size_t len, char *buffer, size_t bufLen)
+	int sendMessage(const wchar_t *msg, wchar_t *buffer, size_t bufLen, size_t *bufWritten)
 	{
 		HANDLE hPipe = INVALID_HANDLE_VALUE;
 
-		if (WaitNamedPipeA(pipeName, 1000) == 0)
+		if (WaitNamedPipe(pipeName, 1000) == 0)
 		{
 			fprintf(stderr, "sendMessage: WaitNamedPipe failed: %u\n", GetLastError());
 
 			return 1;
 		}
 
-		if ((hPipe = CreateFileA(pipeName, GENERIC_READ | GENERIC_WRITE,
+		if ((hPipe = CreateFile(pipeName, GENERIC_READ | GENERIC_WRITE,
 			0, NULL, OPEN_EXISTING, 0, NULL)) == INVALID_HANDLE_VALUE)
 		{
 			fprintf(stderr, "sendMessage: CreateFile failed: %u\n", GetLastError());
@@ -38,7 +38,7 @@ namespace WinBtrfsDrv
 		}
 		
 		DWORD bytesWritten = 0;
-		if (WriteFile(hPipe, msg, len, &bytesWritten, NULL) == 0)
+		if (WriteFile(hPipe, msg, wcslen(msg), &bytesWritten, NULL) == 0)
 		{
 			fprintf(stderr, "sendMessage: WriteFile failed: %u\n", GetLastError());
 
@@ -48,13 +48,18 @@ namespace WinBtrfsDrv
 
 		/* TODO: make sure that this function (a) waits for at least a second, and (b) doesn't block indefinitely */
 		DWORD bytesRead = 0;
-		if (ReadFile(hPipe, buffer, bufLen, &bytesRead, NULL) == 0)
+		if (ReadFile(hPipe, buffer, bufLen - 1, &bytesRead, NULL) == 0)
 		{
 			fprintf(stderr, "sendMessage: ReadFile failed: %u\n", GetLastError());
 
 			CloseHandle(hPipe);
 			return 4;
 		}
+
+		/* null terminate the string we get */
+		((wchar_t *)buffer)[bytesRead / 2] = 0;
+
+		*bufWritten = bytesRead;
 		
 		CloseHandle(hPipe);
 		return 0;

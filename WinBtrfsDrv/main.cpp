@@ -37,13 +37,18 @@ int main(int argc, char **argv)
 		improperInvocation();
 	
 	/* load argument values */
-	strcpy(pipeName, "\\\\.\\pipe\\");
-	strncpy(pipeName, argv[1] + 12, MAX_PATH - 9);
+	wcscpy(pipeName, L"\\\\.\\pipe\\");
+	mbstowcs(pipeName + 9, argv[1] + 12, MAX_PATH - 9);
 	if (sscanf(argv[2] + 13, "%d", &parentPID) != 1)
 		improperInvocation();
 	
 	/* sleep for now */
-	Sleep(5000);
+	Sleep(10000);
+
+	const wchar_t msg[] = L"DrvMountData";
+	wchar_t buffer[51200];
+	size_t bufWritten;
+	sendMessage(msg, buffer, sizeof(buffer), &bufWritten);
 
 	/* TODO: establish a pipe connection
 		then, request mount data for driver purposes
