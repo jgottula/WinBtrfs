@@ -167,21 +167,20 @@ namespace WinBtrfsService
 					{
 						reply += "Entry\n";
 						reply += "fsUUID|" + entry.fsUUID.ToString() + "\n";
-						reply += "MountData\n";
-						reply += "optSubvol|" + entry.mountData.optSubvol.ToString() + "\n";
-						reply += "optSubvolID|" + entry.mountData.optSubvolID.ToString() + "\n";
-						reply += "optDump|" + entry.mountData.optDump.ToString() + "\n";
-						reply += "optTestRun|" + entry.mountData.optTestRun.ToString() + "\n";
-						reply += "mountPoint|" + entry.mountData.mountPoint.Length + "|" +
+						reply += "mountData|optSubvol|" + entry.mountData.optSubvol.ToString() + "\n";
+						reply += "mountData|optSubvolID|" + entry.mountData.optSubvolID.ToString() + "\n";
+						reply += "mountData|optDump|" + entry.mountData.optDump.ToString() + "\n";
+						reply += "mountData|optTestRun|" + entry.mountData.optTestRun.ToString() + "\n";
+						reply += "mountData|mountPoint|" + entry.mountData.mountPoint.Length + "|" +
 							entry.mountData.mountPoint + "\n";
-						reply += "subvolName|" + entry.mountData.subvolName.Length + "|" +
+						reply += "mountData|subvolName|" + entry.mountData.subvolName.Length + "|" +
 							entry.mountData.subvolName + "\n";
-						reply += "dumpFile|" + entry.mountData.dumpFile.Length + "|" +
+						reply += "mountData|dumpFile|" + entry.mountData.dumpFile.Length + "|" +
 							entry.mountData.dumpFile + "\n";
-						reply += "subvolID|" + entry.mountData.subvolID.ToString() + "\n";
+						reply += "mountData|subvolID|" + entry.mountData.subvolID.ToString() + "\n";
 
 						foreach (string device in entry.mountData.devices)
-							reply += "device|" + device.Length + "|" + device + "\n";
+							reply += "mountData|devices|" + device.Length + "|" + device + "\n";
 					}
 				}
 			}
