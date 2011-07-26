@@ -44,6 +44,7 @@
     <ClCompile Include="crc32c.cpp" />
     <ClCompile Include="dokan_callbacks.cpp" />
     <ClCompile Include="fstree_parser.cpp" />
+    <ClCompile Include="ipc.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="roottree_parser.cpp" />
     <ClCompile Include="util.cpp" />
@@ -74,6 +75,7 @@
     <ClInclude Include="endian.h" />
     <ClInclude Include="fstree_parser.h" />
     <ClInclude Include="init.h" />
+    <ClInclude Include="ipc.h" />
     <ClInclude Include="roottree_parser.h" />
     <ClInclude Include="types.h" />
     <ClInclude Include="util.h" />

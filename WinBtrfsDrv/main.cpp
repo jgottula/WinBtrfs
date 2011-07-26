@@ -13,6 +13,7 @@
 #include <cstdio>
 #include <Windows.h>
 #include "init.h"
+#include "ipc.h"
 
 namespace WinBtrfsDrv
 {
@@ -30,17 +31,18 @@ int main(int argc, char **argv)
 	printf("WinBtrfsDrv | Copyright (c) 2011 Justin Gottula\n"
 		"Please report bugs at http://github.com/jgottula/WinBtrfs\n\n\n");
 
+	/* check arguments for validity */
 	if (argc != 3 || strlen(argv[1]) <= 12 || strncmp(argv[1], "--pipe-name=", 12) != 0 ||
 		strlen(argv[2]) <= 13 || strncmp(argv[2], "--parent-pid=", 13) != 0)
 		improperInvocation();
 	
-	const char *pipeName = argv[1] + 12;
-	int parentPID = -1;
-
+	/* load argument values */
+	strcpy(pipeName, "\\\\.\\pipe\\");
+	strncpy(pipeName, argv[1] + 12, MAX_PATH - 9);
 	if (sscanf(argv[2] + 13, "%d", &parentPID) != 1)
 		improperInvocation();
-
-	printf("pipeName: %s\nparentPID: %d\n", pipeName, parentPID);
+	
+	/* sleep for now */
 	Sleep(5000);
 
 	/* TODO: establish a pipe connection
