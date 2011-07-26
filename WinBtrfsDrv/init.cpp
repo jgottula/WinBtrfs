@@ -75,7 +75,7 @@ namespace WinBtrfsDrv
 			exit(1);
 		}
 
-		if ((error = loadSBs(!mountData->noDump)) != 0)
+		if ((error = loadSBs(true)) != 0)
 		{
 			cleanUp();
 			exit(1);
@@ -87,28 +87,24 @@ namespace WinBtrfsDrv
 			exit(1);
 		}
 
-		loadSBChunks(!mountData->noDump);
+		loadSBChunks(true);
 
-		if (!mountData->noDump) parseChunkTree(CTOP_DUMP_TREE);
+		parseChunkTree(CTOP_DUMP_TREE);
 		parseChunkTree(CTOP_LOAD);
 
-		if (!mountData->noDump) parseRootTree(RTOP_DUMP_TREE, NULL, NULL);
+		parseRootTree(RTOP_DUMP_TREE, NULL, NULL);
 
-		if (!mountData->noDump)
-		{
-			parseFSTree(OBJID_FS_TREE, FSOP_DUMP_TREE, NULL, NULL, NULL, NULL, NULL);
-			parseRootTree(RTOP_DUMP_SUBVOLS, NULL, NULL);
-		}
+		parseFSTree(OBJID_FS_TREE, FSOP_DUMP_TREE, NULL, NULL, NULL, NULL, NULL);
+		parseRootTree(RTOP_DUMP_SUBVOLS, NULL, NULL);
 
-		if (mountData->dumpOnly)
+		if (mountData->testRun)
 		{
 			cleanUp();
 			exit(0);
 		}
-	
+		
 		/* aesthetic line break */
-		if (!mountData->noDump)
-			printf("\n");
+		printf("\n");
 
 		if (!mountData->useSubvolID && !mountData->useSubvolName)
 		{

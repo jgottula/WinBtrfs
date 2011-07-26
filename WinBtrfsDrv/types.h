@@ -390,16 +390,6 @@ namespace WinBtrfsDrv
 		FilePkg					*entries;
 	};
 	
-	struct MountData
-	{
-		bool noDump, dumpOnly, useSubvolID, useSubvolName;
-		BtrfsObjID subvolID;
-		char subvolName[256];
-		wchar_t mountPoint[MAX_PATH];
-		size_t numDevices;
-		wchar_t devicePaths[0][MAX_PATH];
-	};
-	
 	struct PhysAddr
 	{
 		unsigned __int64		offset;
@@ -408,6 +398,17 @@ namespace WinBtrfsDrv
 	};
 	
 	typedef unsigned __int64 LogiAddr;
+	
+	struct MountData
+	{
+		bool useSubvolID, useSubvolName, dump, testRun;
+		BtrfsObjID subvolID;
+		char subvolName[256];
+		wchar_t dumpFile[MAX_PATH];
+		wchar_t mountPoint[MAX_PATH];
+		size_t numDevices;
+		wchar_t devicePaths[0][MAX_PATH];
+	};
 	
 	/* size checks for on-disk types and structs */
 	static_assert(sizeof(BtrfsObjID) == sizeof(unsigned __int64), "BtrfsObjID has an unexpected size!");
