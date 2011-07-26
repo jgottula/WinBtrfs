@@ -17,7 +17,14 @@ namespace WinBtrfsGUI
 
 		private void buttonRefresh_Click(object sender, RoutedEventArgs e)
 		{
-		
+			listViewVolumes.Items.Clear();
+
+
+		}
+
+		private void Window_Loaded(object sender, RoutedEventArgs e)
+		{
+			buttonRefresh_Click(sender, e);
 		}
     }
 }
