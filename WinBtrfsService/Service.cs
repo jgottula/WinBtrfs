@@ -167,6 +167,21 @@ namespace WinBtrfsService
 					{
 						reply += "Entry\n";
 						reply += "fsUUID|" + entry.fsUUID.ToString() + "\n";
+						reply += "MountData\n";
+						reply += "optSubvol|" + entry.mountData.optSubvol.ToString() + "\n";
+						reply += "optSubvolID|" + entry.mountData.optSubvolID.ToString() + "\n";
+						reply += "optDump|" + entry.mountData.optDump.ToString() + "\n";
+						reply += "optTestRun|" + entry.mountData.optTestRun.ToString() + "\n";
+						reply += "mountPoint|" + entry.mountData.mountPoint.Length + "|" +
+							entry.mountData.mountPoint + "\n";
+						reply += "subvolName|" + entry.mountData.subvolName.Length + "|" +
+							entry.mountData.subvolName + "\n";
+						reply += "dumpFile|" + entry.mountData.dumpFile.Length + "|" +
+							entry.mountData.dumpFile + "\n";
+						reply += "subvolID|" + entry.mountData.subvolID.ToString() + "\n";
+
+						foreach (string device in entry.mountData.devices)
+							reply += "device|" + device.Length + "|" + device + "\n";
 					}
 				}
 			}
