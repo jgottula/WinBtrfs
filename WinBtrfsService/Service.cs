@@ -149,6 +149,8 @@ namespace WinBtrfsService
 				reply = VolumeManager.List(lines);
 			else if (lines[0] == "Mount")
 				reply = VolumeManager.Mount(lines);
+			else if (lines[0] == "DrvMountData")
+				reply = VolumeManager.DrvMountData(lines);
 			else
 			{
 				Program.eventLog.WriteEntry("Received an unknown message: " + lines[0] + ".",

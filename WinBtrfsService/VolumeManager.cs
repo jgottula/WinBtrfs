@@ -187,5 +187,17 @@ namespace WinBtrfsService
 				EventLogEntryType.Information);
 			return "OK";
 		}
+
+		public static string DrvMountData(string[] lines)
+		{
+			string reply = "Data\n";
+
+			/* TODO: grab the ID out of the message;
+			 * then, find the right volume entry and stringify it as thereply */
+
+			Program.eventLog.WriteEntry("Processed a DrvMountData message. Returning:\n" + reply,
+				EventLogEntryType.Information);
+			return reply;
+		}
 	}
 }
