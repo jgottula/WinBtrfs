@@ -9,7 +9,8 @@ namespace WinBtrfsCLI
 	{
 		static void Main(string[] args)
 		{
-			Console.Write("WinBtrfsCLI: .NET Variant\n\n");
+			Console.Write("WinBtrfsCLI | Copyright (c) 2011 Justin Gottula\n" +
+				"Please report bugs at http://github.com/jgottula/WinBtrfs\n\n\n");
 
 			ParseArgs(args);
 		}
