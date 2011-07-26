@@ -30,10 +30,18 @@ namespace WinBtrfsService
 			var entry = new VolumeEntry();
 			/* TODO: populate the mountData fields from information in lines */
 
+			var startInfo = new ProcessStartInfo("WinBtrfsDrv.exe",
+					"--pipe-name=WinBtrfsService --parent-pid=" + Process.GetCurrentProcess().Id.ToString());
+			startInfo.UseShellExecute = false;
+			startInfo.CreateNoWindow = true;
+			startInfo.ErrorDialog = false;
+			startInfo.RedirectStandardInput = true;
+			startInfo.RedirectStandardOutput = true;
+			startInfo.RedirectStandardError = true;
+
 			try
 			{
-				entry.drvProc = Process.Start("WinBtrfsDrv.exe",
-					"--pipe-name=WinBtrfsService --parent-pid=" + Process.GetCurrentProcess().Id.ToString());
+				entry.drvProc = Process.Start(startInfo);
 			}
 			catch (Win32Exception e)
 			{
