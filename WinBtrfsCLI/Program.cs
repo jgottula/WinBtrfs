@@ -138,9 +138,7 @@ namespace WinBtrfsCLI
 			foreach (string device in devices)
 				msg += "Device|" + device.Length + "|" + device + "\n";
 
-			msg.TrimEnd('\n');
-
-			SendMessage(msg);
+			SendMessage(msg.TrimEnd('\n'));
 		}
 
 		static void ListArgs(string[] args)
