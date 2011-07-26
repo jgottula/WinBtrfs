@@ -11,6 +11,12 @@ namespace WinBtrfsService
 		public MountData mountData = new MountData();
 		public Guid fsUUID = new Guid();
 		public Process drvProc = null;
+
+		public void Process_OutputDataReceived(object sender, DataReceivedEventArgs e)
+		{ }
+
+		public void Process_ErrorDataReceived(object sender, DataReceivedEventArgs e)
+		{ }
 	}
 
 	class MountData
@@ -49,6 +55,9 @@ namespace WinBtrfsService
 					e.Message, EventLogEntryType.Error);
 				return "Error\nCould not start WinBtrfsDrv.exe: " + e.Message;
 			}
+
+			entry.drvProc.OutputDataReceived += entry.Process_OutputDataReceived;
+			entry.drvProc.ErrorDataReceived += entry.Process_ErrorDataReceived;
 
 			volumeTable.Add(entry);
 
