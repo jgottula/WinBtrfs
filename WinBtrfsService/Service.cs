@@ -144,11 +144,11 @@ namespace WinBtrfsService
 		{
 			string[] lines = msg.Split('\n');
 			string reply;
-
-			if (lines[0] == "Mount")
-				reply = VolumeManager.Mount(lines);
-			else if (lines[0] == "List")
+			
+			if (lines[0] == "List")
 				reply = VolumeManager.List(lines);
+			else if (lines[0] == "Mount")
+				reply = VolumeManager.Mount(lines);
 			else
 			{
 				Program.eventLog.WriteEntry("Received an unknown message: " + lines[0] + ".",
