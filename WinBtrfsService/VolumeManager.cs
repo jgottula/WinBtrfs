@@ -33,8 +33,79 @@ namespace WinBtrfsService
 
 		public static string Mount(string[] lines)
 		{
+			bool header = false;
 			var entry = new VolumeEntry();
-			/* TODO: populate the mountData fields from information in lines */
+
+			foreach (string line in lines)
+			{
+				if (!header)
+				{
+					header = true;
+					continue;
+				}
+
+				try
+				{
+					if (line.Length > 14 && line.Substring(0, 14) == "Option|Subvol|")
+					{
+						int valLen = int.Parse(line.Substring(14, line.IndexOf('|', 14) - 14));
+						string valStr = line.Substring(line.IndexOf('|', 14) + 1, valLen);
+
+						entry.mountData.optSubvol = true;
+						entry.mountData.subvolName = valStr;
+					}
+					else if (line.Length > 16 && line.Substring(0, 16) == "Option|SubvolID|")
+					{
+						int valLen = int.Parse(line.Substring(16, line.IndexOf('|', 16) - 16));
+						string valStr = line.Substring(line.IndexOf('|', 16) + 1, valLen);
+
+						entry.mountData.optSubvolID = true;
+						entry.mountData.subvolID = ulong.Parse(valStr);
+					}
+					else if (line.Length > 12 && line.Substring(0, 12) == "Option|Dump|")
+					{
+						int valLen = int.Parse(line.Substring(12, line.IndexOf('|', 12) - 12));
+						string valStr = line.Substring(line.IndexOf('|', 12) + 1, valLen);
+
+						entry.mountData.optDump = true;
+						entry.mountData.dumpFile = valStr;
+					}
+					else if (line.Length == 14 && line == "Option|TestRun")
+						entry.mountData.optTestRun = true;
+					else if (line.Length > 11 && line.Substring(0, 11) == "MountPoint|")
+					{
+						int valLen = int.Parse(line.Substring(11, line.IndexOf('|', 11) - 11));
+						string valStr = line.Substring(line.IndexOf('|', 11) + 1, valLen);
+
+						entry.mountData.mountPoint = valStr;
+					}
+					else if (line.Length > 7 && line.Substring(0, 7) == "Device|")
+					{
+						int valLen = int.Parse(line.Substring(11, line.IndexOf('|', 7) - 7));
+						string valStr = line.Substring(line.IndexOf('|', 7) + 1, valLen);
+
+						entry.mountData.devices.Add(valStr);
+					}
+					else
+						Program.eventLog.WriteEntry("Encountered an unintelligible line in Mount (ignoring):\n" +
+							line, EventLogEntryType.Warning);
+				}
+				catch (ArgumentOutOfRangeException) // for string.Substring
+				{
+					Program.eventLog.WriteEntry("Caught an ArgumentOutOfRangeException in Mount (ignoring):\n" +
+						line, EventLogEntryType.Warning);
+				}
+				catch (FormatException) // for *.Parse
+				{
+					Program.eventLog.WriteEntry("Caught an FormatException in Mount (ignoring):\n" +
+						line, EventLogEntryType.Warning);
+				}
+				catch (OverflowException) // for *.Parse
+				{
+					Program.eventLog.WriteEntry("Caught an OverflowException in Mount (ignoring):\n" +
+						line, EventLogEntryType.Warning);
+				}
+			}
 
 			var startInfo = new ProcessStartInfo("WinBtrfsDrv.exe",
 					"--pipe-name=WinBtrfsService --parent-pid=" + Process.GetCurrentProcess().Id.ToString());
