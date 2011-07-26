@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.IO;
 using System.ServiceProcess;
 
 namespace WinBtrfsService
@@ -13,6 +14,10 @@ namespace WinBtrfsService
 		/// </summary>
 		static void Main()
 		{
+			/* change the working directory to the directory containing the executable */
+			string modulePath = Process.GetCurrentProcess().MainModule.FileName;
+			Directory.SetCurrentDirectory(modulePath.Substring(0, modulePath.LastIndexOf('\\')));
+			
 			AppDomain.CurrentDomain.UnhandledException +=
 				new UnhandledExceptionEventHandler(CurrentDomain_UnhandledException);
 			
