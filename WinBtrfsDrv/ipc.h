@@ -20,6 +20,7 @@ namespace WinBtrfsDrv
 	extern unsigned __int64 instanceID;
 	extern wchar_t pipeName[MAX_PATH];
 	extern int parentPID;
+	extern HANDLE hParentProc;
 	
 	int sendMessage(const wchar_t *msg, wchar_t *buffer, size_t bufLen, size_t *bufWritten);
 }

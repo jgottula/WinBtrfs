@@ -18,7 +18,8 @@ namespace WinBtrfsDrv
 	unsigned __int64 instanceID;
 	wchar_t pipeName[MAX_PATH];
 	int parentPID;
-	
+	HANDLE hParentProc;
+
 	int sendMessage(const wchar_t *msg, wchar_t *buffer, size_t bufLen, size_t *bufWritten)
 	{
 		HANDLE hPipe = INVALID_HANDLE_VALUE;

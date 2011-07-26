@@ -45,6 +45,10 @@ int main(int argc, char **argv)
 	if (sscanf(argv[3] + 13, "%d", &parentPID) != 1)
 		improperInvocation();
 	
+	/* store parent process as a handle instead of PID;
+		this will help with possible termination of the parent */
+	hParentProc = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, parentPID);
+
 	/* sleep for now */
 	Sleep(10000);
 
