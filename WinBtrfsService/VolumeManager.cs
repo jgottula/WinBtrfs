@@ -125,7 +125,43 @@ namespace WinBtrfsService
 
 			volumeTable.Add(entry);
 
+			Program.eventLog.WriteEntry("Processed a Mount message. Returning: OK",
+				EventLogEntryType.Information);
 			return "OK";
+		}
+
+		public static string List(string[] lines)
+		{
+			string reply = "Data\n";
+
+			if (VolumeManager.volumeTable.Count == 0)
+				reply += "No Entries";
+			else
+			{
+				foreach (var entry in VolumeManager.volumeTable)
+				{
+					reply += "Entry\n";
+					reply += "fsUUID|" + entry.fsUUID.ToString() + "\n";
+					reply += "mountData|optSubvol|" + entry.mountData.optSubvol.ToString() + "\n";
+					reply += "mountData|optSubvolID|" + entry.mountData.optSubvolID.ToString() + "\n";
+					reply += "mountData|optDump|" + entry.mountData.optDump.ToString() + "\n";
+					reply += "mountData|optTestRun|" + entry.mountData.optTestRun.ToString() + "\n";
+					reply += "mountData|mountPoint|" + entry.mountData.mountPoint.Length + "|" +
+						entry.mountData.mountPoint + "\n";
+					reply += "mountData|subvolName|" + entry.mountData.subvolName.Length + "|" +
+						entry.mountData.subvolName + "\n";
+					reply += "mountData|dumpFile|" + entry.mountData.dumpFile.Length + "|" +
+						entry.mountData.dumpFile + "\n";
+					reply += "mountData|subvolID|" + entry.mountData.subvolID.ToString() + "\n";
+
+					foreach (string device in entry.mountData.devices)
+						reply += "mountData|devices|" + device.Length + "|" + device + "\n";
+				}
+			}
+
+			Program.eventLog.WriteEntry("Processed a List message. Returning:\n" + reply,
+				EventLogEntryType.Information);
+			return reply;
 		}
 	}
 }
