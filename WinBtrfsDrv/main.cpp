@@ -26,6 +26,9 @@ using namespace WinBtrfsDrv;
 
 int main(int argc, char **argv)
 {
+	printf("WinBtrfsDrv | Copyright (c) 2011 Justin Gottula\n"
+		"Please report bugs at http://github.com/jgottula/WinBtrfs\n\n\n");
+
 	if (argc != 3 || strlen(argv[1]) <= 12 || strncmp(argv[1], "--pipe-name=", 12) != 0 ||
 		strlen(argv[2]) <= 13 || strncmp(argv[2], "--parent-pid=", 13) != 0)
 		improperInvocation();
