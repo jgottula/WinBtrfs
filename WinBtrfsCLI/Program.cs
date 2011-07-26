@@ -206,7 +206,7 @@ namespace WinBtrfsCLI
 			else
 				Error("WinBtrsService replied with an unintelligible message:\n" + replyStr, 5);
 
-			return null;
+			return replyStr;
 		}
 
 		static void Error(string error, int exitCode)
