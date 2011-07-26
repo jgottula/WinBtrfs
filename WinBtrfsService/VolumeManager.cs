@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 
@@ -34,10 +35,11 @@ namespace WinBtrfsService
 				entry.drvProc = Process.Start("WinBtrfsDrv.exe",
 					"--pipe-name=WinBtrfsService --parent-pid=" + Process.GetCurrentProcess().Id.ToString());
 			}
-			catch (FileNotFoundException)
+			catch (Win32Exception e)
 			{
-				Program.eventLog.WriteEntry("Could not find WinBtrfsDrv.exe!", EventLogEntryType.Error);
-				return "Error\nCould not find WinBtrfsDrv.exe!";
+				Program.eventLog.WriteEntry("Win32Exception on Process.Start for WinBtrfsDrv.exe:\n" +
+					e.Message, EventLogEntryType.Error);
+				return "Error\nCould not start WinBtrfsDrv.exe: " + e.Message;
 			}
 
 			volumeTable.Add(entry);
