@@ -12,6 +12,7 @@
 
 #include <cstdio>
 #include <Windows.h>
+#include "init.h"
 
 namespace WinBtrfsDrv
 {
@@ -41,6 +42,11 @@ int main(int argc, char **argv)
 
 	printf("pipeName: %s\nparentPID: %d\n", pipeName, parentPID);
 	Sleep(5000);
+
+	/* TODO: establish a pipe connection
+		then, request mount data for driver purposes
+		then, shove it into mountData (extern from init.cpp)
+		then, call init */
 
 	return 0;
 }
