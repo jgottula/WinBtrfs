@@ -5,11 +5,11 @@ namespace WinBtrfsService
 {
 	class VolumeEntry
 	{
-		public MountOptions mountOptions = new MountOptions();
+		public MountData mountData = new MountData();
 		public Guid fsUUID = new Guid();
 	}
 
-	class MountOptions
+	class MountData
 	{
 		public bool optSubvol = false, optSubvolID = false, optDump = false, optTestRun = false;
 		public string mountPoint = "", subvolName = "", dumpFile = "";
