@@ -74,7 +74,7 @@ namespace WinBtrfsService
 					}
 					else if (lines[i].Length > 7 && lines[i].Substring(0, 7) == "Device|")
 					{
-						int valLen = int.Parse(lines[i].Substring(11, lines[i].IndexOf('|', 7) - 7));
+						int valLen = int.Parse(lines[i].Substring(7, lines[i].IndexOf('|', 7) - 7));
 						string valStr = lines[i].Substring(lines[i].IndexOf('|', 7) + 1, valLen);
 
 						entry.mountData.devices.Add(valStr);
