@@ -35,64 +35,58 @@ namespace WinBtrfsCLI
 
 		static void MountArgs(string[] args)
 		{
-			bool argCommand = false, argMountPoint = false, argDevice = false;
+			bool argMountPoint = false, argDevice = false;
 			bool optSubvol = false, optSubvolID = false, optDump = false, optTestRun = false;
 			string mountPoint = "", subvolName = "", dumpFile = "";
 			ulong subvolID = 256;
 			var devices = new List<string>();
 
-			foreach (string arg in args)
+			for (int i = 1; i < args.Length; i++)
 			{
-				if (!argCommand) // skip the first arg (the command)
+				if (args[i][0] == '-') // option
 				{
-					argCommand = true;
-					continue;
-				}
-				
-				if (arg[0] == '-') // option
-				{
-					if (arg.Substring(0, 9) == "--subvol=")
+					if (args[i].Substring(0, 9) == "--subvol=")
 					{
 						if (optSubvol)
 							UsageError("You specified --subvol more than once!");
 						else if (optSubvolID)
 							UsageError("You can't specify both a subvol name and an ID; pick just one!");
 
-						if (arg.Length == 9)
+						if (args[i].Length == 9)
 							UsageError("You specified --subvol but didn't supply a subvolume name!");
 
 						optSubvol = true;
 
-						subvolName = arg.Substring(9);
+						subvolName = args[i].Substring(9);
 					}
-					else if (arg.Substring(0, 12) == "--subvol-id=")
+					else if (args[i].Substring(0, 12) == "--subvol-id=")
 					{
 						if (optSubvolID)
 							UsageError("You specified --subvol-id more than once!");
 						else if (optSubvol)
 							UsageError("You can't specify both a subvol name and an ID; pick just one!");
 
-						if (arg.Length == 12)
+						if (args[i].Length == 12)
 							UsageError("You specified --subvol-id but didn't supply a subvolume ID!");
 
 						optSubvolID = true;
 
-						if (!ulong.TryParse(arg.Substring(12), out subvolID))
+						if (!ulong.TryParse(args[i].Substring(12), out subvolID))
 							UsageError("Could not read the value you specified for --subvol-id!");
 					}
-					else if (arg.Substring(0, 7) == "--dump=")
+					else if (args[i].Substring(0, 7) == "--dump=")
 					{
 						if (optDump)
 							UsageError("You specified --dump more than once!");
 
-						if (arg.Length == 7)
+						if (args[i].Length == 7)
 							UsageError("You specified --dump but didn't supply a file to which to dump!");
 
 						optDump = true;
 
-						dumpFile = arg.Substring(7);
+						dumpFile = args[i].Substring(7);
 					}
-					else if (arg.Substring(0, 10) == "--test-run")
+					else if (args[i].Substring(0, 10) == "--test-run")
 					{
 						if (optTestRun)
 							UsageError("You specified --test-run more than once!");
@@ -100,7 +94,7 @@ namespace WinBtrfsCLI
 						optTestRun = true;
 					}
 					else
-						UsageError("'" + arg + "' is not a valid option for the mount command!");
+						UsageError("'" + args[i] + "' is not a valid option for the mount command!");
 				}
 				else
 				{
@@ -108,14 +102,14 @@ namespace WinBtrfsCLI
 					{
 						argMountPoint = true;
 
-						mountPoint = arg;
+						mountPoint = args[i];
 					}
 					else
 					{
 						if (!argDevice)
 							argDevice = true;
 
-						devices.Add(arg);
+						devices.Add(args[i]);
 					}
 				}
 			}
@@ -161,7 +155,7 @@ namespace WinBtrfsCLI
 
 			string[] lines = data.Split('\n');
 
-			/* remove this */
+			/* print this nicely in the future */
 			Console.Write("Data:\n" + data);
 		}
 
