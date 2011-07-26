@@ -53,6 +53,9 @@ namespace WinBtrfsGUI
 			VolumeListData entry = null;
 			bool first = true, ex = false;
 
+			if (lines.Length < 2 || lines[1] == "No Entries")
+				return;
+
 			for (int i = 1; i < lines.Length; i++)
 			{
 				try
