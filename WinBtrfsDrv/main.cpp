@@ -49,13 +49,12 @@ int main(int argc, char **argv)
 		this will help with possible termination of the parent */
 	hParentProc = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, parentPID);
 
-	/* sleep for now */
-	Sleep(10000);
-
 	const wchar_t msg[] = L"DrvMountData";
 	wchar_t buffer[51200];
 	size_t bufWritten;
 	sendMessage(msg, buffer, sizeof(buffer), &bufWritten);
+
+	mountData = (MountData *)malloc(sizeof(MountData));
 
 	/* TODO: shove the data we received into mountData (extern from init.cpp)
 		then, call init */

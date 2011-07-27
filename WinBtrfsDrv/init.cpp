@@ -12,7 +12,6 @@
 
 #include "init.h"
 #include <cstdio>
-#include <vector>
 #include <boost/detail/endian.hpp>
 #include "btrfs_system.h"
 #include "chunktree_parser.h"

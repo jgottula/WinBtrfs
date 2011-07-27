@@ -13,7 +13,6 @@
 #ifndef WINBTRFSDRV_CHUNKTREE_PARSER_H
 #define WINBTRFSDRV_CHUNKTREE_PARSER_H
 
-#include <vector>
 #include "types.h"
 
 namespace WinBtrfsDrv

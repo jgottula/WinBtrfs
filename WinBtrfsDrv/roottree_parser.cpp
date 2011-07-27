@@ -12,7 +12,6 @@
 
 #include "roottree_parser.h"
 #include <cassert>
-#include <vector>
 #include "btrfs_system.h"
 #include "endian.h"
 #include "fstree_parser.h"

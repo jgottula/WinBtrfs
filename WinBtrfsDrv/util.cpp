@@ -13,7 +13,6 @@
 #include "util.h"
 #include <cassert>
 #include <cstdio>
-#include <vector>
 #include <dokan.h>
 #include "btrfs_system.h"
 #include "constants.h"

@@ -13,6 +13,7 @@
 #ifndef WINBTRFSDRV_TYPES_H
 #define WINBTRFSDRV_TYPES_H
 
+#include <vector>
 #include <Windows.h>
 
 /* pack structs the way they are on the disk */
@@ -406,8 +407,7 @@ namespace WinBtrfsDrv
 		char subvolName[256];
 		wchar_t dumpFile[MAX_PATH];
 		wchar_t mountPoint[MAX_PATH];
-		size_t numDevices;
-		wchar_t devicePaths[0][MAX_PATH];
+		std::vector<wchar_t *> devices;
 	};
 	
 	/* size checks for on-disk types and structs */

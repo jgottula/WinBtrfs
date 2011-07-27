@@ -30,10 +30,10 @@ namespace WinBtrfsDrv
 	void allocateBlockReaders()
 	{
 		/* allocate a block reader for each device */
-		size_t numDevices = mountData->numDevices;
-		for (size_t i = 0; i < numDevices; i++)
+		std::vector<wchar_t *>::iterator it = mountData->devices.begin(), end = mountData->devices.end();
+		for ( ; it != end; ++it)
 		{
-			BlockReader *blockReader = new BlockReader(mountData->devicePaths[i]);
+			BlockReader *blockReader = new BlockReader(*it);
 			blockReaders.push_back(blockReader);
 		}
 	}
@@ -119,7 +119,7 @@ namespace WinBtrfsDrv
 				sizeof(BtrfsSuperblock), (unsigned char *)&sb1)) != ERROR_SUCCESS)
 			{
 				printf("loadSBs: could not read a device's primary superblock!\n"
-					"Device: %S\nWindows error code: %d\n", mountData->devicePaths[i],
+					"Device: %S\nWindows error code: %d\n", mountData->devices[i],
 					error);
 				return error;
 			}
@@ -132,15 +132,15 @@ namespace WinBtrfsDrv
 				break;
 			case 1:
 				printf("loadSBs: primary superblock is missing or invalid!\nDevice: %S\n",
-					mountData->devicePaths[i]);
+					mountData->devices[i]);
 				return error;
 			case 2:
 				printf("loadSBs: primary superblock checksum failed!\nDevice: %S\n",
-					mountData->devicePaths[i]);
+					mountData->devices[i]);
 				return error;
 			default:
 				printf("loadSBs: primary superblock failed to validate for unknown reasons!\nDevice: %S\n",
-					mountData->devicePaths[i]);
+					mountData->devices[i]);
 				return error;
 			}
 
@@ -177,7 +177,7 @@ namespace WinBtrfsDrv
 			{
 				char uuid[1024];
 
-				printf("\n[SB%d] from %S\n", sbBestIdx, mountData->devicePaths[i]);
+				printf("\n[SB%d] from %S\n", sbBestIdx, mountData->devices[i]);
 				uuidToStr(sbBest->fsUUID, uuid);
 				printf("  csum: 0x%04x csumType: %x fsUUID: %s\n", endian32(sbBest->csum.crc32c),
 					endian16(sbBest->csumType), uuid);
@@ -325,7 +325,7 @@ namespace WinBtrfsDrv
 			if (memcmp(fsUUID, it->fsUUID, 0x10) != 0)
 			{
 				printf("verifyDevices: the following device is not part of this Btrfs volume!\n%S\n",
-					mountData->devicePaths[i]);
+					mountData->devices[i]);
 				return 1;
 			}
 		}
@@ -340,7 +340,7 @@ namespace WinBtrfsDrv
 				if (memcmp(it->devItem.devUUID, it2->devItem.devUUID, 0x10) == 0)
 				{
 					printf("verifyDevices: the following device is specified more than once!\n%S\n",
-						mountData->devicePaths[i]);
+						mountData->devices[i]);
 					return 2;
 				}
 			}

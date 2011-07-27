@@ -13,7 +13,6 @@
 #ifndef WINBTRFSDRV_BTRFS_SYSTEM_H
 #define WINBTRFSDRV_BTRFS_SYSTEM_H
 
-#include <vector>
 #include "block_reader.h"
 #include "types.h"
 
