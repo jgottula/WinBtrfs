@@ -15,10 +15,22 @@ namespace WinBtrfsService
 		public MountData mountData = new MountData();
 
 		public void Process_OutputDataReceived(object sender, DataReceivedEventArgs e)
-		{ }
+		{
+			/* TODO: use 'this' or 'sender' to determine which driver process got stdout data
+			 * so we don't write all instances to the same file. */
+
+			using (var fileOut = new StreamWriter("stdout.txt", true))
+				fileOut.Write(e.Data);
+		}
 
 		public void Process_ErrorDataReceived(object sender, DataReceivedEventArgs e)
-		{ }
+		{
+			/* TODO: use 'this' or 'sender' to determine which driver process got stderr data
+			 * so we don't write all instances to the same file. */
+
+			using (var fileOut = new StreamWriter("stderr.txt", true))
+				fileOut.Write(e.Data);
+		}
 	}
 
 	class MountData
