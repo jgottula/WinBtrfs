@@ -56,6 +56,21 @@ int main(int argc, char **argv)
 
 	mountData = (MountData *)malloc(sizeof(MountData));
 
+	size_t c = 0, len = wcslen(buffer);
+	while (c < len)
+	{
+		wchar_t *linePtr = buffer + c, *lineEnd = wcschr(linePtr, L'\n');
+		size_t lineLen = (lineEnd == NULL ? wcslen(linePtr) : lineEnd - linePtr);
+
+		wchar_t buf[1024];
+		wcsncpy(buf, linePtr, lineLen);
+		printf("Line: >%S<\n", buf);
+
+		c += lineLen + 1;
+	}
+
+	printf("End of message.\n");
+
 	/* TODO: shove the data we received into mountData (extern from init.cpp)
 		then, call init */
 
