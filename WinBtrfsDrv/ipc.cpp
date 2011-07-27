@@ -59,7 +59,7 @@ namespace WinBtrfsDrv
 		}
 
 		/* null terminate the string we get */
-		((wchar_t *)buffer)[bytesRead / 2] = 0;
+		((wchar_t *)buffer)[bytesRead / 2] = L'\0';
 
 		*bufWritten = bytesRead;
 		
